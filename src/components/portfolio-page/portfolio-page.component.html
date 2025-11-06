@@ -2,10 +2,10 @@
   <div class="max-w-4xl mx-auto">
     <header class="mb-8 flex justify-between items-center">
       <div class="flex items-baseline gap-x-4">
-        <h1 class="text-3xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-4xl">
+        <h1 class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
           Portfolio
         </h1>
-        <a routerLink="/transactions" class="text-2xl font-medium text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-400 transition-colors">
+        <a routerLink="/transactions" class="text-2xl font-medium text-gray-400 hover:text-gray-600 transition-colors">
           Transactions
         </a>
       </div>
@@ -14,8 +14,8 @@
     <!-- Total Value Section -->
     @if (portfolio().length > 0) {
       <div class="mb-6">
-        <h2 class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Portfolio Value</h2>
-        <p class="mt-1 text-3xl font-semibold tracking-tight text-gray-900 dark:text-white">
+        <h2 class="text-sm font-medium text-gray-500">Total Portfolio Value</h2>
+        <p class="mt-1 text-3xl font-semibold tracking-tight text-gray-900">
           {{ totalValue() | currency:'EUR':'symbol':'1.2-2' }}
         </p>
       </div>

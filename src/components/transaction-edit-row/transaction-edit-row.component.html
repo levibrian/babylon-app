@@ -1,10 +1,10 @@
-<li class="p-3 sm:p-4 bg-gray-50 dark:bg-gray-700/50">
+<li class="p-3 sm:p-4 bg-gray-50">
   <form [formGroup]="transactionForm" (ngSubmit)="onSubmit()" class="space-y-4">
     <div class="flex items-start justify-between flex-wrap gap-3">
       <!-- Left Side: Ticker, Date, Type -->
       <div class="flex items-center gap-3 flex-grow min-w-[200px]">
         <div class="flex-shrink-0">
-          <div class="w-10 h-10 rounded-full flex items-center justify-center bg-gray-200 dark:bg-gray-600">
+          <div class="w-10 h-10 rounded-full flex items-center justify-center bg-gray-200">
             <svg class="w-6 h-6 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
             </svg>
@@ -13,24 +13,24 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-4 flex-grow pt-2">
           <!-- Ticker -->
           <div class="relative">
-            <label for="ticker" class="absolute -top-2 left-2 inline-block bg-gray-50 dark:bg-gray-700/50 px-1 text-xs font-medium text-gray-500 dark:text-gray-400">Ticker</label>
-            <input id="ticker" type="text" formControlName="ticker" placeholder="e.g. AAPL" class="bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 uppercase placeholder:normal-case placeholder:text-gray-400 dark:placeholder:text-gray-500" required>
+            <label for="ticker" class="absolute -top-2 left-2 inline-block bg-gray-50 px-1 text-xs font-medium text-gray-500">Ticker</label>
+            <input id="ticker" type="text" formControlName="ticker" placeholder="e.g. AAPL" class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 uppercase placeholder:normal-case placeholder:text-gray-400" required>
           </div>
           
           <!-- Date -->
           <div class="relative">
-            <label for="date" class="absolute -top-2 left-2 inline-block bg-gray-50 dark:bg-gray-700/50 px-1 text-xs font-medium text-gray-500 dark:text-gray-400">Date</label>
-            <input id="date" type="date" formControlName="date" class="bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2" required>
+            <label for="date" class="absolute -top-2 left-2 inline-block bg-gray-50 px-1 text-xs font-medium text-gray-500">Date</label>
+            <input id="date" type="date" formControlName="date" class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2" required>
           </div>
           
           <div class="md:col-span-2 flex gap-4 items-center">
             <div class="flex items-center">
-              <input id="buy-radio" type="radio" value="buy" formControlName="transactionType" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
-              <label for="buy-radio" class="ms-2 text-sm font-medium text-gray-900 dark:text-gray-300">Buy</label>
+              <input id="buy-radio" type="radio" value="buy" formControlName="transactionType" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 focus:ring-2">
+              <label for="buy-radio" class="ms-2 text-sm font-medium text-gray-900">Buy</label>
             </div>
             <div class="flex items-center">
-              <input id="sell-radio" type="radio" value="sell" formControlName="transactionType" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
-              <label for="sell-radio" class="ms-2 text-sm font-medium text-gray-900 dark:text-gray-300">Sell</label>
+              <input id="sell-radio" type="radio" value="sell" formControlName="transactionType" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 focus:ring-2">
+              <label for="sell-radio" class="ms-2 text-sm font-medium text-gray-900">Sell</label>
             </div>
           </div>
         </div>
@@ -40,43 +40,43 @@
       <div class="flex items-center gap-2 flex-wrap justify-end flex-grow pt-2">
          <!-- Shares -->
          <div class="relative">
-            <label for="shares" class="absolute -top-2 left-2 inline-block bg-gray-50 dark:bg-gray-700/50 px-1 text-xs font-medium text-gray-500 dark:text-gray-400">Shares</label>
-            <input id="shares" type="number" formControlName="shares" placeholder="0" class="bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-24 p-2" required>
+            <label for="shares" class="absolute -top-2 left-2 inline-block bg-gray-50 px-1 text-xs font-medium text-gray-500">Shares</label>
+            <input id="shares" type="number" formControlName="shares" placeholder="0" class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-24 p-2" required>
         </div>
 
         <!-- Price/Share -->
         <div class="relative">
-            <label for="sharePrice" class="absolute -top-2 left-2 inline-block bg-gray-50 dark:bg-gray-700/50 px-1 text-xs font-medium text-gray-500 dark:text-gray-400">Price/Share</label>
-            <input id="sharePrice" type="number" formControlName="sharePrice" placeholder="0.00" step="0.01" class="bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-28 p-2" required>
+            <label for="sharePrice" class="absolute -top-2 left-2 inline-block bg-gray-50 px-1 text-xs font-medium text-gray-500">Price/Share</label>
+            <input id="sharePrice" type="number" formControlName="sharePrice" placeholder="0.00" step="0.01" class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-28 p-2" required>
         </div>
         
          <!-- Readonly Amount -->
          <div class="relative">
-            <label for="amount" class="absolute -top-2 left-2 inline-block bg-gray-50 dark:bg-gray-700/50 px-1 text-xs font-medium text-gray-500 dark:text-gray-400">Amount</label>
-            <input id="amount" type="text" [value]="amount() | currency:'EUR':'symbol':'1.2-2'" readonly class="bg-gray-200 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 text-sm rounded-lg block w-32 p-2 cursor-not-allowed">
+            <label for="amount" class="absolute -top-2 left-2 inline-block bg-gray-50 px-1 text-xs font-medium text-gray-500">Amount</label>
+            <input id="amount" type="text" [value]="amount() | currency:'EUR':'symbol':'1.2-2'" readonly class="bg-gray-200 border border-gray-300 text-gray-700 text-sm rounded-lg block w-32 p-2 cursor-not-allowed">
           </div>
 
         <!-- Fees -->
         <div class="relative">
-            <label for="fees" class="absolute -top-2 left-2 inline-block bg-gray-50 dark:bg-gray-700/50 px-1 text-xs font-medium text-gray-500 dark:text-gray-400">Fees</label>
-            <input id="fees" type="number" formControlName="fees" placeholder="0.00" step="0.01" class="bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-20 p-2">
+            <label for="fees" class="absolute -top-2 left-2 inline-block bg-gray-50 px-1 text-xs font-medium text-gray-500">Fees</label>
+            <input id="fees" type="number" formControlName="fees" placeholder="0.00" step="0.01" class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-20 p-2">
         </div>
         
           <!-- Readonly Total -->
           <div class="relative">
-              <label for="totalAmount" class="absolute -top-2 left-2 inline-block bg-gray-50 dark:bg-gray-700/50 px-1 text-xs font-medium text-gray-500 dark:text-gray-400">Total</label>
-            <input id="totalAmount" type="text" [value]="totalAmount() | currency:'EUR':'symbol':'1.2-2'" readonly class="bg-gray-200 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 text-sm rounded-lg block w-32 p-2 cursor-not-allowed">
+              <label for="totalAmount" class="absolute -top-2 left-2 inline-block bg-gray-50 px-1 text-xs font-medium text-gray-500">Total</label>
+            <input id="totalAmount" type="text" [value]="totalAmount() | currency:'EUR':'symbol':'1.2-2'" readonly class="bg-gray-200 border border-gray-300 text-gray-700 text-sm rounded-lg block w-32 p-2 cursor-not-allowed">
           </div>
 
         <!-- Action Buttons -->
         <div class="flex items-center gap-2 pl-2">
-            <button type="submit" [disabled]="transactionForm.invalid" class="p-2 text-green-600 hover:bg-green-100 dark:text-green-400 dark:hover:bg-gray-600 rounded-full transition-colors duration-150 disabled:text-gray-400 disabled:dark:text-gray-500 disabled:hover:bg-transparent">
+            <button type="submit" [disabled]="transactionForm.invalid" class="p-2 text-green-600 hover:bg-green-100 rounded-full transition-colors duration-150 disabled:text-gray-400 disabled:hover:bg-transparent">
               <span class="sr-only">Save</span>
               <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
               </svg>
             </button>
-            <button type="button" (click)="onCancel()" class="p-2 text-red-600 hover:bg-red-100 dark:text-red-400 dark:hover:bg-gray-600 rounded-full transition-colors duration-150">
+            <button type="button" (click)="onCancel()" class="p-2 text-red-600 hover:bg-red-100 rounded-full transition-colors duration-150">
               <span class="sr-only">Cancel</span>
               <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
