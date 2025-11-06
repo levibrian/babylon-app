@@ -1,0 +1,5 @@
+{
+  "name": "Babylon",
+  "description": "A clean and responsive single-page application to display a list of financial transactions with details and color-coded types.",
+  "requestFramePermissions": []
+}

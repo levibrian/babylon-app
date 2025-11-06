@@ -1,0 +1,64 @@
+<div class="bg-white dark:bg-gray-800 shadow-sm rounded-lg overflow-hidden">
+  <ul class="divide-y divide-gray-200 dark:divide-gray-700">
+    @if (isAdding()) {
+      <app-transaction-edit-row (save)="save.emit($event)" (cancel)="cancel.emit()"></app-transaction-edit-row>
+    }
+    @for (transaction of transactions(); track transaction.id) {
+      <li class="p-3 sm:p-4 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-150">
+        <div class="flex items-center justify-between gap-3">
+          <!-- Left side: Ticker and Date -->
+          <div class="flex items-center gap-3 min-w-0">
+            <div class="flex-shrink-0">
+              <div [class]="'w-10 h-10 rounded-full flex items-center justify-center font-bold text-base ' + getTransactionTypePillClass(transaction.transactionType)">
+                {{ transaction.ticker.substring(0, 1) }}
+              </div>
+            </div>
+            <div class="min-w-0">
+              <div class="flex items-baseline gap-x-2">
+                <p class="text-base font-semibold text-gray-900 dark:text-white truncate">{{ transaction.ticker }}</p>
+                <p class="text-sm text-gray-500 dark:text-gray-400">{{ transaction.date | date:'mediumDate' }}</p>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Right side: Details and Amount -->
+          <div class="flex items-center gap-2 sm:gap-4">
+            <!-- Share Details - hidden on small screens -->
+            <div class="hidden sm:block text-sm text-right text-gray-500 dark:text-gray-400">
+              @if (transaction.transactionType !== 'dividend') {
+                <span>{{ transaction.shares }} @ {{ transaction.sharePrice | currency:'EUR' }}</span>
+              } @else if (transaction.notes) {
+                <span class="truncate" title="{{transaction.notes}}">{{ transaction.notes }}</span>
+              }
+            </div>
+
+            <!-- Pill -->
+            <span [class]="'px-2 py-0.5 inline-flex text-xs leading-5 font-semibold rounded-full ' + getTransactionTypePillClass(transaction.transactionType)">
+                {{ transaction.transactionType }}
+            </span>
+
+            <!-- Total Amount -->
+            <p class="text-base font-medium text-right w-24 sm:w-28" [class]="{
+              'text-red-600 dark:text-red-400': transaction.transactionType === 'buy',
+              'text-green-600 dark:text-green-400': transaction.transactionType === 'sell' || transaction.transactionType === 'dividend'
+            }">
+              {{ getValuePrefix(transaction.transactionType) }}{{ getTotalValue(transaction) | currency:'EUR':'symbol':'1.2-2' }}
+            </p>
+          </div>
+        </div>
+      </li>
+    } @empty {
+      @if (!isAdding()) {
+        <li class="p-8 text-center">
+          <div class="flex flex-col items-center">
+            <svg class="w-16 h-16 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 7.5V6.108c0-1.135.845-2.098 1.976-2.192.353-.026.692-.026 1.038 0 .346.026.685.026 1.038 0 1.13.094 1.976 1.057 1.976 2.192v1.392m-.028 11.178H8.278a2.25 2.25 0 0 1-2.25-2.25v-8.25a2.25 2.25 0 0 1 2.25-2.25h7.5a2.25 2.25 0 0 1 2.25 2.25v8.25a2.25 2.25 0 0 1-2.25 2.25H16.5" />
+            </svg>
+            <h3 class="mt-4 text-xl font-semibold text-gray-900 dark:text-white">No transactions found</h3>
+            <p class="mt-1 text-base text-gray-500 dark:text-gray-400">Your transaction history will appear here.</p>
+          </div>
+        </li>
+      }
+    }
+  </ul>
+</div>
