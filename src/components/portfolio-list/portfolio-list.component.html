@@ -11,7 +11,7 @@
                 {{ item.ticker.substring(0, 1) }}
               </div>
             </div>
-            <div class="min-w-0">
+            <div class="min-w-0 sm:flex sm:items-baseline sm:gap-x-4">
               <p class="text-base font-semibold text-gray-900 dark:text-white truncate">{{ item.ticker }}</p>
               <p class="text-sm text-gray-500 dark:text-gray-400 truncate hidden sm:block">
                 {{ item.totalShares | number:'1.0-4' }} shares @ {{ item.averageSharePrice | currency:'EUR' }}
