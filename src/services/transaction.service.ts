@@ -1,8 +1,7 @@
-import { Injectable, signal, Signal, inject, computed } from '@angular/core';
-import { Transaction } from '../models/transaction.model';
+import { Injectable, inject, computed, Signal } from '@angular/core';
+import { Transaction, NewTransactionData } from '../models/transaction.model';
 import { PortfolioService } from './portfolio.service';
 
-export type NewTransactionData = Omit<Transaction, 'id' | 'ticker' | 'amount'>;
 const API_BASE_URL = 'http://localhost:8000';
 
 @Injectable({
@@ -20,19 +19,31 @@ export class TransactionService {
   public readonly loading = this.portfolioService.loading;
   public readonly error = this.portfolioService.error;
 
-  async addTransaction(transactionData: NewTransactionData): Promise<void> {
+  addTransaction(transactionData: NewTransactionData): void {
      try {
-      // Mocked API call to prevent "Failed to fetch" errors.
-      console.log('Simulating adding transaction:', transactionData);
-      await new Promise(resolve => setTimeout(resolve, 500)); // Simulate network delay
+       /*
+       // --- REAL API CALL (commented out as requested) ---
+       // This is where you would send the new transaction to your backend.
+       const response = await fetch(`${API_BASE_URL}/transactions`, {
+         method: 'POST',
+         headers: { 'Content-Type': 'application/json' },
+         body: JSON.stringify(transactionData),
+       });
 
-      // In a real app, the POST response would contain the new data.
-      // Here, we just reload the mocked (and currently static) portfolio data.
-      await this.portfolioService.reload();
+       if (!response.ok) {
+         throw new Error('Failed to save transaction');
+       }
+       
+       // After a successful save, reload all portfolio data from the backend
+       // to ensure the UI is in sync with the database.
+       await this.portfolioService.reload();
+       */
+
+      // Mocked implementation: directly add to portfolio service state for instant UI feedback.
+      this.portfolioService.addTransaction(transactionData);
 
     } catch (err) {
       console.error('Error adding transaction:', err);
-      // Optionally, expose this error to the UI
       alert('Could not save transaction. Please try again.');
     }
   }

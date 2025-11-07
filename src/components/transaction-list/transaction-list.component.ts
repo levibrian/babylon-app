@@ -1,8 +1,8 @@
 import { Component, ChangeDetectionStrategy, input, output } from '@angular/core';
 import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
-import { Transaction } from '../../models/transaction.model';
+// Fix: Import NewTransactionData from the correct model file.
+import { Transaction, NewTransactionData } from '../../models/transaction.model';
 import { TransactionEditRowComponent } from '../transaction-edit-row/transaction-edit-row.component';
-import { NewTransactionData } from '../../services/transaction.service';
 
 @Component({
   selector: 'app-transaction-list',

@@ -1,7 +1,8 @@
 import { Component, ChangeDetectionStrategy, output, OnInit, OnDestroy, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators, FormGroup } from '@angular/forms';
-import { NewTransactionData } from '../../services/transaction.service';
+// Fix: Import NewTransactionData from the correct model file.
+import { NewTransactionData } from '../../models/transaction.model';
 import { Subscription } from 'rxjs';
 
 @Component({

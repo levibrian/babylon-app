@@ -1,7 +1,7 @@
 import { Component, ChangeDetectionStrategy, inject, Signal, signal } from '@angular/core';
 import { TransactionListComponent } from '../transaction-list/transaction-list.component';
-import { TransactionService, NewTransactionData } from '../../services/transaction.service';
-import { Transaction } from '../../models/transaction.model';
+import { TransactionService } from '../../services/transaction.service';
+import { Transaction, NewTransactionData } from '../../models/transaction.model';
 import { RouterLink } from '@angular/router';
 
 @Component({
@@ -26,8 +26,8 @@ export class TransactionsPageComponent {
     this.isAddingTransaction.set(false);
   }
 
-  async saveTransaction(transactionData: NewTransactionData): Promise<void> {
-    await this.transactionService.addTransaction(transactionData);
+  saveTransaction(transactionData: NewTransactionData): void {
+    this.transactionService.addTransaction(transactionData);
     this.cancelNewTransaction();
   }
 }
