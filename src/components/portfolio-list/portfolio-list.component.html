@@ -3,27 +3,38 @@
     @for (item of portfolio(); track item.ticker) {
       <li class="group">
         <!-- Parent Item -->
-        <div class="cursor-pointer flex items-center justify-between gap-3 p-3 sm:p-4 group-hover:bg-gray-50 transition-colors duration-150" (click)="toggleExpand(item.ticker)">
-          <!-- Left side: Ticker, Shares, Avg Price -->
-          <div class="flex items-center gap-3 min-w-0">
+        <div class="cursor-pointer flex items-start sm:items-center justify-between gap-3 p-3 sm:p-4 group-hover:bg-gray-50 transition-colors duration-150" (click)="toggleExpand(item.ticker)">
+          <!-- Left side: Ticker, Allocation Info -->
+          <div class="flex items-start sm:items-center gap-3 min-w-0 flex-grow">
             <div class="flex-shrink-0">
               <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-base bg-gray-200 text-gray-700">
                 {{ item.ticker.substring(0, 1) }}
               </div>
             </div>
             <div class="min-w-0">
-              <div class="flex items-baseline gap-x-2">
-                <p class="text-base font-semibold text-gray-900 truncate">{{ item.ticker }}</p>
-                <p class="text-sm text-gray-500 truncate hidden sm:block">
-                  {{ item.totalShares | number:'1.0-4' }} shares @ {{ item.averageSharePrice | currency:'EUR' }}
-                </p>
+              <p class="text-base font-semibold text-gray-900 truncate">{{ item.ticker }}</p>
+              <div class="text-sm text-gray-500 mt-1 flex items-center gap-x-2 flex-wrap">
+                  <span>{{ item.totalShares | number:'1.0-4' }} shares @ {{ item.averageSharePrice | currency:'EUR' }}</span>
+                  <span class="text-gray-300">•</span>
+                  <span>{{ item.currentAllocationPercentage | number:'1.1-1' }}% → {{ item.targetAllocationPercentage | number:'1.1-1' }}% Target</span>
+                  
+                  @if (item.allocationDifference > 0.1) {
+                  <span class="font-medium text-red-600">
+                    {{ item.allocationDifference | number:'1.1-1' }}% Overweight Sell ~{{ item.rebalanceAmount | currency:'EUR':'symbol':'1.0-0' }}
+                  </span>
+                  } @else if (item.allocationDifference < -0.1) {
+                  <span class="font-medium text-green-600">
+                    {{ -item.allocationDifference | number:'1.1-1' }}% Underweight Buy ~{{ -item.rebalanceAmount | currency:'EUR':'symbol':'1.0-0' }}
+                  </span>
+                  } @else {
+                  <span class="font-medium text-gray-500">Balanced</span>
+                  }
               </div>
-              <p class="text-sm text-gray-500 truncate">{{ item.companyName }}</p>
             </div>
           </div>
           
           <!-- Right side: Total Cost and Chevron -->
-          <div class="flex items-center gap-2 sm:gap-4">
+          <div class="flex items-center gap-2 sm:gap-4 flex-shrink-0">
             <p class="text-base font-medium text-right w-24 sm:w-28 text-gray-900">
               {{ item.totalCost | currency:'EUR':'symbol':'1.2-2' }}
             </p>

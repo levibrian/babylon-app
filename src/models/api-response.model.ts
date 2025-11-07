@@ -19,6 +19,7 @@ export interface ApiPortfolioPosition {
   // Assuming these will be added to the backend DTO as discussed
   TotalShares: number;
   AverageSharePrice: number;
+  TargetAllocation: number; // e.g., 0.3 for 30%
 }
 
 // C# DTO: PortfolioResponse

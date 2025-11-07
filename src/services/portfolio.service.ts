@@ -13,6 +13,7 @@ const MOCK_PORTFOLIO_DATA: ApiPortfolioResponse = {
       TotalInvested: 4960.00,
       TotalShares: 25,
       AverageSharePrice: 198.40,
+      TargetAllocation: 0.30,
       Transactions: [
         { Id: 't1', TransactionType: 'buy', Date: '2023-01-15T00:00:00Z', SharesQuantity: 10, SharePrice: 150.00, Fees: 5.00, Amount: 1500.00, TotalAmount: 1505.00 },
         { Id: 't2', TransactionType: 'buy', Date: '2023-06-20T00:00:00Z', SharesQuantity: 15, SharePrice: 230.00, Fees: 5.00, Amount: 3450.00, TotalAmount: 3455.00 },
@@ -25,6 +26,7 @@ const MOCK_PORTFOLIO_DATA: ApiPortfolioResponse = {
       TotalInvested: 2635.00,
       TotalShares: 15,
       AverageSharePrice: 175.67,
+      TargetAllocation: 0.40,
       Transactions: [
         { Id: 't4', TransactionType: 'buy', Date: '2023-02-10T00:00:00Z', SharesQuantity: 20, SharePrice: 175.50, Fees: 10.00, Amount: 3510.00, TotalAmount: 3520.00 },
         { Id: 't5', TransactionType: 'sell', Date: '2024-01-05T00:00:00Z', SharesQuantity: 5, SharePrice: 200.00, Fees: 5.00, Amount: 1000.00, TotalAmount: 995.00 },
@@ -36,6 +38,7 @@ const MOCK_PORTFOLIO_DATA: ApiPortfolioResponse = {
         TotalInvested: 8420.00,
         TotalShares: 20,
         AverageSharePrice: 421.00,
+        TargetAllocation: 0.30,
         Transactions: [
             { Id: 't6', TransactionType: 'buy', Date: '2024-03-10T00:00:00Z', SharesQuantity: 20, SharePrice: 420.00, Fees: 20.00, Amount: 8400.00, TotalAmount: 8420.00 }
         ]
@@ -70,24 +73,12 @@ export class PortfolioService {
   private async fetchPortfolio(): Promise<void> {
     try {
       this._error.set(null);
-
-      /*
-      // REAL API CALL (commented out as requested)
-      const response = await fetch(`${API_BASE_URL}/portfolio`);
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-      const data: ApiPortfolioResponse = await response.json();
-      */
-
-      // Mocked API call with realistic data
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate network delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
       const data: ApiPortfolioResponse = MOCK_PORTFOLIO_DATA;
 
       const portfolioItems = this.mapApiDataToPortfolio(data);
-      
-      this._portfolio.set(portfolioItems);
-      this._totalPortfolioValue.set(data.TotalInvested);
+      this._recalculateAndSetPortfolio(portfolioItems);
+
     } catch (err) {
       this._error.set('Could not load portfolio. Please ensure the backend server is running and accessible.');
       console.error(err);
@@ -100,80 +91,95 @@ export class PortfolioService {
     const amount = transactionData.shares * transactionData.sharePrice;
     const newTransaction: Transaction = {
         ...transactionData,
-        id: `txn_${new Date().getTime()}`, // mock unique id
+        id: `txn_${new Date().getTime()}`,
         amount,
         ticker: transactionData.ticker.toUpperCase(),
     };
+    
+    // Create a deep copy to avoid direct mutation of the signal's value
+    const portfolioCopy = JSON.parse(JSON.stringify(this._portfolio()));
+    let position = portfolioCopy.find(p => p.ticker === newTransaction.ticker);
 
-    this._portfolio.update(currentPortfolio => {
-        // Use a deep copy to ensure immutability when updating the signal
-        const portfolioCopy = JSON.parse(JSON.stringify(currentPortfolio)); 
-        let position = portfolioCopy.find(p => p.ticker === newTransaction.ticker);
+    if (position) {
+        position.transactions.push(newTransaction);
+    } else {
+        position = {
+            ticker: newTransaction.ticker,
+            companyName: `${newTransaction.ticker} (New)`,
+            totalShares: 0,
+            totalCost: 0,
+            averageSharePrice: 0,
+            targetAllocationPercentage: 0, // Default target
+            transactions: [newTransaction],
+        };
+        portfolioCopy.push(position);
+    }
 
-        if (position) {
-            position.transactions.push(newTransaction);
-        } else {
-            // Create a new position if it doesn't exist
-            position = {
-                ticker: newTransaction.ticker,
-                companyName: `${newTransaction.ticker} (New)`, // Mock company name
-                totalShares: 0,
-                totalCost: 0,
-                averageSharePrice: 0,
-                transactions: [newTransaction],
-            };
-            portfolioCopy.push(position);
+    // --- Recalculate aggregates for the updated position ---
+    position.transactions.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    const buys = position.transactions.filter(t => t.transactionType === 'buy');
+    const totalBuyShares = buys.reduce((sum, t) => sum + t.shares, 0);
+    const totalBuyCost = buys.reduce((sum, t) => sum + t.amount + t.fees, 0);
+    const averageBuyPrice = totalBuyShares > 0 ? totalBuyCost / totalBuyShares : 0;
+    
+    let finalShares = 0;
+    let finalCost = 0;
+    position.transactions.forEach(t => {
+        if (t.transactionType === 'buy') {
+            finalShares += t.shares;
+            finalCost += t.amount + t.fees;
+        } else if (t.transactionType === 'sell') {
+            finalShares -= t.shares;
+            finalCost -= t.shares * averageBuyPrice;
         }
-
-        // --- Recalculate position aggregates using average cost basis method ---
-        position.transactions.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-
-        const buys = position.transactions.filter(t => t.transactionType === 'buy');
-        const totalBuyShares = buys.reduce((sum, t) => sum + t.shares, 0);
-        const totalBuyCost = buys.reduce((sum, t) => sum + t.amount + t.fees, 0);
-        const averageBuyPrice = totalBuyShares > 0 ? totalBuyCost / totalBuyShares : 0;
-        
-        let finalShares = 0;
-        let finalCost = 0;
-        position.transactions.forEach(t => {
-            if (t.transactionType === 'buy') {
-                finalShares += t.shares;
-                finalCost += t.amount + t.fees;
-            } else if (t.transactionType === 'sell') {
-                finalShares -= t.shares;
-                finalCost -= t.shares * averageBuyPrice; // Reduce cost basis
-            }
-        });
-
-        position.totalShares = finalShares > 0 ? finalShares : 0;
-        position.totalCost = finalCost > 0 ? finalCost : 0;
-        position.averageSharePrice = position.totalShares > 0 ? position.totalCost / position.totalShares : 0;
-        
-        // --- Recalculate total portfolio value ---
-        const newTotalValue = portfolioCopy.reduce((sum, p) => sum + p.totalCost, 0);
-        this._totalPortfolioValue.set(newTotalValue);
-
-        return portfolioCopy;
     });
+
+    position.totalShares = finalShares > 0 ? finalShares : 0;
+    position.totalCost = finalCost > 0 ? finalCost : 0;
+    position.averageSharePrice = position.totalShares > 0 ? position.totalCost / position.totalShares : 0;
+    
+    // --- Recalculate allocations for the entire portfolio and update the signal ---
+    this._recalculateAndSetPortfolio(portfolioCopy);
   }
 
-  private mapApiDataToPortfolio(data: ApiPortfolioResponse): PortfolioItem[] {
+  // FIX: Widen parameter type to accept portfolio items before allocation calculation.
+  private _recalculateAndSetPortfolio(items: Omit<PortfolioItem, 'currentAllocationPercentage' | 'allocationDifference' | 'rebalanceAmount'>[]): void {
+    const totalValue = items.reduce((sum, p) => sum + p.totalCost, 0);
+    this._totalPortfolioValue.set(totalValue);
+
+    const calculatedPortfolio = items.map(p => {
+        const currentAllocationPercentage = totalValue > 0 ? (p.totalCost / totalValue) * 100 : 0;
+        const allocationDifference = currentAllocationPercentage - p.targetAllocationPercentage;
+        const rebalanceAmount = (allocationDifference / 100) * totalValue;
+
+        return {
+            ...p,
+            currentAllocationPercentage,
+            allocationDifference,
+            rebalanceAmount
+        };
+    });
+    this._portfolio.set(calculatedPortfolio);
+  }
+
+  private mapApiDataToPortfolio(data: ApiPortfolioResponse): Omit<PortfolioItem, 'currentAllocationPercentage' | 'allocationDifference' | 'rebalanceAmount'>[] {
     return data.Positions.map(position => ({
       ticker: position.Ticker,
       companyName: position.CompanyName,
       totalCost: position.TotalInvested,
       totalShares: position.TotalShares,
       averageSharePrice: position.AverageSharePrice,
+      targetAllocationPercentage: position.TargetAllocation * 100, // Convert 0.3 to 30
       transactions: position.Transactions.map(t => ({
         id: t.Id,
-        ticker: position.Ticker, // Add ticker to each transaction
+        ticker: position.Ticker,
         date: t.Date,
         transactionType: t.TransactionType,
         shares: t.SharesQuantity,
         sharePrice: t.SharePrice,
         fees: t.Fees,
         amount: t.Amount,
-      })).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()), // Sort oldest to newest for detail view
+      })).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()),
     }));
   }
 }
