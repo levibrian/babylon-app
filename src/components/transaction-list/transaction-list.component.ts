@@ -31,7 +31,7 @@ export class TransactionListComponent {
   }
 
   getTotalValue(transaction: Transaction): number {
-    return transaction.shares * transaction.sharePrice;
+    return transaction.amount;
   }
 
   getValuePrefix(type: Transaction['transactionType']): string {

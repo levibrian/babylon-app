@@ -13,6 +13,9 @@ import { RouterLink } from '@angular/router';
 export class TransactionsPageComponent {
   private transactionService = inject(TransactionService);
   transactions: Signal<Transaction[]> = this.transactionService.transactions;
+  isLoading: Signal<boolean> = this.transactionService.loading;
+  error: Signal<string | null> = this.transactionService.error;
+  
   isAddingTransaction = signal(false);
 
   showNewTransactionRow(): void {
@@ -23,8 +26,8 @@ export class TransactionsPageComponent {
     this.isAddingTransaction.set(false);
   }
 
-  saveTransaction(transactionData: NewTransactionData): void {
-    this.transactionService.addTransaction(transactionData);
+  async saveTransaction(transactionData: NewTransactionData): Promise<void> {
+    await this.transactionService.addTransaction(transactionData);
     this.cancelNewTransaction();
   }
 }

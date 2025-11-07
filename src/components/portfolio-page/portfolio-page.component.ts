@@ -15,4 +15,6 @@ export class PortfolioPageComponent {
   private portfolioService = inject(PortfolioService);
   portfolio: Signal<PortfolioItem[]> = this.portfolioService.portfolio;
   totalValue: Signal<number> = this.portfolioService.totalPortfolioValue;
+  isLoading: Signal<boolean> = this.portfolioService.loading;
+  error: Signal<string | null> = this.portfolioService.error;
 }

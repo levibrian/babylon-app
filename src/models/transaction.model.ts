@@ -6,5 +6,5 @@ export interface Transaction {
   shares: number;
   sharePrice: number;
   fees: number;
-  notes?: string;
+  amount: number;
 }

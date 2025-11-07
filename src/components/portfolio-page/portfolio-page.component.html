@@ -11,16 +11,27 @@
       </div>
     </header>
 
-    <!-- Total Value Section -->
-    @if (portfolio().length > 0) {
-      <div class="mb-6">
-        <h2 class="text-sm font-medium text-gray-500">Total Portfolio Value</h2>
-        <p class="mt-1 text-3xl font-semibold tracking-tight text-gray-900">
-          {{ totalValue() | currency:'EUR':'symbol':'1.2-2' }}
-        </p>
+    @if (isLoading()) {
+      <div class="text-center py-10">
+        <p class="text-gray-500">Loading portfolio...</p>
       </div>
-    }
+    } @else if (error()) {
+      <div class="bg-red-50 border-l-4 border-red-400 p-4" role="alert">
+        <p class="font-bold text-red-800">Error</p>
+        <p class="text-red-700">{{ error() }}</p>
+      </div>
+    } @else {
+      <!-- Total Value Section -->
+      @if (portfolio().length > 0) {
+        <div class="mb-6">
+          <h2 class="text-sm font-medium text-gray-500">Total Portfolio Value</h2>
+          <p class="mt-1 text-3xl font-semibold tracking-tight text-gray-900">
+            {{ totalValue() | currency:'EUR':'symbol':'1.2-2' }}
+          </p>
+        </div>
+      }
 
-    <app-portfolio-list [portfolio]="portfolio()"></app-portfolio-list>
+      <app-portfolio-list [portfolio]="portfolio()"></app-portfolio-list>
+    }
   </div>
 </main>
