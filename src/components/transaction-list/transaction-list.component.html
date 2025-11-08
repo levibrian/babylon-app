@@ -4,47 +4,67 @@
       <app-transaction-edit-row (save)="save.emit($event)" (cancel)="cancel.emit()"></app-transaction-edit-row>
     }
     @for (transaction of transactions(); track transaction.id) {
-      <li class="p-3 sm:p-4 hover:bg-gray-50 transition-colors duration-150">
-        <div class="flex items-center justify-between gap-3">
-          <!-- Left side: Ticker and Date -->
-          <div class="flex items-center gap-3 min-w-0">
-            <div class="flex-shrink-0">
-              <div [class]="'w-10 h-10 rounded-full flex items-center justify-center font-bold text-base ' + getTransactionTypePillClass(transaction.transactionType)">
-                {{ transaction.ticker.substring(0, 1) }}
+      @if (isEditing(transaction.id)) {
+        <app-transaction-edit-row 
+          [initialState]="transaction"
+          (save)="handleUpdate($event)" 
+          (cancel)="cancelEdit()">
+        </app-transaction-edit-row>
+      } @else {
+        <li class="group p-3 sm:p-4 hover:bg-gray-50 transition-colors duration-150">
+          <div class="flex items-center justify-between gap-3">
+            <!-- Left side: Ticker and Date -->
+            <div class="flex items-center gap-3 min-w-0">
+              <div class="flex-shrink-0">
+                <div [class]="'w-10 h-10 rounded-full flex items-center justify-center font-bold text-base ' + getTransactionTypePillClass(transaction.transactionType)">
+                  {{ transaction.ticker.substring(0, 1) }}
+                </div>
+              </div>
+              <div class="min-w-0">
+                <div class="flex items-baseline gap-x-2">
+                  <p class="text-base font-semibold text-gray-900 truncate">{{ transaction.ticker }}</p>
+                  <p class="text-sm text-gray-500">{{ transaction.date | date:'mediumDate' }}</p>
+                </div>
               </div>
             </div>
-            <div class="min-w-0">
-              <div class="flex items-baseline gap-x-2">
-                <p class="text-base font-semibold text-gray-900 truncate">{{ transaction.ticker }}</p>
-                <p class="text-sm text-gray-500">{{ transaction.date | date:'mediumDate' }}</p>
+            
+            <!-- Right side: Details and Amount -->
+            <div class="flex items-center gap-2 sm:gap-4">
+              <!-- Share Details - hidden on small screens -->
+              <div class="hidden sm:block text-sm text-right text-gray-500">
+                @if (transaction.transactionType !== 'dividend') {
+                  <span>{{ transaction.shares }} @ {{ transaction.sharePrice | currency:'EUR' }}</span>
+                }
+              </div>
+
+              <!-- Pill -->
+              <span [class]="'px-2 py-0.5 inline-flex text-xs leading-5 font-semibold rounded-full ' + getTransactionTypePillClass(transaction.transactionType)">
+                  {{ transaction.transactionType }}
+              </span>
+
+              <!-- Total Amount -->
+              <p class="text-base font-medium text-right w-24 sm:w-28" [class]="{
+                'text-red-600': transaction.transactionType === 'buy',
+                'text-green-600': transaction.transactionType === 'sell' || transaction.transactionType === 'dividend'
+              }">
+                {{ getValuePrefix(transaction.transactionType) }}{{ getTotalValue(transaction) | currency:'EUR':'symbol':'1.2-2' }}
+              </p>
+
+              <!-- Action Buttons - visible on group-hover -->
+              <div class="flex-shrink-0 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                <button (click)="startEdit(transaction)" class="p-2 text-gray-500 hover:bg-gray-200 rounded-full transition-colors">
+                  <span class="sr-only">Edit</span>
+                  <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" /></svg>
+                </button>
+                <button (click)="handleDelete(transaction)" class="p-2 text-gray-500 hover:bg-red-100 hover:text-red-600 rounded-full transition-colors">
+                  <span class="sr-only">Delete</span>
+                  <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" clip-rule="evenodd" /></svg>
+                </button>
               </div>
             </div>
           </div>
-          
-          <!-- Right side: Details and Amount -->
-          <div class="flex items-center gap-2 sm:gap-4">
-            <!-- Share Details - hidden on small screens -->
-            <div class="hidden sm:block text-sm text-right text-gray-500">
-              @if (transaction.transactionType !== 'dividend') {
-                <span>{{ transaction.shares }} @ {{ transaction.sharePrice | currency:'EUR' }}</span>
-              }
-            </div>
-
-            <!-- Pill -->
-            <span [class]="'px-2 py-0.5 inline-flex text-xs leading-5 font-semibold rounded-full ' + getTransactionTypePillClass(transaction.transactionType)">
-                {{ transaction.transactionType }}
-            </span>
-
-            <!-- Total Amount -->
-            <p class="text-base font-medium text-right w-24 sm:w-28" [class]="{
-              'text-red-600': transaction.transactionType === 'buy',
-              'text-green-600': transaction.transactionType === 'sell' || transaction.transactionType === 'dividend'
-            }">
-              {{ getValuePrefix(transaction.transactionType) }}{{ getTotalValue(transaction) | currency:'EUR':'symbol':'1.2-2' }}
-            </p>
-          </div>
-        </div>
-      </li>
+        </li>
+      }
     } @empty {
       @if (!isAdding()) {
         <li class="p-8 text-center">

@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, input, output } from '@angular/core';
+import { Component, ChangeDetectionStrategy, input, output, signal } from '@angular/core';
 import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
 // Fix: Import NewTransactionData from the correct model file.
 import { Transaction, NewTransactionData } from '../../models/transaction.model';
@@ -16,6 +16,33 @@ export class TransactionListComponent {
 
   save = output<NewTransactionData>();
   cancel = output<void>();
+  update = output<Transaction>();
+  delete = output<Transaction>();
+  
+  editingTransactionId = signal<string | null>(null);
+
+  isEditing(transactionId: string): boolean {
+    return this.editingTransactionId() === transactionId;
+  }
+
+  startEdit(transaction: Transaction): void {
+    this.editingTransactionId.set(transaction.id);
+  }
+
+  cancelEdit(): void {
+    this.editingTransactionId.set(null);
+  }
+
+  handleUpdate(transaction: Transaction): void {
+    this.update.emit(transaction);
+    this.editingTransactionId.set(null);
+  }
+
+  handleDelete(transaction: Transaction): void {
+    if (window.confirm(`Are you sure you want to delete the transaction for ${transaction.ticker} on ${new Date(transaction.date).toLocaleDateString()}?`)) {
+        this.delete.emit(transaction);
+    }
+  }
 
   getTransactionTypePillClass(type: Transaction['transactionType']): string {
     switch (type) {

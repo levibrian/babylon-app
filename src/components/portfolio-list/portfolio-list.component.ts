@@ -1,18 +1,23 @@
-import { Component, ChangeDetectionStrategy, input, signal } from '@angular/core';
+import { Component, ChangeDetectionStrategy, input, output, signal } from '@angular/core';
 import { CommonModule, CurrencyPipe, DecimalPipe, TitleCasePipe } from '@angular/common';
 import { PortfolioItem } from '../../models/portfolio.model';
 import { Transaction } from '../../models/transaction.model';
+import { TransactionEditRowComponent } from '../transaction-edit-row/transaction-edit-row.component';
 
 @Component({
   selector: 'app-portfolio-list',
   templateUrl: './portfolio-list.component.html',
-  imports: [CommonModule, CurrencyPipe, DecimalPipe, TitleCasePipe],
+  imports: [CommonModule, CurrencyPipe, DecimalPipe, TitleCasePipe, TransactionEditRowComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PortfolioListComponent {
   portfolio = input.required<PortfolioItem[]>();
   
   private expandedTickers = signal(new Set<string>());
+  editingTransactionId = signal<string | null>(null);
+
+  update = output<Transaction>();
+  delete = output<Transaction>();
 
   isExpanded(ticker: string): boolean {
     return this.expandedTickers().has(ticker);
@@ -20,6 +25,9 @@ export class PortfolioListComponent {
 
   toggleExpand(ticker: string): void {
     this.expandedTickers.update(tickers => {
+      // Do not toggle expand when clicking edit/delete on a child
+      if (this.editingTransactionId()) return tickers;
+
       const newTickers = new Set(tickers);
       if (newTickers.has(ticker)) {
         newTickers.delete(ticker);
@@ -28,6 +36,29 @@ export class PortfolioListComponent {
       }
       return newTickers;
     });
+  }
+  
+  isEditing(transactionId: string): boolean {
+    return this.editingTransactionId() === transactionId;
+  }
+
+  startEdit(transaction: Transaction): void {
+    this.editingTransactionId.set(transaction.id);
+  }
+
+  cancelEdit(): void {
+    this.editingTransactionId.set(null);
+  }
+
+  handleUpdate(transaction: Transaction): void {
+    this.update.emit(transaction);
+    this.editingTransactionId.set(null);
+  }
+
+  handleDelete(transaction: Transaction): void {
+    if (window.confirm(`Are you sure you want to delete the transaction for ${transaction.ticker} on ${new Date(transaction.date).toLocaleDateString()}?`)) {
+        this.delete.emit(transaction);
+    }
   }
 
   getTransactionTypePillClass(type: Transaction['transactionType']): string {

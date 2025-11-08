@@ -1,75 +1,57 @@
 <li class="p-3 sm:p-4 bg-gray-50">
-  <form [formGroup]="transactionForm" (ngSubmit)="onSubmit()" class="space-y-4">
-    <div class="flex items-start justify-between flex-wrap gap-3">
-      <!-- Left Side: Ticker, Date, Type -->
-      <div class="flex items-center gap-3 flex-grow min-w-[200px]">
-        <div class="flex-shrink-0">
-          <div class="w-10 h-10 rounded-full flex items-center justify-center bg-gray-200">
-            <svg class="w-6 h-6 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-            </svg>
-          </div>
-        </div>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-4 flex-grow pt-2">
-          <!-- Ticker -->
-          <div class="relative">
-            <label for="ticker" class="absolute -top-2 left-2 inline-block bg-gray-50 px-1 text-xs font-medium text-gray-500">Ticker</label>
-            <input id="ticker" type="text" formControlName="ticker" placeholder="e.g. AAPL" class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 uppercase placeholder:normal-case placeholder:text-gray-400" required>
-          </div>
-          
-          <!-- Date -->
-          <div class="relative">
-            <label for="date" class="absolute -top-2 left-2 inline-block bg-gray-50 px-1 text-xs font-medium text-gray-500">Date</label>
-            <input id="date" type="date" formControlName="date" class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2" required>
-          </div>
-          
-          <div class="md:col-span-2 flex gap-4 items-center">
-            <div class="flex items-center">
-              <input id="buy-radio" type="radio" value="buy" formControlName="transactionType" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 focus:ring-2">
-              <label for="buy-radio" class="ms-2 text-sm font-medium text-gray-900">Buy</label>
-            </div>
-            <div class="flex items-center">
-              <input id="sell-radio" type="radio" value="sell" formControlName="transactionType" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 focus:ring-2">
-              <label for="sell-radio" class="ms-2 text-sm font-medium text-gray-900">Sell</label>
-            </div>
-          </div>
+  <form [formGroup]="transactionForm" (ngSubmit)="onSubmit()">
+    <div class="flex flex-col gap-y-4">
+      
+      <!-- Row 1: Transaction Type -->
+      <div class="flex items-center gap-x-4">
+        <!-- Segmented Control for Transaction Type -->
+        <div class="inline-flex rounded-md shadow-sm" role="group">
+          <button 
+            type="button" 
+            (click)="setTransactionType('buy')"
+            [class]="transactionForm.get('transactionType')?.value === 'buy' ? 'bg-gray-900 text-white ring-1 ring-gray-900' : 'bg-white text-gray-700 hover:bg-gray-50 ring-1 ring-inset ring-gray-300'"
+            class="px-4 py-2 text-sm font-medium rounded-l-lg focus:z-10 focus:ring-2 focus:ring-gray-800 transition-colors duration-150">
+            Buy
+          </button>
+          <button 
+            type="button" 
+            (click)="setTransactionType('sell')"
+            [class]="transactionForm.get('transactionType')?.value === 'sell' ? 'bg-gray-900 text-white ring-1 ring-gray-900' : 'bg-white text-gray-700 hover:bg-gray-50 ring-1 ring-inset ring-gray-300'"
+            class="-ml-px px-4 py-2 text-sm font-medium rounded-r-md focus:z-10 focus:ring-2 focus:ring-gray-800 transition-colors duration-150">
+            Sell
+          </button>
         </div>
       </div>
-
-      <!-- Right Side: Inputs and Actions -->
-      <div class="flex items-center gap-2 flex-wrap justify-end flex-grow pt-2">
-         <!-- Shares -->
-         <div class="relative">
-            <label for="shares" class="absolute -top-2 left-2 inline-block bg-gray-50 px-1 text-xs font-medium text-gray-500">Shares</label>
-            <input id="shares" type="number" formControlName="shares" placeholder="0" class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-24 p-2" required>
+      
+      <!-- Row 2: Inputs & Actions -->
+      <div class="flex items-end flex-wrap gap-x-3 gap-y-4 w-full border-t border-gray-200 pt-4">
+        <!-- Ticker -->
+        <div class="flex-grow sm:flex-grow-0 sm:w-28">
+          <input id="ticker" type="text" formControlName="ticker" placeholder="e.g. BTC, TSLA..." aria-label="Ticker" class="block w-full bg-transparent border-0 border-b border-gray-300 focus:ring-0 focus:border-blue-500 text-gray-900 text-sm p-2 uppercase placeholder:normal-case placeholder:text-gray-400" required>
         </div>
-
+        <!-- Date -->
+        <div class="flex-grow sm:flex-grow-0 sm:w-40">
+          <input id="date" type="date" formControlName="date" aria-label="Transaction Date" class="block w-full bg-transparent border-0 border-b border-gray-300 focus:ring-0 focus:border-blue-500 text-gray-900 text-sm p-2" required>
+        </div>
+        <!-- Shares -->
+        <div class="flex-grow sm:flex-grow-0 sm:w-24">
+          <input id="shares" type="number" formControlName="shares" placeholder="Shares" aria-label="Shares" class="block w-full bg-transparent border-0 border-b border-gray-300 focus:ring-0 focus:border-blue-500 text-gray-900 text-sm p-2" required>
+        </div>
         <!-- Price/Share -->
-        <div class="relative">
-            <label for="sharePrice" class="absolute -top-2 left-2 inline-block bg-gray-50 px-1 text-xs font-medium text-gray-500">Price/Share</label>
-            <input id="sharePrice" type="number" formControlName="sharePrice" placeholder="0.00" step="0.01" class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-28 p-2" required>
+        <div class="flex-grow sm:flex-grow-0 sm:w-28">
+          <input id="sharePrice" type="number" formControlName="sharePrice" placeholder="Price/Share" aria-label="Price per Share" step="0.01" class="block w-full bg-transparent border-0 border-b border-gray-300 focus:ring-0 focus:border-blue-500 text-gray-900 text-sm p-2" required>
         </div>
-        
-         <!-- Readonly Amount -->
-         <div class="relative">
-            <label for="amount" class="absolute -top-2 left-2 inline-block bg-gray-50 px-1 text-xs font-medium text-gray-500">Amount</label>
-            <input id="amount" type="text" [value]="amount() | currency:'EUR':'symbol':'1.2-2'" readonly class="bg-gray-200 border border-gray-300 text-gray-700 text-sm rounded-lg block w-32 p-2 cursor-not-allowed">
-          </div>
-
         <!-- Fees -->
-        <div class="relative">
-            <label for="fees" class="absolute -top-2 left-2 inline-block bg-gray-50 px-1 text-xs font-medium text-gray-500">Fees</label>
-            <input id="fees" type="number" formControlName="fees" placeholder="0.00" step="0.01" class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-20 p-2">
+        <div class="flex-grow sm:flex-grow-0 sm:w-20">
+          <input id="fees" type="number" formControlName="fees" placeholder="Fees" aria-label="Fees" step="0.01" class="block w-full bg-transparent border-0 border-b border-gray-300 focus:ring-0 focus:border-blue-500 text-gray-900 text-sm p-2">
         </div>
-        
-          <!-- Readonly Total -->
-          <div class="relative">
-              <label for="totalAmount" class="absolute -top-2 left-2 inline-block bg-gray-50 px-1 text-xs font-medium text-gray-500">Total</label>
-            <input id="totalAmount" type="text" [value]="totalAmount() | currency:'EUR':'symbol':'1.2-2'" readonly class="bg-gray-200 border border-gray-300 text-gray-700 text-sm rounded-lg block w-32 p-2 cursor-not-allowed">
-          </div>
+        <!-- Readonly Total -->
+        <div class="flex-grow sm:flex-grow-0 sm:w-32">
+          <input id="totalAmount" type="text" [value]="totalAmount() | currency:'EUR':'symbol':'1.2-2'" readonly placeholder="Total" aria-label="Total Amount" class="block w-full bg-transparent border-0 border-b border-gray-200 text-gray-700 text-sm p-2 cursor-not-allowed">
+        </div>
 
         <!-- Action Buttons -->
-        <div class="flex items-center gap-2 pl-2">
+        <div class="flex items-center gap-2 ml-auto">
             <button type="submit" [disabled]="transactionForm.invalid" class="p-2 text-green-600 hover:bg-green-100 rounded-full transition-colors duration-150 disabled:text-gray-400 disabled:hover:bg-transparent">
               <span class="sr-only">Save</span>
               <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">

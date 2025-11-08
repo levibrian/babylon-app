@@ -31,7 +31,11 @@
         </div>
       }
 
-      <app-portfolio-list [portfolio]="portfolio()"></app-portfolio-list>
+      <app-portfolio-list 
+        [portfolio]="portfolio()"
+        (update)="updateTransaction($event)"
+        (delete)="deleteTransaction($event)">
+      </app-portfolio-list>
     }
   </div>
 </main>

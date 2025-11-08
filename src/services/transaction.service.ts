@@ -47,4 +47,22 @@ export class TransactionService {
       alert('Could not save transaction. Please try again.');
     }
   }
+
+  updateTransaction(transaction: Transaction): void {
+    try {
+      this.portfolioService.updateTransaction(transaction);
+    } catch (err) {
+      console.error('Error updating transaction:', err);
+      alert('Could not update transaction. Please try again.');
+    }
+  }
+
+  deleteTransaction(transactionId: string, ticker: string): void {
+    try {
+      this.portfolioService.deleteTransaction(transactionId, ticker);
+    } catch (err) {
+      console.error('Error deleting transaction:', err);
+      alert('Could not delete transaction. Please try again.');
+    }
+  }
 }

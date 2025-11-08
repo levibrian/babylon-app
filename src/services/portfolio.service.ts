@@ -96,7 +96,6 @@ export class PortfolioService {
         ticker: transactionData.ticker.toUpperCase(),
     };
     
-    // Create a deep copy to avoid direct mutation of the signal's value
     const portfolioCopy = JSON.parse(JSON.stringify(this._portfolio()));
     let position = portfolioCopy.find(p => p.ticker === newTransaction.ticker);
 
@@ -114,8 +113,56 @@ export class PortfolioService {
         };
         portfolioCopy.push(position);
     }
+    
+    this._recalculatePositionAggregates(position);
+    this._recalculateAndSetPortfolio(portfolioCopy);
+  }
 
-    // --- Recalculate aggregates for the updated position ---
+  public updateTransaction(updatedTx: Transaction): void {
+    const portfolioCopy = JSON.parse(JSON.stringify(this._portfolio()));
+    const position = portfolioCopy.find(p => p.ticker === updatedTx.ticker);
+
+    if (!position) {
+      console.error('Position not found for transaction update:', updatedTx);
+      return;
+    }
+
+    const txIndex = position.transactions.findIndex(t => t.id === updatedTx.id);
+    if (txIndex === -1) {
+      console.error('Transaction not found for update:', updatedTx);
+      return;
+    }
+
+    // Recalculate amount before updating
+    const amount = updatedTx.shares * updatedTx.sharePrice;
+    const finalUpdatedTx: Transaction = { ...updatedTx, amount };
+    position.transactions[txIndex] = finalUpdatedTx;
+    
+    this._recalculatePositionAggregates(position);
+    this._recalculateAndSetPortfolio(portfolioCopy);
+  }
+
+  public deleteTransaction(transactionId: string, ticker: string): void {
+    const portfolioCopy = JSON.parse(JSON.stringify(this._portfolio()));
+    let position = portfolioCopy.find(p => p.ticker === ticker);
+
+    if (!position) {
+      console.error('Position not found for transaction deletion:', ticker);
+      return;
+    }
+
+    position.transactions = position.transactions.filter(t => t.id !== transactionId);
+
+    if (position.transactions.length === 0) {
+      const portfolioWithoutPosition = portfolioCopy.filter(p => p.ticker !== ticker);
+      this._recalculateAndSetPortfolio(portfolioWithoutPosition);
+    } else {
+      this._recalculatePositionAggregates(position);
+      this._recalculateAndSetPortfolio(portfolioCopy);
+    }
+  }
+
+  private _recalculatePositionAggregates(position: PortfolioItem): void {
     position.transactions.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
     const buys = position.transactions.filter(t => t.transactionType === 'buy');
     const totalBuyShares = buys.reduce((sum, t) => sum + t.shares, 0);
@@ -130,19 +177,17 @@ export class PortfolioService {
             finalCost += t.amount + t.fees;
         } else if (t.transactionType === 'sell') {
             finalShares -= t.shares;
+            // When selling, reduce total cost by the original average cost of the shares sold
             finalCost -= t.shares * averageBuyPrice;
         }
+        // Dividends don't affect share count or cost basis in this model
     });
 
     position.totalShares = finalShares > 0 ? finalShares : 0;
     position.totalCost = finalCost > 0 ? finalCost : 0;
     position.averageSharePrice = position.totalShares > 0 ? position.totalCost / position.totalShares : 0;
-    
-    // --- Recalculate allocations for the entire portfolio and update the signal ---
-    this._recalculateAndSetPortfolio(portfolioCopy);
   }
 
-  // FIX: Widen parameter type to accept portfolio items before allocation calculation.
   private _recalculateAndSetPortfolio(items: Omit<PortfolioItem, 'currentAllocationPercentage' | 'allocationDifference' | 'rebalanceAmount'>[]): void {
     const totalValue = items.reduce((sum, p) => sum + p.totalCost, 0);
     this._totalPortfolioValue.set(totalValue);
