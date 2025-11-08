@@ -45,7 +45,9 @@
         </div>
 
         <!-- Child items (Transactions) -->
-        @if (isExpanded(item.ticker)) {
+        <div class="overflow-hidden transition-all duration-500 ease-in-out" 
+             [class.max-h-0]="!isExpanded(item.ticker)" 
+             [class.max-h-[1000px]]="isExpanded(item.ticker)">
           <ul class="pl-5 sm:pl-8 bg-gray-50">
             @for (transaction of item.transactions; track transaction.id) {
               <li class="border-t border-gray-200">
@@ -79,7 +81,7 @@
               </li>
             }
           </ul>
-        }
+        </div>
       </li>
     } @empty {
       <li class="p-8 text-center">
