@@ -1,8 +1,8 @@
-import { Component, ChangeDetectionStrategy, inject, Signal } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, Signal, signal, OnDestroy, effect } from '@angular/core';
 import { PortfolioListComponent } from '../portfolio-list/portfolio-list.component';
 import { PortfolioService } from '../../services/portfolio.service';
 import { TransactionService } from '../../services/transaction.service';
-import { PortfolioItem } from '../../models/portfolio.model';
+import { PortfolioItem, PortfolioInsight } from '../../models/portfolio.model';
 import { Transaction } from '../../models/transaction.model';
 import { RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
@@ -13,7 +13,7 @@ import { CommonModule } from '@angular/common';
   imports: [PortfolioListComponent, RouterLink, CommonModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class PortfolioPageComponent {
+export class PortfolioPageComponent implements OnDestroy {
   private portfolioService = inject(PortfolioService);
   private transactionService = inject(TransactionService);
   
@@ -21,6 +21,64 @@ export class PortfolioPageComponent {
   totalValue: Signal<number> = this.portfolioService.totalPortfolioValue;
   isLoading: Signal<boolean> = this.portfolioService.loading;
   error: Signal<string | null> = this.portfolioService.error;
+
+  dailyGainLoss: Signal<number> = this.portfolioService.dailyGainLoss;
+  dailyGainLossPercentage: Signal<number> = this.portfolioService.dailyGainLossPercentage;
+  insights: Signal<PortfolioInsight[]> = this.portfolioService.insights;
+
+  currentInsightIndex = signal(0);
+  private insightTimeout: any;
+
+  constructor() {
+    effect(() => {
+      // This effect runs whenever the insights signal changes.
+      // It resets the carousel to the first slide and restarts the auto-play timer.
+      this.currentInsightIndex.set(0);
+      this.stopAndRestartCarousel();
+    });
+  }
+  
+  ngOnDestroy(): void {
+    this.stopInsightCarousel();
+  }
+
+  private stopAndRestartCarousel(): void {
+    this.stopInsightCarousel();
+    if (this.insights().length > 1) {
+      this.scheduleNextInsight();
+    }
+  }
+
+  private scheduleNextInsight(): void {
+    this.insightTimeout = setTimeout(() => {
+      this.currentInsightIndex.update(i => (i + 1) % (this.insights().length || 1));
+      this.scheduleNextInsight(); // Loop
+    }, 5000);
+  }
+
+  private stopInsightCarousel(): void {
+    if (this.insightTimeout) {
+      clearTimeout(this.insightTimeout);
+      this.insightTimeout = undefined;
+    }
+  }
+
+  setCurrentInsight(index: number): void {
+    this.currentInsightIndex.set(index);
+    this.stopAndRestartCarousel(); // Reset timer on manual navigation
+  }
+
+  getInsightSeverityClass(severity: PortfolioInsight['severity']): string {
+    switch (severity) {
+      case 'warning':
+        return 'text-red-600';
+      case 'positive':
+        return 'text-green-600';
+      case 'info':
+      default:
+        return 'text-gray-600';
+    }
+  }
 
   updateTransaction(transaction: Transaction): void {
     this.transactionService.updateTransaction(transaction);

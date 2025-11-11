@@ -1,5 +1,10 @@
 import { Transaction } from './transaction.model';
 
+export interface PortfolioInsight {
+  message: string;
+  severity: 'warning' | 'info' | 'positive';
+}
+
 export interface PortfolioItem {
   ticker: string;
   companyName: string;

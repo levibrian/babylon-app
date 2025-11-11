@@ -21,13 +21,42 @@
         <p class="text-red-700">{{ error() }}</p>
       </div>
     } @else {
-      <!-- Total Value Section -->
+      <!-- Total Value & Insights Section -->
       @if (portfolio().length > 0) {
-        <div class="mb-6">
+        <div class="mb-8 p-6 bg-white rounded-lg shadow-sm">
           <h2 class="text-sm font-medium text-gray-500">Total Portfolio Value</h2>
-          <p class="mt-1 text-3xl font-semibold tracking-tight text-gray-900">
-            {{ totalValue() | currency:'EUR':'symbol':'1.2-2' }}
-          </p>
+          <div class="mt-1 flex items-baseline gap-x-3 flex-wrap">
+            <p class="text-3xl sm:text-4xl font-bold tracking-tight text-gray-900">
+              {{ totalValue() | currency:'EUR':'symbol':'1.2-2' }}
+            </p>
+            @if (dailyGainLoss() !== 0) {
+              <p class="text-lg font-medium" [class]="dailyGainLoss() >= 0 ? 'text-green-600' : 'text-red-600'">
+                {{ dailyGainLoss() > 0 ? '+' : '' }}{{ dailyGainLoss() | currency:'EUR':'symbol':'1.2-2' }} ({{ dailyGainLossPercentage() | percent:'1.2-2' }})
+              </p>
+            }
+          </div>
+
+          <!-- Insights Carousel -->
+          @if (insights().length > 0) {
+            <div class="mt-4 min-h-[60px] flex flex-col justify-center items-center">
+              @for (insight of insights(); track insight.message; let i = $index) {
+                @if (i === currentInsightIndex()) {
+                  <p class="text-center text-sm font-medium" [class]="getInsightSeverityClass(insight.severity)">
+                    {{ insight.message }}
+                  </p>
+                }
+              }
+
+              @if (insights().length > 1) {
+                <div class="flex justify-center gap-x-2 mt-3">
+                  @for (insight of insights(); track $index; let i = $index) {
+                    <button (click)="setCurrentInsight(i)" [attr.aria-label]="'Go to insight ' + (i + 1)" class="w-2 h-2 rounded-full transition-colors" [class]="i === currentInsightIndex() ? 'bg-gray-800' : 'bg-gray-300 hover:bg-gray-400'">
+                    </button>
+                  }
+                </div>
+              }
+            </div>
+          }
         </div>
       }
 

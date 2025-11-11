@@ -22,8 +22,17 @@ export interface ApiPortfolioPosition {
   TargetAllocation: number; // e.g., 0.3 for 30%
 }
 
+// C# DTO: PortfolioInsightDto
+export interface ApiPortfolioInsight {
+    Message: string;
+    Severity: 'warning' | 'info' | 'positive';
+}
+
 // C# DTO: PortfolioResponse
 export interface ApiPortfolioResponse {
   Positions: ApiPortfolioPosition[];
   TotalInvested: number;
+  DailyGainLoss?: number;
+  DailyGainLossPercentage?: number;
+  Insights?: ApiPortfolioInsight[];
 }

@@ -1,6 +1,6 @@
 import { Injectable, signal, Signal } from '@angular/core';
-import { PortfolioItem } from '../models/portfolio.model';
-import { ApiPortfolioResponse } from '../models/api-response.model';
+import { PortfolioItem, PortfolioInsight } from '../models/portfolio.model';
+import { ApiPortfolioResponse, ApiPortfolioInsight } from '../models/api-response.model';
 import { Transaction, NewTransactionData } from '../models/transaction.model';
 
 const API_BASE_URL = 'http://localhost:8000';
@@ -45,6 +45,13 @@ const MOCK_PORTFOLIO_DATA: ApiPortfolioResponse = {
     }
   ],
   TotalInvested: 16015.00,
+  DailyGainLoss: 142.35,
+  DailyGainLossPercentage: 0.0090, // This is 0.90%
+  Insights: [
+    { Message: 'Overall: 5% Overweight Stocks. Consider selling ~€800 to rebalance.', Severity: 'warning' },
+    { Message: 'Your tech sector allocation is higher than average. Monitor for volatility.', Severity: 'info' },
+    { Message: 'Congratulations! Your GOOGL position has returned over 20% since purchase.', Severity: 'positive' }
+  ]
 };
 
 @Injectable({
@@ -55,11 +62,17 @@ export class PortfolioService {
   private readonly _totalPortfolioValue = signal(0);
   private readonly _loading = signal(true);
   private readonly _error = signal<string | null>(null);
+  private readonly _dailyGainLoss = signal(0);
+  private readonly _dailyGainLossPercentage = signal(0);
+  private readonly _insights = signal<PortfolioInsight[]>([]);
 
   public readonly portfolio: Signal<PortfolioItem[]> = this._portfolio.asReadonly();
   public readonly totalPortfolioValue: Signal<number> = this._totalPortfolioValue.asReadonly();
   public readonly loading: Signal<boolean> = this._loading.asReadonly();
   public readonly error: Signal<string | null> = this._error.asReadonly();
+  public readonly dailyGainLoss: Signal<number> = this._dailyGainLoss.asReadonly();
+  public readonly dailyGainLossPercentage: Signal<number> = this._dailyGainLossPercentage.asReadonly();
+  public readonly insights: Signal<PortfolioInsight[]> = this._insights.asReadonly();
 
   constructor() {
     this.fetchPortfolio();
@@ -89,6 +102,10 @@ export class PortfolioService {
 
       const portfolioItems = this.mapApiDataToPortfolio(data);
       this._recalculateAndSetPortfolio(portfolioItems);
+
+      this._dailyGainLoss.set(data.DailyGainLoss ?? 0);
+      this._dailyGainLossPercentage.set(data.DailyGainLossPercentage ?? 0);
+      this._insights.set(this.mapApiInsightsToPortfolioInsights(data.Insights));
 
     } catch (err) {
       this._error.set('Could not load portfolio. Please ensure the backend server is running and accessible.');
@@ -236,6 +253,14 @@ export class PortfolioService {
         fees: t.Fees,
         amount: t.Amount,
       })).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()),
+    }));
+  }
+
+  private mapApiInsightsToPortfolioInsights(insights: ApiPortfolioInsight[] | undefined): PortfolioInsight[] {
+    if (!insights) return [];
+    return insights.map(i => ({
+      message: i.Message,
+      severity: i.Severity
     }));
   }
 }
