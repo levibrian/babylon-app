@@ -73,6 +73,17 @@ export class PortfolioService {
   private async fetchPortfolio(): Promise<void> {
     try {
       this._error.set(null);
+      
+      /*
+      // --- REAL API CALL (commented out as requested) ---
+      const response = await fetch(`${API_BASE_URL}/portfolio`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch portfolio');
+      }
+      const data: ApiPortfolioResponse = await response.json();
+      */
+
+      // Mocked implementation: use mock data with a delay to simulate a network request.
       await new Promise(resolve => setTimeout(resolve, 1000));
       const data: ApiPortfolioResponse = MOCK_PORTFOLIO_DATA;
 
