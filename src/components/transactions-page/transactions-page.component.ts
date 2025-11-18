@@ -1,24 +1,28 @@
 import { Component, ChangeDetectionStrategy, inject, Signal, signal, effect } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
+import { CommonModule } from '@angular/common';
 import { TransactionListComponent } from '../transaction-list/transaction-list.component';
 import { TransactionService } from '../../services/transaction.service';
+import { PortfolioService } from '../../services/portfolio.service';
 import { Transaction, NewTransactionData } from '../../models/transaction.model';
 import { RouterLink, ActivatedRoute, Router } from '@angular/router';
 
 @Component({
   selector: 'app-transactions-page',
   templateUrl: './transactions-page.component.html',
-  imports: [TransactionListComponent, RouterLink],
+  imports: [TransactionListComponent, RouterLink, CommonModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TransactionsPageComponent {
   private transactionService = inject(TransactionService);
+  private portfolioService = inject(PortfolioService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
 
   transactions: Signal<Transaction[]> = this.transactionService.transactions;
   isLoading: Signal<boolean> = this.transactionService.loading;
   error: Signal<string | null> = this.transactionService.error;
+  totalInvested: Signal<number> = this.portfolioService.totalInvested;
   
   isAddingTransaction = signal(false);
   private queryParams = toSignal(this.route.queryParams);

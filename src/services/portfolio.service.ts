@@ -1,4 +1,4 @@
-import { Injectable, signal, Signal } from '@angular/core';
+import { Injectable, signal, Signal, computed } from '@angular/core';
 import { PortfolioItem, PortfolioInsight } from '../models/portfolio.model';
 import { ApiPortfolioResponse, ApiPortfolioInsight } from '../models/api-response.model';
 import { Transaction, NewTransactionData } from '../models/transaction.model';
@@ -59,7 +59,7 @@ const MOCK_PORTFOLIO_DATA: ApiPortfolioResponse = {
 })
 export class PortfolioService {
   private readonly _portfolio = signal<PortfolioItem[]>([]);
-  private readonly _totalPortfolioValue = signal(0);
+  private readonly _totalInvested = signal(0);
   private readonly _loading = signal(true);
   private readonly _error = signal<string | null>(null);
   private readonly _dailyGainLoss = signal(0);
@@ -67,12 +67,13 @@ export class PortfolioService {
   private readonly _insights = signal<PortfolioInsight[]>([]);
 
   public readonly portfolio: Signal<PortfolioItem[]> = this._portfolio.asReadonly();
-  public readonly totalPortfolioValue: Signal<number> = this._totalPortfolioValue.asReadonly();
+  public readonly totalInvested: Signal<number> = this._totalInvested.asReadonly();
   public readonly loading: Signal<boolean> = this._loading.asReadonly();
   public readonly error: Signal<string | null> = this._error.asReadonly();
   public readonly dailyGainLoss: Signal<number> = this._dailyGainLoss.asReadonly();
   public readonly dailyGainLossPercentage: Signal<number> = this._dailyGainLossPercentage.asReadonly();
   public readonly insights: Signal<PortfolioInsight[]> = this._insights.asReadonly();
+  public readonly totalPortfolioValue: Signal<number> = computed(() => this.totalInvested() + this.dailyGainLoss());
 
   constructor() {
     this.fetchPortfolio();
@@ -217,13 +218,13 @@ export class PortfolioService {
   }
 
   private _recalculateAndSetPortfolio(items: Omit<PortfolioItem, 'currentAllocationPercentage' | 'allocationDifference' | 'rebalanceAmount'>[]): void {
-    const totalValue = items.reduce((sum, p) => sum + p.totalCost, 0);
-    this._totalPortfolioValue.set(totalValue);
+    const totalInvested = items.reduce((sum, p) => sum + p.totalCost, 0);
+    this._totalInvested.set(totalInvested);
 
     const calculatedPortfolio = items.map(p => {
-        const currentAllocationPercentage = totalValue > 0 ? (p.totalCost / totalValue) * 100 : 0;
+        const currentAllocationPercentage = totalInvested > 0 ? (p.totalCost / totalInvested) * 100 : 0;
         const allocationDifference = currentAllocationPercentage - p.targetAllocationPercentage;
-        const rebalanceAmount = (allocationDifference / 100) * totalValue;
+        const rebalanceAmount = (allocationDifference / 100) * totalInvested;
 
         return {
             ...p,
