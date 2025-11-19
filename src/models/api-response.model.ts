@@ -1,38 +1,42 @@
-// C# DTO: TransactionDto
+// Backend API: TransactionDto
 export interface ApiTransaction {
-  Id: string;
-  TransactionType: 'buy' | 'sell' | 'dividend';
-  Date: string; // ISO string
-  SharesQuantity: number;
-  SharePrice: number;
-  Fees: number;
-  Amount: number;
-  TotalAmount: number;
+  id: string;
+  transactionType: string; // "Buy", "Sell", etc. (capitalized)
+  date: number; // Unix timestamp
+  sharesQuantity: number;
+  sharePrice: number;
+  fees: number;
+  totalAmount: number;
 }
 
-// C# DTO: PositionDto
+// Backend API: PositionDto
 export interface ApiPortfolioPosition {
-  Ticker: string;
-  CompanyName: string;
-  TotalInvested: number;
-  Transactions: ApiTransaction[];
-  // Assuming these will be added to the backend DTO as discussed
-  TotalShares: number;
-  AverageSharePrice: number;
-  TargetAllocation: number; // e.g., 0.3 for 30%
+  ticker: string;
+  securityName: string;
+  totalInvested: number;
+  totalShares: number;
+  averageSharePrice: number;
+  currentAllocationPercentage: number | null;
+  targetAllocationPercentage: number; // Already a percentage (e.g., 4.48 for 4.48%)
+  allocationDeviation: number;
+  rebalancingAmount: number;
+  rebalancingStatus: string;
+  rebalancingMessage: string;
+  currentMarketValue: number | null;
+  transactions: ApiTransaction[];
 }
 
-// C# DTO: PortfolioInsightDto
+// Backend API: PortfolioInsightDto (if present)
 export interface ApiPortfolioInsight {
-    Message: string;
-    Severity: 'warning' | 'info' | 'positive';
+    message: string;
+    severity: 'warning' | 'info' | 'positive';
 }
 
-// C# DTO: PortfolioResponse
+// Backend API: PortfolioResponse
 export interface ApiPortfolioResponse {
-  Positions: ApiPortfolioPosition[];
-  TotalInvested: number;
-  DailyGainLoss?: number;
-  DailyGainLossPercentage?: number;
-  Insights?: ApiPortfolioInsight[];
+  positions: ApiPortfolioPosition[];
+  totalInvested: number;
+  dailyGainLoss?: number;
+  dailyGainLossPercentage?: number;
+  insights?: ApiPortfolioInsight[];
 }

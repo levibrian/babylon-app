@@ -2,19 +2,45 @@
 <img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
 </div>
 
-# Run and deploy your AI Studio app
+# Babylon Portfolio App
 
-This contains everything you need to run your app locally.
+Angular-based portfolio management application for tracking investments and transactions.
 
-View your app in AI Studio: https://ai.studio/apps/drive/1jww3F3jXo2hahAZEe0tXO22e3Er2SNio
+## Prerequisites
+
+- Node.js (v18 or higher recommended)
+- Backend API running at `https://localhost:7192`
 
 ## Run Locally
 
-**Prerequisites:**  Node.js
+1. **Install dependencies:**
+   ```bash
+   npm install
+   ```
 
+2. **Start the development server:**
+   ```bash
+   npm run dev
+   ```
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+3. **Open your browser:**
+   The app will be available at `http://localhost:3000`
+
+## Development
+
+- **Build for production:**
+  ```bash
+  npm run build
+  ```
+
+- **Preview production build:**
+  ```bash
+  npm run preview
+  ```
+
+## Backend API
+
+The app expects the backend API to be running at `https://localhost:7192` with the following endpoint:
+- `GET /api/v1/portfolios/{userId}` - Fetch portfolio data with positions and transactions
+
+Make sure your backend server is running and accessible before starting the frontend.

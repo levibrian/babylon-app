@@ -2,7 +2,8 @@ import { Injectable, inject, computed, Signal } from '@angular/core';
 import { Transaction, NewTransactionData } from '../models/transaction.model';
 import { PortfolioService } from './portfolio.service';
 
-const API_BASE_URL = 'http://localhost:8000';
+const API_BASE_URL = 'https://localhost:7192';
+const USER_ID = 'a1b2c3d4-e5f6-4a5b-8c9d-0e1f2a3b4c5d';
 
 @Injectable({
   providedIn: 'root',

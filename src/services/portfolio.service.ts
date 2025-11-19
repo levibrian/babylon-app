@@ -3,56 +3,8 @@ import { PortfolioItem, PortfolioInsight } from '../models/portfolio.model';
 import { ApiPortfolioResponse, ApiPortfolioInsight } from '../models/api-response.model';
 import { Transaction, NewTransactionData } from '../models/transaction.model';
 
-const API_BASE_URL = 'http://localhost:8000';
-
-const MOCK_PORTFOLIO_DATA: ApiPortfolioResponse = {
-  Positions: [
-    {
-      Ticker: 'AAPL',
-      CompanyName: 'Apple Inc.',
-      TotalInvested: 4960.00,
-      TotalShares: 25,
-      AverageSharePrice: 198.40,
-      TargetAllocation: 0.30,
-      Transactions: [
-        { Id: 't1', TransactionType: 'buy', Date: '2023-01-15T00:00:00Z', SharesQuantity: 10, SharePrice: 150.00, Fees: 5.00, Amount: 1500.00, TotalAmount: 1505.00 },
-        { Id: 't2', TransactionType: 'buy', Date: '2023-06-20T00:00:00Z', SharesQuantity: 15, SharePrice: 230.00, Fees: 5.00, Amount: 3450.00, TotalAmount: 3455.00 },
-        { Id: 't3', TransactionType: 'dividend', Date: '2023-08-15T00:00:00Z', SharesQuantity: 0, SharePrice: 0, Fees: 0, Amount: 50.00, TotalAmount: 50.00 },
-      ],
-    },
-    {
-      Ticker: 'GOOGL',
-      CompanyName: 'Alphabet Inc.',
-      TotalInvested: 2635.00,
-      TotalShares: 15,
-      AverageSharePrice: 175.67,
-      TargetAllocation: 0.40,
-      Transactions: [
-        { Id: 't4', TransactionType: 'buy', Date: '2023-02-10T00:00:00Z', SharesQuantity: 20, SharePrice: 175.50, Fees: 10.00, Amount: 3510.00, TotalAmount: 3520.00 },
-        { Id: 't5', TransactionType: 'sell', Date: '2024-01-05T00:00:00Z', SharesQuantity: 5, SharePrice: 200.00, Fees: 5.00, Amount: 1000.00, TotalAmount: 995.00 },
-      ],
-    },
-     {
-        Ticker: 'MSFT',
-        CompanyName: 'Microsoft Corporation',
-        TotalInvested: 8420.00,
-        TotalShares: 20,
-        AverageSharePrice: 421.00,
-        TargetAllocation: 0.30,
-        Transactions: [
-            { Id: 't6', TransactionType: 'buy', Date: '2024-03-10T00:00:00Z', SharesQuantity: 20, SharePrice: 420.00, Fees: 20.00, Amount: 8400.00, TotalAmount: 8420.00 }
-        ]
-    }
-  ],
-  TotalInvested: 16015.00,
-  DailyGainLoss: 142.35,
-  DailyGainLossPercentage: 0.0090, // This is 0.90%
-  Insights: [
-    { Message: 'Overall: 5% Overweight Stocks. Consider selling ~€800 to rebalance.', Severity: 'warning' },
-    { Message: 'Your tech sector allocation is higher than average. Monitor for volatility.', Severity: 'info' },
-    { Message: 'Congratulations! Your GOOGL position has returned over 20% since purchase.', Severity: 'positive' }
-  ]
-};
+const API_BASE_URL = 'https://localhost:7192';
+const USER_ID = 'a1b2c3d4-e5f6-4a5b-8c9d-0e1f2a3b4c5d';
 
 @Injectable({
   providedIn: 'root',
@@ -87,30 +39,32 @@ export class PortfolioService {
   private async fetchPortfolio(): Promise<void> {
     try {
       this._error.set(null);
+      this._loading.set(true);
       
-      /*
-      // --- REAL API CALL (commented out as requested) ---
-      const response = await fetch(`${API_BASE_URL}/portfolio`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch portfolio');
-      }
-      const data: ApiPortfolioResponse = await response.json();
-      */
+      // Real API call to fetch portfolio data
+      const response = await fetch(`${API_BASE_URL}/api/v1/portfolios/${USER_ID}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
 
-      // Mocked implementation: use mock data with a delay to simulate a network request.
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      const data: ApiPortfolioResponse = MOCK_PORTFOLIO_DATA;
+      if (!response.ok) {
+        throw new Error(`Failed to fetch portfolio: ${response.status} ${response.statusText}`);
+      }
+
+      const data: ApiPortfolioResponse = await response.json();
 
       const portfolioItems = this.mapApiDataToPortfolio(data);
       this._recalculateAndSetPortfolio(portfolioItems);
 
-      this._dailyGainLoss.set(data.DailyGainLoss ?? 0);
-      this._dailyGainLossPercentage.set(data.DailyGainLossPercentage ?? 0);
-      this._insights.set(this.mapApiInsightsToPortfolioInsights(data.Insights));
+      this._dailyGainLoss.set(data.dailyGainLoss ?? 0);
+      this._dailyGainLossPercentage.set(data.dailyGainLossPercentage ?? 0);
+      this._insights.set(this.mapApiInsightsToPortfolioInsights(data.insights));
 
     } catch (err) {
       this._error.set('Could not load portfolio. Please ensure the backend server is running and accessible.');
-      console.error(err);
+      console.error('Error fetching portfolio:', err);
     } finally {
       this._loading.set(false);
     }
@@ -192,7 +146,6 @@ export class PortfolioService {
   }
 
   private _recalculatePositionAggregates(position: PortfolioItem): void {
-    position.transactions.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
     const buys = position.transactions.filter(t => t.transactionType === 'buy');
     const totalBuyShares = buys.reduce((sum, t) => sum + t.shares, 0);
     const totalBuyCost = buys.reduce((sum, t) => sum + t.amount + t.fees, 0);
@@ -237,31 +190,40 @@ export class PortfolioService {
   }
 
   private mapApiDataToPortfolio(data: ApiPortfolioResponse): Omit<PortfolioItem, 'currentAllocationPercentage' | 'allocationDifference' | 'rebalanceAmount'>[] {
-    return data.Positions.map(position => ({
-      ticker: position.Ticker,
-      companyName: position.CompanyName,
-      totalCost: position.TotalInvested,
-      totalShares: position.TotalShares,
-      averageSharePrice: position.AverageSharePrice,
-      targetAllocationPercentage: position.TargetAllocation * 100, // Convert 0.3 to 30
-      transactions: position.Transactions.map(t => ({
-        id: t.Id,
-        ticker: position.Ticker,
-        date: t.Date,
-        transactionType: t.TransactionType,
-        shares: t.SharesQuantity,
-        sharePrice: t.SharePrice,
-        fees: t.Fees,
-        amount: t.Amount,
-      })).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()),
+    return data.positions.map(position => ({
+      ticker: position.ticker,
+      companyName: position.securityName,
+      totalCost: position.totalInvested,
+      totalShares: position.totalShares,
+      averageSharePrice: position.averageSharePrice,
+      targetAllocationPercentage: position.targetAllocationPercentage, // Already a percentage
+      transactions: position.transactions.map(t => {
+        // Convert Unix timestamp to ISO string
+        const date = new Date(t.date * 1000).toISOString();
+        // Convert transaction type from "Buy"/"Sell" to lowercase "buy"/"sell"
+        const transactionType = t.transactionType.toLowerCase() as 'buy' | 'sell' | 'dividend';
+        // Calculate amount from sharesQuantity and sharePrice (or use totalAmount if available)
+        const amount = t.sharesQuantity * t.sharePrice;
+        
+        return {
+          id: t.id,
+          ticker: position.ticker,
+          date: date,
+          transactionType: transactionType,
+          shares: t.sharesQuantity,
+          sharePrice: t.sharePrice,
+          fees: t.fees,
+          amount: amount,
+        };
+      }),
     }));
   }
 
   private mapApiInsightsToPortfolioInsights(insights: ApiPortfolioInsight[] | undefined): PortfolioInsight[] {
     if (!insights) return [];
     return insights.map(i => ({
-      message: i.Message,
-      severity: i.Severity
+      message: i.message,
+      severity: i.severity
     }));
   }
 }
