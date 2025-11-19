@@ -1,7 +1,8 @@
 import { Injectable, inject, Signal, signal } from '@angular/core';
 import { Transaction, NewTransactionData } from '../models/transaction.model';
 import { PortfolioService } from './portfolio.service';
-import { ApiTransactionsResponse, ApiTransaction } from '../models/api-response.model';
+import { ApiTransactionsResponse } from '../models/api-response.model';
+import { mapApiTransactionsToTransactions } from '../utils/transaction-mapper.util';
 
 const API_BASE_URL = 'https://localhost:7192';
 const USER_ID = 'a1b2c3d4-e5f6-4a5b-8c9d-0e1f2a3b4c5d';
@@ -47,7 +48,7 @@ export class TransactionService {
       }
 
       const data: ApiTransactionsResponse = await response.json();
-      const mappedTransactions = this.mapApiTransactionsToTransactions(data.transactions);
+      const mappedTransactions = mapApiTransactionsToTransactions(data.transactions);
       this._transactions.set(mappedTransactions);
 
     } catch (err) {
@@ -58,28 +59,6 @@ export class TransactionService {
     }
   }
 
-  private mapApiTransactionsToTransactions(apiTransactions: ApiTransaction[]): Transaction[] {
-    return apiTransactions.map(t => {
-      // Convert Unix timestamp to ISO string
-      const date = new Date(t.date * 1000).toISOString();
-      // Convert transaction type from "Buy"/"Sell" to lowercase "buy"/"sell"
-      const transactionType = t.transactionType.toLowerCase() as 'buy' | 'sell' | 'dividend';
-      // Calculate amount from sharesQuantity and sharePrice (or use totalAmount if available)
-      const amount = t.sharesQuantity * t.sharePrice;
-      
-      return {
-        id: t.id,
-        ticker: t.ticker || '', // Ticker should be included in the API response
-        date: date,
-        transactionType: transactionType,
-        shares: t.sharesQuantity,
-        sharePrice: t.sharePrice,
-        fees: t.fees,
-        amount: amount,
-        companyName: t.securityName, // Company name from transaction
-      };
-    });
-  }
 
   async addTransaction(transactionData: NewTransactionData): Promise<void> {
     try {

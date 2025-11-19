@@ -2,6 +2,7 @@ import { Injectable, signal, Signal, computed } from '@angular/core';
 import { PortfolioItem, PortfolioInsight } from '../models/portfolio.model';
 import { ApiPortfolioResponse, ApiPortfolioInsight } from '../models/api-response.model';
 import { Transaction, NewTransactionData } from '../models/transaction.model';
+import { mapApiTransactionsToTransactions } from '../utils/transaction-mapper.util';
 
 const API_BASE_URL = 'https://localhost:7192';
 const USER_ID = 'a1b2c3d4-e5f6-4a5b-8c9d-0e1f2a3b4c5d';
@@ -71,11 +72,11 @@ export class PortfolioService {
   }
 
   public addTransaction(transactionData: NewTransactionData): void {
-    const amount = transactionData.shares * transactionData.sharePrice;
+    const totalAmount = transactionData.shares * transactionData.sharePrice;
     const newTransaction: Transaction = {
         ...transactionData,
         id: `txn_${new Date().getTime()}`,
-        amount,
+        totalAmount,
         ticker: transactionData.ticker.toUpperCase(),
     };
     
@@ -116,9 +117,9 @@ export class PortfolioService {
       return;
     }
 
-    // Recalculate amount before updating
-    const amount = updatedTx.shares * updatedTx.sharePrice;
-    const finalUpdatedTx: Transaction = { ...updatedTx, amount };
+    // Recalculate totalAmount before updating
+    const totalAmount = updatedTx.shares * updatedTx.sharePrice;
+    const finalUpdatedTx: Transaction = { ...updatedTx, totalAmount };
     position.transactions[txIndex] = finalUpdatedTx;
     
     this._recalculatePositionAggregates(position);
@@ -148,7 +149,7 @@ export class PortfolioService {
   private _recalculatePositionAggregates(position: PortfolioItem): void {
     const buys = position.transactions.filter(t => t.transactionType === 'buy');
     const totalBuyShares = buys.reduce((sum, t) => sum + t.shares, 0);
-    const totalBuyCost = buys.reduce((sum, t) => sum + t.amount + t.fees, 0);
+    const totalBuyCost = buys.reduce((sum, t) => sum + t.totalAmount + t.fees, 0);
     const averageBuyPrice = totalBuyShares > 0 ? totalBuyCost / totalBuyShares : 0;
     
     let finalShares = 0;
@@ -156,7 +157,7 @@ export class PortfolioService {
     position.transactions.forEach(t => {
         if (t.transactionType === 'buy') {
             finalShares += t.shares;
-            finalCost += t.amount + t.fees;
+            finalCost += t.totalAmount + t.fees;
         } else if (t.transactionType === 'sell') {
             finalShares -= t.shares;
             // When selling, reduce total cost by the original average cost of the shares sold
@@ -197,26 +198,10 @@ export class PortfolioService {
       totalShares: position.totalShares,
       averageSharePrice: position.averageSharePrice,
       targetAllocationPercentage: position.targetAllocationPercentage, // Already a percentage
-      transactions: position.transactions.map(t => {
-        // Convert Unix timestamp to ISO string
-        const date = new Date(t.date * 1000).toISOString();
-        // Convert transaction type from "Buy"/"Sell" to lowercase "buy"/"sell"
-        const transactionType = t.transactionType.toLowerCase() as 'buy' | 'sell' | 'dividend';
-        // Calculate amount from sharesQuantity and sharePrice (or use totalAmount if available)
-        const amount = t.sharesQuantity * t.sharePrice;
-        
-        return {
-          id: t.id,
-          ticker: position.ticker,
-          date: date,
-          transactionType: transactionType,
-          shares: t.sharesQuantity,
-          sharePrice: t.sharePrice,
-          fees: t.fees,
-          amount: amount,
-          companyName: t.securityName || position.securityName, // Use transaction's securityName if available, otherwise fall back to position's
-        };
-      }),
+      transactions: mapApiTransactionsToTransactions(
+        position.transactions,
+        position.ticker // Fallback ticker from position if transaction doesn't have it
+      ),
     }));
   }
 

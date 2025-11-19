@@ -22,8 +22,8 @@ export class TransactionListComponent {
   editingTransactionId = signal<string | null>(null);
   
   getCompanyName(transaction: Transaction): string {
-    // Use companyName from transaction if available, otherwise fall back to ticker
-    return transaction.companyName || transaction.ticker;
+    // Use securityName from transaction if available, otherwise fall back to ticker
+    return transaction.securityName || transaction.ticker;
   }
 
   isEditing(transactionId: string): boolean {
@@ -63,7 +63,7 @@ export class TransactionListComponent {
   }
 
   getTotalValue(transaction: Transaction): number {
-    return transaction.amount;
+    return transaction.totalAmount;
   }
 
   getValuePrefix(type: Transaction['transactionType']): string {
