@@ -20,6 +20,11 @@ export class TransactionListComponent {
   delete = output<Transaction>();
   
   editingTransactionId = signal<string | null>(null);
+  
+  getCompanyName(transaction: Transaction): string {
+    // Use companyName from transaction if available, otherwise fall back to ticker
+    return transaction.companyName || transaction.ticker;
+  }
 
   isEditing(transactionId: string): boolean {
     return this.editingTransactionId() === transactionId;

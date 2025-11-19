@@ -7,6 +7,8 @@ export interface ApiTransaction {
   sharePrice: number;
   fees: number;
   totalAmount: number;
+  securityName?: string; // Company/security name (optional for backward compatibility)
+  ticker?: string; // Ticker symbol (should be included in transactions endpoint response)
 }
 
 // Backend API: PositionDto
@@ -39,4 +41,9 @@ export interface ApiPortfolioResponse {
   dailyGainLoss?: number;
   dailyGainLossPercentage?: number;
   insights?: ApiPortfolioInsight[];
+}
+
+// Backend API: TransactionsResponse (for GET /api/v1/transactions/{userId})
+export interface ApiTransactionsResponse {
+  transactions: ApiTransaction[];
 }

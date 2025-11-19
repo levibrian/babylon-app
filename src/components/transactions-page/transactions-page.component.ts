@@ -40,18 +40,18 @@ export class TransactionsPageComponent {
     this.clearAddQueryParam();
   }
 
-  saveTransaction(transactionData: NewTransactionData): void {
-    this.transactionService.addTransaction(transactionData);
+  async saveTransaction(transactionData: NewTransactionData): Promise<void> {
+    await this.transactionService.addTransaction(transactionData);
     this.isAddingTransaction.set(false);
     this.clearAddQueryParam();
   }
 
-  updateTransaction(transaction: Transaction): void {
-    this.transactionService.updateTransaction(transaction);
+  async updateTransaction(transaction: Transaction): Promise<void> {
+    await this.transactionService.updateTransaction(transaction);
   }
 
-  deleteTransaction(transaction: Transaction): void {
-    this.transactionService.deleteTransaction(transaction.id, transaction.ticker);
+  async deleteTransaction(transaction: Transaction): Promise<void> {
+    await this.transactionService.deleteTransaction(transaction.id, transaction.ticker);
   }
 
   private clearAddQueryParam(): void {

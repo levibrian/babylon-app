@@ -21,8 +21,9 @@
                 </div>
               </div>
               <div class="min-w-0">
-                <div class="flex items-baseline gap-x-2">
-                  <p class="text-base font-semibold text-gray-900 truncate">{{ transaction.ticker }}</p>
+                <p class="text-base font-bold text-gray-900 truncate">{{ getCompanyName(transaction) }}</p>
+                <div class="flex items-baseline gap-x-2 mt-1">
+                  <p class="text-sm text-gray-500">{{ transaction.ticker }}</p>
                   <p class="text-sm text-gray-500">{{ transaction.date | date:'mediumDate' }}</p>
                 </div>
               </div>

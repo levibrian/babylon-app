@@ -1,6 +1,7 @@
-import { Injectable, inject, computed, Signal } from '@angular/core';
+import { Injectable, inject, Signal, signal } from '@angular/core';
 import { Transaction, NewTransactionData } from '../models/transaction.model';
 import { PortfolioService } from './portfolio.service';
+import { ApiTransactionsResponse, ApiTransaction } from '../models/api-response.model';
 
 const API_BASE_URL = 'https://localhost:7192';
 const USER_ID = 'a1b2c3d4-e5f6-4a5b-8c9d-0e1f2a3b4c5d';
@@ -11,37 +12,93 @@ const USER_ID = 'a1b2c3d4-e5f6-4a5b-8c9d-0e1f2a3b4c5d';
 export class TransactionService {
   private portfolioService = inject(PortfolioService);
 
-  public readonly transactions: Signal<Transaction[]> = computed(() => {
-    const portfolio = this.portfolioService.portfolio();
-    const allTransactions = portfolio.flatMap(p => p.transactions);
-    return allTransactions.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-  });
+  private readonly _transactions = signal<Transaction[]>([]);
+  private readonly _loading = signal(true);
+  private readonly _error = signal<string | null>(null);
 
-  public readonly loading = this.portfolioService.loading;
-  public readonly error = this.portfolioService.error;
+  public readonly transactions: Signal<Transaction[]> = this._transactions.asReadonly();
+  public readonly loading: Signal<boolean> = this._loading.asReadonly();
+  public readonly error: Signal<string | null> = this._error.asReadonly();
 
-  addTransaction(transactionData: NewTransactionData): void {
-     try {
-       /*
-       // --- REAL API CALL (commented out as requested) ---
-       // This is where you would send the new transaction to your backend.
-       const response = await fetch(`${API_BASE_URL}/transactions`, {
-         method: 'POST',
-         headers: { 'Content-Type': 'application/json' },
-         body: JSON.stringify(transactionData),
-       });
+  constructor() {
+    this.fetchTransactions();
+  }
 
-       if (!response.ok) {
-         throw new Error('Failed to save transaction');
-       }
-       
-       // After a successful save, reload all portfolio data from the backend
-       // to ensure the UI is in sync with the database.
-       await this.portfolioService.reload();
-       */
+  async reload(): Promise<void> {
+    this._loading.set(true);
+    await this.fetchTransactions();
+  }
 
-      // Mocked implementation: directly add to portfolio service state for instant UI feedback.
-      this.portfolioService.addTransaction(transactionData);
+  private async fetchTransactions(): Promise<void> {
+    try {
+      this._error.set(null);
+      this._loading.set(true);
+      
+      // Fetch transactions from the dedicated endpoint
+      const response = await fetch(`${API_BASE_URL}/api/v1/transactions/${USER_ID}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch transactions: ${response.status} ${response.statusText}`);
+      }
+
+      const data: ApiTransactionsResponse = await response.json();
+      const mappedTransactions = this.mapApiTransactionsToTransactions(data.transactions);
+      this._transactions.set(mappedTransactions);
+
+    } catch (err) {
+      this._error.set('Could not load transactions. Please ensure the backend server is running and accessible.');
+      console.error('Error fetching transactions:', err);
+    } finally {
+      this._loading.set(false);
+    }
+  }
+
+  private mapApiTransactionsToTransactions(apiTransactions: ApiTransaction[]): Transaction[] {
+    return apiTransactions.map(t => {
+      // Convert Unix timestamp to ISO string
+      const date = new Date(t.date * 1000).toISOString();
+      // Convert transaction type from "Buy"/"Sell" to lowercase "buy"/"sell"
+      const transactionType = t.transactionType.toLowerCase() as 'buy' | 'sell' | 'dividend';
+      // Calculate amount from sharesQuantity and sharePrice (or use totalAmount if available)
+      const amount = t.sharesQuantity * t.sharePrice;
+      
+      return {
+        id: t.id,
+        ticker: t.ticker || '', // Ticker should be included in the API response
+        date: date,
+        transactionType: transactionType,
+        shares: t.sharesQuantity,
+        sharePrice: t.sharePrice,
+        fees: t.fees,
+        amount: amount,
+        companyName: t.securityName, // Company name from transaction
+      };
+    });
+  }
+
+  async addTransaction(transactionData: NewTransactionData): Promise<void> {
+    try {
+      // Real API call to add transaction
+      const response = await fetch(`${API_BASE_URL}/api/v1/transactions/${USER_ID}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(transactionData),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to save transaction');
+      }
+      
+      // After a successful save, reload transactions and portfolio data
+      await Promise.all([
+        this.reload(),
+        this.portfolioService.reload()
+      ]);
 
     } catch (err) {
       console.error('Error adding transaction:', err);
@@ -49,18 +106,48 @@ export class TransactionService {
     }
   }
 
-  updateTransaction(transaction: Transaction): void {
+  async updateTransaction(transaction: Transaction): Promise<void> {
     try {
-      this.portfolioService.updateTransaction(transaction);
+      // Real API call to update transaction
+      const response = await fetch(`${API_BASE_URL}/api/v1/transactions/${USER_ID}/${transaction.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(transaction),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update transaction');
+      }
+      
+      // After a successful update, reload transactions and portfolio data
+      await Promise.all([
+        this.reload(),
+        this.portfolioService.reload()
+      ]);
+
     } catch (err) {
       console.error('Error updating transaction:', err);
       alert('Could not update transaction. Please try again.');
     }
   }
 
-  deleteTransaction(transactionId: string, ticker: string): void {
+  async deleteTransaction(transactionId: string, ticker: string): Promise<void> {
     try {
-      this.portfolioService.deleteTransaction(transactionId, ticker);
+      // Real API call to delete transaction
+      const response = await fetch(`${API_BASE_URL}/api/v1/transactions/${USER_ID}/${transactionId}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete transaction');
+      }
+      
+      // After a successful delete, reload transactions and portfolio data
+      await Promise.all([
+        this.reload(),
+        this.portfolioService.reload()
+      ]);
+
     } catch (err) {
       console.error('Error deleting transaction:', err);
       alert('Could not delete transaction. Please try again.');

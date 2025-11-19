@@ -214,6 +214,7 @@ export class PortfolioService {
           sharePrice: t.sharePrice,
           fees: t.fees,
           amount: amount,
+          companyName: t.securityName || position.securityName, // Use transaction's securityName if available, otherwise fall back to position's
         };
       }),
     }));

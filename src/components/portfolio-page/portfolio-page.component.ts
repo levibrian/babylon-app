@@ -80,11 +80,11 @@ export class PortfolioPageComponent implements OnDestroy {
     }
   }
 
-  updateTransaction(transaction: Transaction): void {
-    this.transactionService.updateTransaction(transaction);
+  async updateTransaction(transaction: Transaction): Promise<void> {
+    await this.transactionService.updateTransaction(transaction);
   }
 
-  deleteTransaction(transaction: Transaction): void {
-    this.transactionService.deleteTransaction(transaction.id, transaction.ticker);
+  async deleteTransaction(transaction: Transaction): Promise<void> {
+    await this.transactionService.deleteTransaction(transaction.id, transaction.ticker);
   }
 }

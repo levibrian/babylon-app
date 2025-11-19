@@ -7,6 +7,7 @@ export interface Transaction {
   sharePrice: number;
   fees: number;
   amount: number;
+  companyName?: string; // Company/security name (optional for backward compatibility)
 }
 
 /**
