@@ -1,7 +1,7 @@
 import { Injectable, inject, Signal, signal } from '@angular/core';
 import { Transaction, NewTransactionData } from '../models/transaction.model';
 import { PortfolioService } from './portfolio.service';
-import { ApiTransactionsResponse } from '../models/api-response.model';
+import { ApiTransaction, ApiTransactionsResponse } from '../models/api-response.model';
 import { mapApiTransactionsToTransactions } from '../utils/transaction-mapper.util';
 
 const API_BASE_URL = 'https://localhost:7192';
@@ -47,8 +47,9 @@ export class TransactionService {
         throw new Error(`Failed to fetch transactions: ${response.status} ${response.statusText}`);
       }
 
-      const data: ApiTransactionsResponse = await response.json();
-      const mappedTransactions = mapApiTransactionsToTransactions(data.transactions);
+      const data: ApiTransaction[] = await response.json();
+      console.log(data);
+      const mappedTransactions = mapApiTransactionsToTransactions(data);
       this._transactions.set(mappedTransactions);
 
     } catch (err) {

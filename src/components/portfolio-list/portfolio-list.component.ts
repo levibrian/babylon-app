@@ -75,7 +75,7 @@ export class PortfolioListComponent {
   }
 
   getTotalValue(transaction: Transaction): number {
-    return transaction.amount;
+    return transaction.totalAmount;
   }
 
   getValuePrefix(type: Transaction['transactionType']): string {
