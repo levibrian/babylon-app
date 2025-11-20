@@ -21,6 +21,7 @@ export class TransactionListComponent {
   update = output<Transaction>();
   delete = output<Transaction>();
   toggleAdd = output<void>();
+  navigateToRecurring = output<void>();
   
   editingTransactionId = signal<string | null>(null);
   

@@ -1,7 +1,14 @@
 <div class="h-full overflow-hidden flex flex-col">
-  <!-- Header Label with Add Button -->
+  <!-- Navigation Pane with Add Button -->
   <div class="flex items-center justify-between mb-3 flex-shrink-0">
-    <h2 class="text-sm font-medium text-gray-900">Historical Transactions</h2>
+    <div class="flex items-baseline gap-x-3 sm:gap-x-4">
+      <h2 class="text-sm font-bold tracking-tight text-gray-900">Historical Transactions</h2>
+      <button 
+        (click)="navigateToRecurring.emit()" 
+        class="text-sm font-medium text-gray-400 hover:text-gray-600 transition-colors">
+        Recurring Investments
+      </button>
+    </div>
     @if (!isLoading() && !error()) {
       <button 
         (click)="toggleAdd.emit()" 

@@ -2,6 +2,7 @@ import { Component, ChangeDetectionStrategy, inject, Signal, signal, effect } fr
 import { toSignal } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { TransactionListComponent } from '../transaction-list/transaction-list.component';
+import { RecurringInvestmentsListComponent } from '../recurring-investments-list/recurring-investments-list.component';
 import { TransactionService } from '../../services/transaction.service';
 import { PortfolioService } from '../../services/portfolio.service';
 import { Transaction, NewTransactionData } from '../../models/transaction.model';
@@ -11,7 +12,7 @@ import { TransactionSkeletonComponent } from '../ghosting-elements/transaction-s
 @Component({
   selector: 'app-transactions-page',
   templateUrl: './transactions-page.component.html',
-  imports: [TransactionListComponent, RouterLink, CommonModule, TransactionSkeletonComponent],
+  imports: [TransactionListComponent, RecurringInvestmentsListComponent, RouterLink, CommonModule, TransactionSkeletonComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TransactionsPageComponent {
@@ -26,6 +27,7 @@ export class TransactionsPageComponent {
   totalInvested: Signal<number> = this.portfolioService.totalInvested;
   
   isAddingTransaction = signal(false);
+  activeView = signal<'transactions' | 'recurring'>('transactions');
   private queryParams = toSignal(this.route.queryParams);
 
   constructor() {
@@ -76,5 +78,13 @@ export class TransactionsPageComponent {
       queryParams: { add: null },
       queryParamsHandling: 'merge',
     });
+  }
+
+  navigateToRecurring(): void {
+    this.activeView.set('recurring');
+  }
+
+  navigateToTransactions(): void {
+    this.activeView.set('transactions');
   }
 }

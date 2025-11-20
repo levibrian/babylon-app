@@ -1,0 +1,23 @@
+<div class="h-full overflow-hidden flex flex-col">
+  <!-- Navigation Pane -->
+  <div class="flex items-baseline gap-x-3 sm:gap-x-4 mb-3 flex-shrink-0">
+    <button 
+      (click)="navigateToTransactions.emit()" 
+      class="text-sm font-medium text-gray-400 hover:text-gray-600 transition-colors">
+      Historical Transactions
+    </button>
+    <h2 class="text-sm font-bold tracking-tight text-gray-900">Recurring Investments</h2>
+  </div>
+  
+  <!-- Placeholder Content -->
+  <div class="flex-1 overflow-y-auto" style="scrollbar-gutter: stable;">
+    <div class="flex flex-col items-center justify-center h-full text-gray-400">
+      <svg class="w-16 h-16 sm:w-24 sm:h-24 mb-4 opacity-50" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+      <p class="text-base sm:text-lg font-medium">Recurring Investments</p>
+      <p class="text-xs sm:text-sm mt-2">Coming soon...</p>
+    </div>
+  </div>
+</div>
+
