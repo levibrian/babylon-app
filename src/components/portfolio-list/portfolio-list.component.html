@@ -10,26 +10,25 @@
           <!-- Left side: SecurityName • Ticker -->
           <div class="flex items-center gap-2 min-w-0 flex-shrink-0">
             <div class="min-w-0 flex items-center gap-2 text-sm">
-              <span class="font-bold text-gray-900 truncate">{{ item.companyName }}</span>
+              <span class="font-medium text-gray-900 truncate">{{ item.companyName }}</span>
               <span class="text-gray-400">•</span>
               <span class="text-gray-500">{{ item.ticker }}</span>
+              <span class="text-gray-400">•</span>
+              <span class="text-gray-500">Target</span>
+              <span class="font-medium text-gray-900 whitespace-nowrap">{{ item.targetAllocationPercentage | number:'1.1-1' }}%</span>
+              <span class="text-gray-400">→</span>
+              <span class="text-gray-500">Current</span>
+              <span [class]="'font-medium whitespace-nowrap ' + getCurrentAllocationColorClass(item)">
+                {{ item.currentAllocationPercentage | number:'1.1-1' }}%
+              </span>
+              <span [class]="'font-bold whitespace-nowrap ' + getRebalancingStatusClass(item)">
+                {{ getRebalancingStatusWithAction(item) }}
+              </span>
             </div>
           </div>
           
           <!-- Right side: T Target% → C Current% • RebalanceStatus • Total Amount • Chevron -->
           <div class="flex items-center gap-2 text-sm flex-shrink-0">
-            <span class="text-gray-400">•</span>
-            <span class="text-gray-500">T</span>
-            <span class="font-bold text-gray-900 whitespace-nowrap">{{ item.targetAllocationPercentage | number:'1.1-1' }}%</span>
-            <span class="text-gray-400">→</span>
-            <span class="text-gray-500">C</span>
-            <span [class]="'font-bold whitespace-nowrap ' + getCurrentAllocationColorClass(item)">
-              {{ item.currentAllocationPercentage | number:'1.1-1' }}%
-            </span>
-            <span [class]="'font-bold whitespace-nowrap ' + getRebalancingStatusClass(item)">
-              {{ getRebalancingStatusWithAction(item) }}
-            </span>
-            <span class="text-gray-400">•</span>
             <span class="font-bold text-gray-900 whitespace-nowrap">{{ item.totalCost | currency:'EUR':'symbol':'1.2-2' }}</span>
             <svg [class]="'w-4 h-4 text-gray-400 transition-transform duration-200 ' + (isExpanded(item.ticker) ? 'rotate-180' : '')" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
               <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />

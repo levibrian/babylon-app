@@ -90,9 +90,9 @@ export class PortfolioListComponent {
     
     switch (item.rebalancingStatus) {
       case 'Overweight':
-        return `${absDeviation.toFixed(1)}% Overweight Sell ~€${absAmount.toFixed(0)}`;
+        return `${absDeviation.toFixed(1)}% Sell ~€${absAmount.toFixed(0)}`;
       case 'Underweight':
-        return `${absDeviation.toFixed(1)}% Underweight Buy ~€${absAmount.toFixed(0)}`;
+        return `${absDeviation.toFixed(1)}% Buy ~€${absAmount.toFixed(0)}`;
       case 'Balanced':
       default:
         return 'Balanced';
@@ -143,6 +143,6 @@ export class PortfolioListComponent {
   getRebalancingStatusWithAction(item: PortfolioItem): string {
     const status = this.getRebalancingStatusText(item);
     const action = this.getRebalanceActionText(item);
-    return action ? `${status} ${action}` : status;
+    return action ? `${action}` : status;
   }
 }
