@@ -24,6 +24,8 @@
               <span [class]="'font-bold whitespace-nowrap ' + getRebalancingStatusClass(item)">
                 {{ getRebalancingStatusWithAction(item) }}
               </span>
+              <span class="text-gray-400">•</span>
+              <span class="text-gray-500 whitespace-nowrap">{{ item.totalShares | number:'1.0-4' }} shares @ {{ item.averageSharePrice | currency:'EUR' }}</span>
             </div>
           </div>
           
