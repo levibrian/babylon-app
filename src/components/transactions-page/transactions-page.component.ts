@@ -37,6 +37,21 @@ export class TransactionsPageComponent {
     });
   }
 
+  toggleAddTransaction(): void {
+    this.isAddingTransaction.update(value => !value);
+    if (this.isAddingTransaction()) {
+      // Set query param when showing
+      this.router.navigate([], {
+        relativeTo: this.route,
+        queryParams: { add: 'true' },
+        queryParamsHandling: 'merge',
+      });
+    } else {
+      // Clear query param when hiding
+      this.clearAddQueryParam();
+    }
+  }
+
   cancelNewTransaction(): void {
     this.isAddingTransaction.set(false);
     this.clearAddQueryParam();

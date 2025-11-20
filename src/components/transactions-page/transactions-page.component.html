@@ -9,6 +9,24 @@
           Transactions
         </h1>
       </div>
+      @if (!isLoading() && !error()) {
+        <button 
+          (click)="toggleAddTransaction()" 
+          class="flex items-center justify-center w-10 h-10 rounded-full bg-gray-900 text-white hover:bg-gray-800 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-2"
+          [attr.aria-label]="isAddingTransaction() ? 'Cancel adding transaction' : 'Add new transaction'">
+          @if (isAddingTransaction()) {
+            <!-- X icon -->
+            <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          } @else {
+            <!-- Plus icon -->
+            <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+            </svg>
+          }
+        </button>
+      }
     </header>
 
     @if (isLoading() && !isAddingTransaction()) {
