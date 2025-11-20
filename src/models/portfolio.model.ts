@@ -18,4 +18,5 @@ export interface PortfolioItem {
   currentAllocationPercentage: number; // e.g., 31.5 for 31.5%
   allocationDifference: number; // e.g., 1.5 for 1.5% overweight
   rebalanceAmount: number; // e.g., 160 for "Sell ~€160"
+  rebalancingStatus: string; // "Balanced", "Overweight", or "Underweight"
 }

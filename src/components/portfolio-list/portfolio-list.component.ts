@@ -83,4 +83,31 @@ export class PortfolioListComponent {
     if (type === 'sell') return '+';
     return '+'; // Dividends are gains
   }
+
+  getRebalancingMessage(item: PortfolioItem): string {
+    const absDeviation = Math.abs(item.allocationDifference);
+    const absAmount = Math.abs(item.rebalanceAmount);
+    
+    switch (item.rebalancingStatus) {
+      case 'Overweight':
+        return `${absDeviation.toFixed(1)}% Overweight Sell ~€${absAmount.toFixed(0)}`;
+      case 'Underweight':
+        return `${absDeviation.toFixed(1)}% Underweight Buy ~€${absAmount.toFixed(0)}`;
+      case 'Balanced':
+      default:
+        return 'Balanced';
+    }
+  }
+
+  getRebalancingStatusClass(item: PortfolioItem): string {
+    switch (item.rebalancingStatus) {
+      case 'Overweight':
+        return 'font-medium text-red-600';
+      case 'Underweight':
+        return 'font-medium text-green-600';
+      case 'Balanced':
+      default:
+        return 'font-medium text-gray-500';
+    }
+  }
 }

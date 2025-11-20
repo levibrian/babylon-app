@@ -22,8 +22,7 @@ export interface ApiPortfolioPosition {
   targetAllocationPercentage: number; // Already a percentage (e.g., 4.48 for 4.48%)
   allocationDeviation: number;
   rebalancingAmount: number;
-  rebalancingStatus: string;
-  rebalancingMessage: string;
+  rebalancingStatus: string; // "Balanced", "Overweight", or "Underweight"
   currentMarketValue: number | null;
   transactions: ApiTransaction[];
 }

@@ -93,13 +93,18 @@ export class PortfolioService {
             totalCost: 0,
             averageSharePrice: 0,
             targetAllocationPercentage: 0, // Default target
+            currentAllocationPercentage: 0,
+            allocationDifference: 0,
+            rebalanceAmount: 0,
+            rebalancingStatus: 'Balanced',
             transactions: [newTransaction],
         };
         portfolioCopy.push(position);
     }
     
     this._recalculatePositionAggregates(position);
-    this._recalculateAndSetPortfolio(portfolioCopy);
+    const recalculatedPortfolio = this._recalculateAllocations(portfolioCopy);
+    this._recalculateAndSetPortfolio(recalculatedPortfolio);
   }
 
   public updateTransaction(updatedTx: Transaction): void {
@@ -123,7 +128,8 @@ export class PortfolioService {
     position.transactions[txIndex] = finalUpdatedTx;
     
     this._recalculatePositionAggregates(position);
-    this._recalculateAndSetPortfolio(portfolioCopy);
+    const recalculatedPortfolio = this._recalculateAllocations(portfolioCopy);
+    this._recalculateAndSetPortfolio(recalculatedPortfolio);
   }
 
   public deleteTransaction(transactionId: string, ticker: string): void {
@@ -139,10 +145,12 @@ export class PortfolioService {
 
     if (position.transactions.length === 0) {
       const portfolioWithoutPosition = portfolioCopy.filter(p => p.ticker !== ticker);
-      this._recalculateAndSetPortfolio(portfolioWithoutPosition);
+      const recalculatedPortfolio = this._recalculateAllocations(portfolioWithoutPosition);
+      this._recalculateAndSetPortfolio(recalculatedPortfolio);
     } else {
       this._recalculatePositionAggregates(position);
-      this._recalculateAndSetPortfolio(portfolioCopy);
+      const recalculatedPortfolio = this._recalculateAllocations(portfolioCopy);
+      this._recalculateAndSetPortfolio(recalculatedPortfolio);
     }
   }
 
@@ -171,26 +179,44 @@ export class PortfolioService {
     position.averageSharePrice = position.totalShares > 0 ? position.totalCost / position.totalShares : 0;
   }
 
-  private _recalculateAndSetPortfolio(items: Omit<PortfolioItem, 'currentAllocationPercentage' | 'allocationDifference' | 'rebalanceAmount'>[]): void {
+  private _recalculateAndSetPortfolio(items: PortfolioItem[]): void {
     const totalInvested = items.reduce((sum, p) => sum + p.totalCost, 0);
     this._totalInvested.set(totalInvested);
 
-    const calculatedPortfolio = items.map(p => {
-        const currentAllocationPercentage = totalInvested > 0 ? (p.totalCost / totalInvested) * 100 : 0;
-        const allocationDifference = currentAllocationPercentage - p.targetAllocationPercentage;
-        const rebalanceAmount = (allocationDifference / 100) * totalInvested;
-
-        return {
-            ...p,
-            currentAllocationPercentage,
-            allocationDifference,
-            rebalanceAmount
-        };
-    });
-    this._portfolio.set(calculatedPortfolio);
+    // Use backend's allocation calculations directly - no recalculation needed
+    // Note: When items come from backend, they already have allocation values.
+    // When items are modified locally (add/update/delete), we recalculate below.
+    this._portfolio.set(items);
   }
 
-  private mapApiDataToPortfolio(data: ApiPortfolioResponse): Omit<PortfolioItem, 'currentAllocationPercentage' | 'allocationDifference' | 'rebalanceAmount'>[] {
+  private _recalculateAllocations(items: PortfolioItem[]): PortfolioItem[] {
+    const totalInvested = items.reduce((sum, p) => sum + p.totalCost, 0);
+    
+    // Recalculate allocations for local modifications (before backend sync)
+    return items.map(p => {
+      const currentAllocationPercentage = totalInvested > 0 ? (p.totalCost / totalInvested) * 100 : 0;
+      const allocationDifference = currentAllocationPercentage - p.targetAllocationPercentage;
+      const rebalanceAmount = (allocationDifference / 100) * totalInvested;
+      
+      // Determine rebalancing status based on allocation difference
+      let rebalancingStatus = 'Balanced';
+      if (allocationDifference > 0.1) {
+        rebalancingStatus = 'Overweight';
+      } else if (allocationDifference < -0.1) {
+        rebalancingStatus = 'Underweight';
+      }
+
+      return {
+        ...p,
+        currentAllocationPercentage,
+        allocationDifference,
+        rebalanceAmount,
+        rebalancingStatus
+      };
+    });
+  }
+
+  private mapApiDataToPortfolio(data: ApiPortfolioResponse): PortfolioItem[] {
     return data.positions.map(position => ({
       ticker: position.ticker,
       companyName: position.securityName,
@@ -198,6 +224,11 @@ export class PortfolioService {
       totalShares: position.totalShares,
       averageSharePrice: position.averageSharePrice,
       targetAllocationPercentage: position.targetAllocationPercentage, // Already a percentage
+      // Use backend's allocation calculations
+      currentAllocationPercentage: position.currentAllocationPercentage ?? 0,
+      allocationDifference: position.allocationDeviation, // Backend uses allocationDeviation
+      rebalanceAmount: position.rebalancingAmount,
+      rebalancingStatus: position.rebalancingStatus, // "Balanced", "Overweight", or "Underweight"
       transactions: mapApiTransactionsToTransactions(
         position.transactions,
         position.ticker // Fallback ticker from position if transaction doesn't have it
