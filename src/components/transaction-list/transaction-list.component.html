@@ -1,5 +1,28 @@
-<div class="bg-white shadow-sm rounded-lg overflow-hidden">
-  <ul class="divide-y divide-gray-200 max-h-[calc(100vh-20rem)] overflow-y-auto">
+<div class="h-full overflow-hidden flex flex-col">
+  <!-- Header Label with Add Button -->
+  <div class="flex items-center justify-between mb-3 flex-shrink-0">
+    <h2 class="text-sm font-medium text-gray-900">Historical Transactions</h2>
+    @if (!isLoading() && !error()) {
+      <button 
+        (click)="toggleAdd.emit()" 
+        class="flex items-center justify-center w-8 h-8 rounded-full bg-gray-900 text-white hover:bg-gray-800 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-2"
+        [attr.aria-label]="isAdding() ? 'Cancel adding transaction' : 'Add new transaction'">
+        @if (isAdding()) {
+          <!-- X icon -->
+          <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        } @else {
+          <!-- Plus icon -->
+          <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+          </svg>
+        }
+      </button>
+    }
+  </div>
+  
+  <ul class="divide-y divide-gray-200 flex-1 overflow-y-auto" style="scrollbar-gutter: stable;">
     @if (isAdding()) {
       <app-transaction-edit-row (save)="save.emit($event)" (cancel)="cancel.emit()"></app-transaction-edit-row>
     }
@@ -11,28 +34,28 @@
           (cancel)="cancelEdit()">
         </app-transaction-edit-row>
       } @else {
-        <li class="group p-3 sm:p-4 hover:bg-gray-50 transition-colors duration-150">
-          <div class="flex items-center justify-between gap-3">
+        <li class="group p-2 hover:bg-gray-50 transition-colors duration-150 rounded">
+          <div class="flex items-center justify-between gap-2">
             <!-- Left side: Ticker and Date -->
-            <div class="flex items-center gap-3 min-w-0">
+            <div class="flex items-center gap-2 min-w-0 flex-grow">
               <div class="flex-shrink-0">
-                <div [class]="'w-10 h-10 rounded-full flex items-center justify-center font-bold text-base ' + getTransactionTypePillClass(transaction.transactionType)">
+                <div [class]="'w-8 h-8 rounded-full flex items-center justify-center font-semibold text-sm ' + getTransactionTypePillClass(transaction.transactionType)">
                   {{ transaction.ticker.substring(0, 1) }}
                 </div>
               </div>
-              <div class="min-w-0">
-                <p class="text-base font-bold text-gray-900 truncate">{{ getCompanyName(transaction) }}</p>
-                <div class="flex items-baseline gap-x-2 mt-1">
-                  <p class="text-sm text-gray-500">{{ transaction.ticker }}</p>
-                  <p class="text-sm text-gray-500">{{ transaction.date | date:'mediumDate' }}</p>
-                </div>
+              <div class="min-w-0 flex items-center gap-2 text-sm">
+                <span class="font-semibold text-gray-900 truncate">{{ getCompanyName(transaction) }}</span>
+                <span class="text-gray-400">•</span>
+                <span class="text-gray-500">{{ transaction.ticker }}</span>
+                <span class="text-gray-400">•</span>
+                <span class="text-gray-500">{{ transaction.date | date:'shortDate' }}</span>
               </div>
             </div>
             
             <!-- Right side: Details and Amount -->
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-2 flex-shrink-0">
               <!-- Share Details - hidden on small screens -->
-              <div class="hidden sm:block text-sm text-right text-gray-500">
+              <div class="hidden sm:block text-xs text-right text-gray-500">
                 @if (transaction.transactionType !== 'dividend') {
                   <span>{{ transaction.shares }} @ {{ transaction.sharePrice | currency:'EUR' }}</span>
                 }
@@ -41,12 +64,12 @@
               <!-- Group: Pill and Amount together -->
               <div class="flex items-center gap-2">
                 <!-- Pill -->
-                <span [class]="'px-2 py-0.5 inline-flex text-xs leading-5 font-semibold rounded-full ' + getTransactionTypePillClass(transaction.transactionType)">
+                <span [class]="'px-1.5 py-0.5 inline-flex text-xs leading-4 font-semibold rounded-full ' + getTransactionTypePillClass(transaction.transactionType)">
                     {{ transaction.transactionType }}
                 </span>
 
                 <!-- Total Amount -->
-                <p class="text-base font-medium text-right w-24 sm:w-28" [class]="{
+                <p class="text-sm font-medium text-right" [class]="{
                   'text-red-600': transaction.transactionType === 'buy',
                   'text-green-600': transaction.transactionType === 'sell' || transaction.transactionType === 'dividend'
                 }">
@@ -56,13 +79,13 @@
 
               <!-- Action Buttons - visible on group-hover -->
               <div class="flex-shrink-0 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                <button (click)="startEdit(transaction)" class="p-2 text-gray-500 hover:bg-gray-200 rounded-full transition-colors">
+                <button (click)="startEdit(transaction)" class="p-1.5 text-gray-500 hover:bg-gray-200 rounded-full transition-colors">
                   <span class="sr-only">Edit</span>
-                  <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" /></svg>
+                  <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" /></svg>
                 </button>
-                <button (click)="handleDelete(transaction)" class="p-2 text-gray-500 hover:bg-red-100 hover:text-red-600 rounded-full transition-colors">
+                <button (click)="handleDelete(transaction)" class="p-1.5 text-gray-500 hover:bg-red-100 hover:text-red-600 rounded-full transition-colors">
                   <span class="sr-only">Delete</span>
-                  <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" clip-rule="evenodd" /></svg>
+                  <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" clip-rule="evenodd" /></svg>
                 </button>
               </div>
             </div>

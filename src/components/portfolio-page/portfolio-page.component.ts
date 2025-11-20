@@ -7,12 +7,11 @@ import { Transaction } from '../../models/transaction.model';
 import { RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { PortfolioSkeletonComponent } from '../ghosting-elements/portfolio-skeleton/portfolio-skeleton.component';
-import { PortfolioSummarySkeletonComponent } from '../ghosting-elements/portfolio-summary-skeleton/portfolio-summary-skeleton.component';
 
 @Component({
   selector: 'app-portfolio-page',
   templateUrl: './portfolio-page.component.html',
-  imports: [PortfolioListComponent, RouterLink, CommonModule, PortfolioSkeletonComponent, PortfolioSummarySkeletonComponent],
+  imports: [PortfolioListComponent, RouterLink, CommonModule, PortfolioSkeletonComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PortfolioPageComponent implements OnDestroy {

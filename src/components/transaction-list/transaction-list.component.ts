@@ -13,11 +13,14 @@ import { TransactionEditRowComponent } from '../transaction-edit-row/transaction
 export class TransactionListComponent {
   transactions = input.required<Transaction[]>();
   isAdding = input.required<boolean>();
+  isLoading = input<boolean>(false);
+  error = input<string | null>(null);
 
   save = output<NewTransactionData>();
   cancel = output<void>();
   update = output<Transaction>();
   delete = output<Transaction>();
+  toggleAdd = output<void>();
   
   editingTransactionId = signal<string | null>(null);
   

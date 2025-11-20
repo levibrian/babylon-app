@@ -7,12 +7,11 @@ import { PortfolioService } from '../../services/portfolio.service';
 import { Transaction, NewTransactionData } from '../../models/transaction.model';
 import { RouterLink, ActivatedRoute, Router } from '@angular/router';
 import { TransactionSkeletonComponent } from '../ghosting-elements/transaction-skeleton/transaction-skeleton.component';
-import { TotalInvestedSkeletonComponent } from '../ghosting-elements/total-invested-skeleton/total-invested-skeleton.component';
 
 @Component({
   selector: 'app-transactions-page',
   templateUrl: './transactions-page.component.html',
-  imports: [TransactionListComponent, RouterLink, CommonModule, TransactionSkeletonComponent, TotalInvestedSkeletonComponent],
+  imports: [TransactionListComponent, RouterLink, CommonModule, TransactionSkeletonComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TransactionsPageComponent {

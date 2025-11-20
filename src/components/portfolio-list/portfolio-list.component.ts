@@ -110,4 +110,39 @@ export class PortfolioListComponent {
         return 'font-medium text-gray-500';
     }
   }
+
+  getRebalancingStatusText(item: PortfolioItem): string {
+    return item.rebalancingStatus;
+  }
+
+  getCurrentAllocationColorClass(item: PortfolioItem): string {
+    switch (item.rebalancingStatus) {
+      case 'Overweight':
+        return 'text-red-600';
+      case 'Underweight':
+        return 'text-green-600';
+      case 'Balanced':
+      default:
+        return 'text-gray-900';
+    }
+  }
+
+  getRebalanceActionText(item: PortfolioItem): string {
+    const absAmount = Math.abs(item.rebalanceAmount);
+    switch (item.rebalancingStatus) {
+      case 'Overweight':
+        return `Sell €${absAmount.toFixed(0)}`;
+      case 'Underweight':
+        return `Buy €${absAmount.toFixed(0)}`;
+      case 'Balanced':
+      default:
+        return '';
+    }
+  }
+
+  getRebalancingStatusWithAction(item: PortfolioItem): string {
+    const status = this.getRebalancingStatusText(item);
+    const action = this.getRebalanceActionText(item);
+    return action ? `${status} ${action}` : status;
+  }
 }

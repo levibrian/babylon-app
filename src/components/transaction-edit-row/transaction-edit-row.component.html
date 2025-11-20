@@ -2,8 +2,8 @@
   <form [formGroup]="transactionForm" (ngSubmit)="onSubmit()">
     <div class="flex flex-col gap-y-4">
       
-      <!-- Row 1: Transaction Type -->
-      <div class="flex items-center gap-x-4">
+      <!-- Row 1: Transaction Type (left) & Action Buttons (right) -->
+      <div class="flex items-center justify-between">
         <!-- Segmented Control for Transaction Type -->
         <div class="inline-flex rounded-md shadow-sm" role="group">
           <button 
@@ -21,10 +21,26 @@
             Sell
           </button>
         </div>
+
+        <!-- Action Buttons -->
+        <div class="flex items-center gap-2">
+            <button type="submit" [disabled]="transactionForm.invalid" class="p-2 text-green-600 hover:bg-green-100 rounded-full transition-colors duration-150 disabled:text-gray-400 disabled:hover:bg-transparent">
+              <span class="sr-only">Save</span>
+              <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+              </svg>
+            </button>
+            <button type="button" (click)="onCancel()" class="p-2 text-red-600 hover:bg-red-100 rounded-full transition-colors duration-150">
+              <span class="sr-only">Cancel</span>
+              <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+              </svg>
+            </button>
+        </div>
       </div>
       
-      <!-- Row 2: Inputs & Actions -->
-      <div class="flex items-end flex-wrap gap-x-3 gap-y-4 w-full border-t border-gray-200 pt-4">
+      <!-- Row 2: Inputs -->
+      <div class="flex items-end flex-wrap gap-x-3 gap-y-4 w-full">
         <!-- Ticker -->
         <div class="flex-grow sm:flex-grow-0 sm:w-28">
           <input id="ticker" type="text" formControlName="ticker" placeholder="e.g. BTC, TSLA..." aria-label="Ticker" class="block w-full bg-transparent border-0 border-b border-gray-300 focus:ring-0 focus:border-blue-500 text-gray-900 text-sm p-2 uppercase placeholder:normal-case placeholder:text-gray-400" required>
@@ -48,22 +64,6 @@
         <!-- Readonly Total -->
         <div class="flex-grow sm:flex-grow-0 sm:w-32">
           <input id="totalAmount" type="text" [value]="totalAmount() | currency:'EUR':'symbol':'1.2-2'" readonly placeholder="Total" aria-label="Total Amount" class="block w-full bg-transparent border-0 border-b border-gray-200 text-gray-700 text-sm p-2 cursor-not-allowed">
-        </div>
-
-        <!-- Action Buttons -->
-        <div class="flex items-center gap-2 ml-auto">
-            <button type="submit" [disabled]="transactionForm.invalid" class="p-2 text-green-600 hover:bg-green-100 rounded-full transition-colors duration-150 disabled:text-gray-400 disabled:hover:bg-transparent">
-              <span class="sr-only">Save</span>
-              <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
-              </svg>
-            </button>
-            <button type="button" (click)="onCancel()" class="p-2 text-red-600 hover:bg-red-100 rounded-full transition-colors duration-150">
-              <span class="sr-only">Cancel</span>
-              <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
-              </svg>
-            </button>
         </div>
       </div>
     </div>
