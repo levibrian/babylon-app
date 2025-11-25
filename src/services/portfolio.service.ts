@@ -71,6 +71,15 @@ export class PortfolioService {
     }
   }
 
+  /**
+   * Optimistic UI update for adding a transaction.
+   * NOTE: This method is NOT called directly by components. All transaction operations
+   * go through TransactionService, which triggers PortfolioService.reload() after backend sync.
+   * 
+   * This method is kept for potential future use but currently serves as a reference.
+   * It only performs simple aggregations (shares, cost, avg price) and marks the position
+   * as pending sync. Allocation calculations are deferred to backend.
+   */
   public addTransaction(transactionData: NewTransactionData): void {
     const totalAmount = transactionData.shares * transactionData.sharePrice;
     const newTransaction: Transaction = {
@@ -102,11 +111,29 @@ export class PortfolioService {
         portfolioCopy.push(position);
     }
     
+    // Only recalculate simple aggregations (shares, cost, avg price)
+    // Allocation calculations are deferred to backend to avoid floating-point inconsistencies
     this._recalculatePositionAggregates(position);
-    const recalculatedPortfolio = this._recalculateAllocations(portfolioCopy);
-    this._recalculateAndSetPortfolio(recalculatedPortfolio);
+    
+    // Mark position as pending sync - allocation values will be updated when backend responds
+    position.pendingSync = true;
+    
+    // Update total invested, but keep existing allocation values from backend
+    // These will be refreshed when TransactionService triggers reload()
+    const totalInvested = portfolioCopy.reduce((sum, p) => sum + p.totalCost, 0);
+    this._totalInvested.set(totalInvested);
+    this._portfolio.set(portfolioCopy);
   }
 
+  /**
+   * Optimistic UI update for updating a transaction.
+   * NOTE: This method is NOT called directly by components. All transaction operations
+   * go through TransactionService, which triggers PortfolioService.reload() after backend sync.
+   * 
+   * This method is kept for potential future use but currently serves as a reference.
+   * It only performs simple aggregations (shares, cost, avg price) and marks the position
+   * as pending sync. Allocation calculations are deferred to backend.
+   */
   public updateTransaction(updatedTx: Transaction): void {
     const portfolioCopy = JSON.parse(JSON.stringify(this._portfolio()));
     const position = portfolioCopy.find(p => p.ticker === updatedTx.ticker);
@@ -127,11 +154,28 @@ export class PortfolioService {
     const finalUpdatedTx: Transaction = { ...updatedTx, totalAmount };
     position.transactions[txIndex] = finalUpdatedTx;
     
+    // Only recalculate simple aggregations (shares, cost, avg price)
+    // Allocation calculations are deferred to backend to avoid floating-point inconsistencies
     this._recalculatePositionAggregates(position);
-    const recalculatedPortfolio = this._recalculateAllocations(portfolioCopy);
-    this._recalculateAndSetPortfolio(recalculatedPortfolio);
+    
+    // Mark position as pending sync - allocation values will be updated when backend responds
+    position.pendingSync = true;
+    
+    // Update total invested, but keep existing allocation values from backend
+    const totalInvested = portfolioCopy.reduce((sum, p) => sum + p.totalCost, 0);
+    this._totalInvested.set(totalInvested);
+    this._portfolio.set(portfolioCopy);
   }
 
+  /**
+   * Optimistic UI update for deleting a transaction.
+   * NOTE: This method is NOT called directly by components. All transaction operations
+   * go through TransactionService, which triggers PortfolioService.reload() after backend sync.
+   * 
+   * This method is kept for potential future use but currently serves as a reference.
+   * It only performs simple aggregations (shares, cost, avg price) and marks the position
+   * as pending sync. Allocation calculations are deferred to backend.
+   */
   public deleteTransaction(transactionId: string, ticker: string): void {
     const portfolioCopy = JSON.parse(JSON.stringify(this._portfolio()));
     let position = portfolioCopy.find(p => p.ticker === ticker);
@@ -144,13 +188,23 @@ export class PortfolioService {
     position.transactions = position.transactions.filter(t => t.id !== transactionId);
 
     if (position.transactions.length === 0) {
+      // Remove position entirely
       const portfolioWithoutPosition = portfolioCopy.filter(p => p.ticker !== ticker);
-      const recalculatedPortfolio = this._recalculateAllocations(portfolioWithoutPosition);
-      this._recalculateAndSetPortfolio(recalculatedPortfolio);
+      const totalInvested = portfolioWithoutPosition.reduce((sum, p) => sum + p.totalCost, 0);
+      this._totalInvested.set(totalInvested);
+      this._portfolio.set(portfolioWithoutPosition);
     } else {
+      // Only recalculate simple aggregations (shares, cost, avg price)
+      // Allocation calculations are deferred to backend to avoid floating-point inconsistencies
       this._recalculatePositionAggregates(position);
-      const recalculatedPortfolio = this._recalculateAllocations(portfolioCopy);
-      this._recalculateAndSetPortfolio(recalculatedPortfolio);
+      
+      // Mark position as pending sync - allocation values will be updated when backend responds
+      position.pendingSync = true;
+      
+      // Update total invested, but keep existing allocation values from backend
+      const totalInvested = portfolioCopy.reduce((sum, p) => sum + p.totalCost, 0);
+      this._totalInvested.set(totalInvested);
+      this._portfolio.set(portfolioCopy);
     }
   }
 
@@ -184,11 +238,19 @@ export class PortfolioService {
     this._totalInvested.set(totalInvested);
 
     // Use backend's allocation calculations directly - no recalculation needed
-    // Note: When items come from backend, they already have allocation values.
-    // When items are modified locally (add/update/delete), we recalculate below.
-    this._portfolio.set(items);
+    // Backend is the Source of Truth for allocation calculations
+    // Clear pending sync flags when receiving fresh data from backend
+    const itemsWithClearedPending = items.map(p => ({ ...p, pendingSync: false }));
+    this._portfolio.set(itemsWithClearedPending);
   }
 
+  /**
+   * @deprecated This method duplicates backend allocation calculation logic and can cause
+   * floating-point inconsistencies between JavaScript and C#. Allocation calculations should
+   * only be performed by the backend. This method is kept for reference but should not be used.
+   * 
+   * See: PROJECT_DOCUMENTATION.md - "Architectural Risks & Recommendations" section
+   */
   private _recalculateAllocations(items: PortfolioItem[]): PortfolioItem[] {
     const totalInvested = items.reduce((sum, p) => sum + p.totalCost, 0);
     

@@ -102,12 +102,12 @@ export class PortfolioListComponent {
   getRebalancingStatusClass(item: PortfolioItem): string {
     switch (item.rebalancingStatus) {
       case 'Overweight':
-        return 'font-medium text-red-600';
+        return 'bg-red-100 text-red-800 border-red-200';
       case 'Underweight':
-        return 'font-medium text-green-600';
+        return 'bg-green-100 text-green-800 border-green-200';
       case 'Balanced':
       default:
-        return 'font-medium text-gray-500';
+        return 'bg-gray-100 text-gray-800 border-gray-200';
     }
   }
 

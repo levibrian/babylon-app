@@ -3,6 +3,7 @@ import { Transaction, NewTransactionData } from '../models/transaction.model';
 import { PortfolioService } from './portfolio.service';
 import { ApiTransaction, ApiTransactionsResponse } from '../models/api-response.model';
 import { mapApiTransactionsToTransactions } from '../utils/transaction-mapper.util';
+import { toast } from 'ngx-sonner';
 
 const API_BASE_URL = 'https://localhost:7192';
 const USER_ID = 'a1b2c3d4-e5f6-4a5b-8c9d-0e1f2a3b4c5d';
@@ -80,9 +81,12 @@ export class TransactionService {
         this.portfolioService.reload()
       ]);
 
+      // Show success toast
+      toast.success('Transaction saved successfully');
+
     } catch (err) {
       console.error('Error adding transaction:', err);
-      alert('Could not save transaction. Please try again.');
+      toast.error('Could not save transaction. Please try again.');
     }
   }
 
@@ -105,9 +109,12 @@ export class TransactionService {
         this.portfolioService.reload()
       ]);
 
+      // Show success toast
+      toast.success('Position updated');
+
     } catch (err) {
       console.error('Error updating transaction:', err);
-      alert('Could not update transaction. Please try again.');
+      toast.error('Could not update transaction. Please try again.');
     }
   }
 
@@ -128,9 +135,12 @@ export class TransactionService {
         this.portfolioService.reload()
       ]);
 
+      // Show success toast
+      toast.success('Transaction deleted successfully');
+
     } catch (err) {
       console.error('Error deleting transaction:', err);
-      alert('Could not delete transaction. Please try again.');
+      toast.error('Could not delete transaction. Please try again.');
     }
   }
 }

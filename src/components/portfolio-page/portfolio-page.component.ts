@@ -7,15 +7,16 @@ import { Transaction } from '../../models/transaction.model';
 import { RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { PortfolioSkeletonComponent } from '../ghosting-elements/portfolio-skeleton/portfolio-skeleton.component';
+import { ErrorStateComponent } from '../common/error-state/error-state.component';
 
 @Component({
   selector: 'app-portfolio-page',
   templateUrl: './portfolio-page.component.html',
-  imports: [PortfolioListComponent, RouterLink, CommonModule, PortfolioSkeletonComponent],
+  imports: [PortfolioListComponent, RouterLink, CommonModule, PortfolioSkeletonComponent, ErrorStateComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PortfolioPageComponent implements OnDestroy {
-  private portfolioService = inject(PortfolioService);
+  portfolioService = inject(PortfolioService);
   private transactionService = inject(TransactionService);
   
   portfolio: Signal<PortfolioItem[]> = this.portfolioService.portfolio;

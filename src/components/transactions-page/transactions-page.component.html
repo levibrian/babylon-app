@@ -1,4 +1,4 @@
-<main class="min-h-screen flex flex-col lg:flex-row lg:h-screen">
+<main class="flex flex-col lg:flex-row overflow-hidden" style="height: 100vh; max-height: 100vh;">
   <!-- Left Pane (55% width on large screens, full width on mobile) -->
   <div class="w-full lg:w-[55%] flex flex-col lg:h-full">
     <!-- Top Section (20% height on large screens, auto on mobile) -->
@@ -18,11 +18,6 @@
         <div class="flex-1">
           <div class="h-4 bg-gray-200 rounded w-40 mb-2 animate-pulse"></div>
           <div class="h-8 sm:h-10 bg-gray-200 rounded w-48 animate-pulse"></div>
-        </div>
-      } @else if (error()) {
-        <div class="bg-red-50 border-l-4 border-red-400 p-4" role="alert">
-          <p class="font-bold text-red-800">Error</p>
-          <p class="text-red-700">{{ error() }}</p>
         </div>
       } @else {
         <div class="flex-1">
@@ -60,18 +55,17 @@
   </div>
 
   <!-- Right Pane (45% width on large screens, full width on mobile) - Transactions List or Recurring Investments -->
-  <div class="w-full lg:w-[45%] min-h-[400px] lg:h-full overflow-hidden flex flex-col p-4 sm:p-6">
+  <div class="w-full lg:w-[45%] p-4 sm:p-6" style="height: 100%; overflow-y: auto;">
     @if (activeView() === 'transactions') {
       <!-- Transactions List -->
       @if (isLoading() && !isAddingTransaction()) {
         <app-transaction-skeleton></app-transaction-skeleton>
-      } @else if (error()) {
-        <div class="p-4 sm:p-6">
-          <div class="bg-red-50 border-l-4 border-red-400 p-4" role="alert">
-            <p class="font-bold text-red-800">Error</p>
-            <p class="text-red-700">{{ error() }}</p>
-          </div>
-        </div>
+      } @else if (error() && transactions().length === 0) {
+        <app-error-state
+          [title]="'Unable to load transactions'"
+          [message]="error() || 'We couldn\'t connect to Alfred. Please check your connection.'"
+          (retry)="transactionService.reload()">
+        </app-error-state>
       } @else {
         <app-transaction-list 
           [transactions]="transactions()" 

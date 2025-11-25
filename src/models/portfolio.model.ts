@@ -13,10 +13,13 @@ export interface PortfolioItem {
   averageSharePrice: number;
   transactions: Transaction[];
 
-  // Strategic Allocation fields
+  // Strategic Allocation fields (from backend - Source of Truth)
   targetAllocationPercentage: number; // e.g., 30 for 30%
   currentAllocationPercentage: number; // e.g., 31.5 for 31.5%
   allocationDifference: number; // e.g., 1.5 for 1.5% overweight
   rebalanceAmount: number; // e.g., 160 for "Sell ~€160"
   rebalancingStatus: string; // "Balanced", "Overweight", or "Underweight"
+  
+  // Pending sync state (for optimistic updates)
+  pendingSync?: boolean; // true when local changes are pending backend sync
 }

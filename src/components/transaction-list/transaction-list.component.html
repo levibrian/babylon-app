@@ -1,6 +1,6 @@
-<div class="h-full overflow-hidden flex flex-col">
+<div class="flex flex-col">
   <!-- Navigation Pane with Add Button -->
-  <div class="flex items-center justify-between mb-3 flex-shrink-0">
+  <div class="flex items-center justify-between mb-3">
     <div class="flex items-baseline gap-x-3 sm:gap-x-4">
       <h2 class="text-sm font-bold tracking-tight text-gray-900">Historical Transactions</h2>
       <button 
@@ -29,7 +29,7 @@
     }
   </div>
   
-  <ul class="divide-y divide-gray-200 flex-1 overflow-y-auto" style="scrollbar-gutter: stable;">
+  <ul class="divide-y divide-gray-200">
     @if (isAdding()) {
       <app-transaction-edit-row (save)="save.emit($event)" (cancel)="cancel.emit()"></app-transaction-edit-row>
     }

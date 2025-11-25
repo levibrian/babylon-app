@@ -1,0 +1,194 @@
+<div class="p-6 space-y-12 bg-gray-50 min-h-screen">
+  <h1 class="text-3xl font-bold text-gray-900 mb-8">Portfolio Design Options</h1>
+
+  <!-- Option 1: Card-based Layout -->
+  <section class="space-y-4">
+    <h2 class="text-2xl font-semibold text-gray-800 mb-4">Option 1: Card-based Layout</h2>
+    <div class="space-y-3">
+      @for (item of demoPositions; track item.ticker) {
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow">
+          <!-- Header: Company Name and Ticker -->
+          <div class="flex items-start justify-between mb-3">
+            <div>
+              <h3 class="text-lg font-bold text-gray-900">{{ item.companyName }}</h3>
+              <p class="text-sm text-gray-500 mt-0.5">{{ item.ticker }}</p>
+            </div>
+            <div class="text-right">
+              <p class="text-xl font-bold text-gray-900">{{ item.totalCost | currency:'EUR':'symbol':'1.2-2' }}</p>
+            </div>
+          </div>
+
+          <!-- Allocation Row -->
+          <div class="flex items-center gap-2 mb-2 text-sm">
+            <span class="text-gray-500">Allocation:</span>
+            <span class="text-gray-700 font-medium">T {{ item.targetAllocationPercentage | number:'1.1-1' }}%</span>
+            <span class="text-gray-400">→</span>
+            <span [class]="'font-medium ' + getCurrentAllocationColorClass(item)">
+              C {{ item.currentAllocationPercentage | number:'1.1-1' }}%
+            </span>
+          </div>
+
+          <!-- Position Details -->
+          <div class="flex items-center gap-2 mb-3 text-sm text-gray-600">
+            <span>Position:</span>
+            <span class="font-medium">{{ item.totalShares | number:'1.0-4' }} shares</span>
+            <span class="text-gray-400">@</span>
+            <span class="font-medium">{{ item.averageSharePrice | currency:'EUR' }}</span>
+          </div>
+
+          <!-- Rebalancing Badge -->
+          @if (item.rebalancingStatus !== 'Balanced') {
+            <div [class]="'inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold border ' + getRebalancingStatusClass(item)">
+              {{ getRebalancingText(item) }}
+            </div>
+          }
+        </div>
+      }
+    </div>
+  </section>
+
+  <!-- Option 2: Two-row Compact Layout -->
+  <section class="space-y-4">
+    <h2 class="text-2xl font-semibold text-gray-800 mb-4">Option 2: Two-row Compact Layout</h2>
+    <div class="space-y-2">
+      @for (item of demoPositions; track item.ticker) {
+        <div class="bg-white rounded-lg border border-gray-200 p-3 hover:bg-gray-50 transition-colors">
+          <!-- Row 1: Company and Total Value -->
+          <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center gap-2">
+              <span class="font-bold text-gray-900">{{ item.companyName }}</span>
+              <span class="text-gray-500 text-sm">({{ item.ticker }})</span>
+            </div>
+            <span class="text-lg font-bold text-gray-900">{{ item.totalCost | currency:'EUR':'symbol':'1.2-2' }}</span>
+          </div>
+
+          <!-- Row 2: Details -->
+          <div class="flex items-center gap-2 text-sm text-gray-600">
+            <span class="text-gray-500">T</span>
+            <span class="font-medium text-gray-900">{{ item.targetAllocationPercentage | number:'1.1-1' }}%</span>
+            <span class="text-gray-400">→</span>
+            <span class="text-gray-500">C</span>
+            <span [class]="'font-medium ' + getCurrentAllocationColorClass(item)">
+              {{ item.currentAllocationPercentage | number:'1.1-1' }}%
+            </span>
+            <span class="text-gray-400">•</span>
+            <span>{{ item.totalShares | number:'1.0-4' }} shares @ {{ item.averageSharePrice | currency:'EUR' }}</span>
+            @if (item.rebalancingStatus !== 'Balanced') {
+              <span class="text-gray-400">•</span>
+              <span [class]="'font-semibold ' + getCurrentAllocationColorClass(item)">
+                {{ getRebalancingText(item) }}
+              </span>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  </section>
+
+  <!-- Option 3: Visual Allocation Bar -->
+  <section class="space-y-4">
+    <h2 class="text-2xl font-semibold text-gray-800 mb-4">Option 3: Visual Allocation Bar</h2>
+    <div class="space-y-3">
+      @for (item of demoPositions; track item.ticker) {
+        <div class="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md transition-shadow">
+          <!-- Company Name and Ticker -->
+          <div class="flex items-center justify-between mb-3">
+            <div>
+              <span class="font-bold text-gray-900">{{ item.companyName }}</span>
+              <span class="text-gray-500 text-sm ml-2">({{ item.ticker }})</span>
+            </div>
+            <span class="text-xl font-bold text-gray-900">{{ item.totalCost | currency:'EUR':'symbol':'1.2-2' }}</span>
+          </div>
+
+          <!-- Allocation Bar -->
+          <div class="mb-3">
+            <div class="flex items-center justify-between text-xs text-gray-600 mb-1">
+              <span>Target: {{ item.targetAllocationPercentage | number:'1.1-1' }}%</span>
+              <span [class]="'font-medium ' + getCurrentAllocationColorClass(item)">
+                Current: {{ item.currentAllocationPercentage | number:'1.1-1' }}%
+              </span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-2.5 relative overflow-hidden">
+              <!-- Target indicator -->
+              <div class="absolute left-0 top-0 bottom-0 w-0.5 bg-gray-400" 
+                   [style.left.%]="item.targetAllocationPercentage"></div>
+              <!-- Current allocation bar -->
+              <div [class]="'h-full rounded-full transition-all duration-300 ' + 
+                            (item.rebalancingStatus === 'Overweight' ? 'bg-red-500' : 
+                             item.rebalancingStatus === 'Underweight' ? 'bg-green-500' : 'bg-blue-500')"
+                   [style.width.%]="item.currentAllocationPercentage"
+                   [style.max-width.%]="100"></div>
+            </div>
+          </div>
+
+          <!-- Position Details -->
+          <div class="flex items-center gap-2 text-sm text-gray-600">
+            <span>{{ item.totalShares | number:'1.0-4' }} shares</span>
+            <span class="text-gray-400">@</span>
+            <span class="font-medium">{{ item.averageSharePrice | currency:'EUR' }}</span>
+            @if (item.rebalancingStatus !== 'Balanced') {
+              <span class="text-gray-400">•</span>
+              <span [class]="'font-semibold ' + getCurrentAllocationColorClass(item)">
+                {{ getRebalancingText(item) }}
+              </span>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  </section>
+
+  <!-- Option 4: Minimalist with Badges -->
+  <section class="space-y-4">
+    <h2 class="text-2xl font-semibold text-gray-800 mb-4">Option 4: Minimalist with Badges</h2>
+    <div class="space-y-2">
+      @for (item of demoPositions; track item.ticker) {
+        <div class="bg-white rounded-lg border border-gray-200 p-4 hover:bg-gray-50 transition-colors">
+          <div class="flex items-center justify-between">
+            <!-- Left: Company Info -->
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2 mb-2">
+                <span class="font-bold text-lg text-gray-900 truncate">{{ item.companyName }}</span>
+                <span class="text-gray-500 text-sm">({{ item.ticker }})</span>
+              </div>
+              
+              <!-- Badges Row -->
+              <div class="flex items-center gap-2 flex-wrap">
+                <!-- Allocation Badge -->
+                <div class="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-gray-100 text-xs">
+                  <span class="text-gray-600">T:</span>
+                  <span class="font-medium text-gray-900">{{ item.targetAllocationPercentage | number:'1.1-1' }}%</span>
+                  <span class="text-gray-400">→</span>
+                  <span class="text-gray-600">C:</span>
+                  <span [class]="'font-medium ' + getCurrentAllocationColorClass(item)">
+                    {{ item.currentAllocationPercentage | number:'1.1-1' }}%
+                  </span>
+                </div>
+
+                <!-- Position Badge -->
+                <div class="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-gray-100 text-xs text-gray-600">
+                  <span>{{ item.totalShares | number:'1.0-4' }} shares</span>
+                  <span>@</span>
+                  <span class="font-medium">{{ item.averageSharePrice | currency:'EUR' }}</span>
+                </div>
+
+                <!-- Rebalancing Badge -->
+                @if (item.rebalancingStatus !== 'Balanced') {
+                  <div [class]="'inline-flex items-center px-2 py-1 rounded-md text-xs font-semibold border ' + getRebalancingStatusClass(item)">
+                    {{ getRebalancingText(item) }}
+                  </div>
+                }
+              </div>
+            </div>
+
+            <!-- Right: Total Value -->
+            <div class="ml-4 text-right flex-shrink-0">
+              <p class="text-2xl font-bold text-gray-900">{{ item.totalCost | currency:'EUR':'symbol':'1.2-2' }}</p>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  </section>
+</div>
+

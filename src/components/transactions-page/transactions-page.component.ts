@@ -8,15 +8,16 @@ import { PortfolioService } from '../../services/portfolio.service';
 import { Transaction, NewTransactionData } from '../../models/transaction.model';
 import { RouterLink, ActivatedRoute, Router } from '@angular/router';
 import { TransactionSkeletonComponent } from '../ghosting-elements/transaction-skeleton/transaction-skeleton.component';
+import { ErrorStateComponent } from '../common/error-state/error-state.component';
 
 @Component({
   selector: 'app-transactions-page',
   templateUrl: './transactions-page.component.html',
-  imports: [TransactionListComponent, RecurringInvestmentsListComponent, RouterLink, CommonModule, TransactionSkeletonComponent],
+  imports: [TransactionListComponent, RecurringInvestmentsListComponent, RouterLink, CommonModule, TransactionSkeletonComponent, ErrorStateComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TransactionsPageComponent {
-  private transactionService = inject(TransactionService);
+  transactionService = inject(TransactionService);
   private portfolioService = inject(PortfolioService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
