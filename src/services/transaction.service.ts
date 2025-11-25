@@ -2,7 +2,7 @@ import { Injectable, inject, Signal, signal } from '@angular/core';
 import { Transaction, NewTransactionData } from '../models/transaction.model';
 import { PortfolioService } from './portfolio.service';
 import { ApiTransaction, ApiTransactionsResponse } from '../models/api-response.model';
-import { mapApiTransactionsToTransactions } from '../utils/transaction-mapper.util';
+import { mapApiTransactionsToTransactions, mapToCreateTransactionRequest } from '../utils/transaction-mapper.util';
 import { toast } from 'ngx-sonner';
 
 const API_BASE_URL = 'https://localhost:7192';
@@ -63,18 +63,23 @@ export class TransactionService {
 
 
   async addTransaction(transactionData: NewTransactionData): Promise<void> {
-    try {
-      // Real API call to add transaction
-      const response = await fetch(`${API_BASE_URL}/api/v1/transactions/${USER_ID}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(transactionData),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to save transaction');
-      }
+     try {
+      // Map frontend format to backend API format
+      const requestBody = mapToCreateTransactionRequest(transactionData, USER_ID);
       
+      // Real API call to add transaction - userId is in the request body, not the URL
+      const response = await fetch(`${API_BASE_URL}/api/v1/transactions`, {
+         method: 'POST',
+         headers: { 'Content-Type': 'application/json' },
+         body: JSON.stringify(requestBody),
+       });
+
+       if (!response.ok) {
+         const errorText = await response.text();
+         console.error('API Error:', response.status, errorText);
+         throw new Error(`Failed to save transaction: ${response.status} ${response.statusText}`);
+       }
+       
       // After a successful save, reload transactions and portfolio data
       await Promise.all([
         this.reload(),

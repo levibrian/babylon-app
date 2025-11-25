@@ -1,13 +1,14 @@
 import { Component, ChangeDetectionStrategy, input, output, signal } from '@angular/core';
-import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
+import { CommonModule, CurrencyPipe, DecimalPipe } from '@angular/common';
 // Fix: Import NewTransactionData from the correct model file.
 import { Transaction, NewTransactionData } from '../../models/transaction.model';
 import { TransactionEditRowComponent } from '../transaction-edit-row/transaction-edit-row.component';
+import { formatDateShort } from '../../utils/date-formatter.util';
 
 @Component({
   selector: 'app-transaction-list',
   templateUrl: './transaction-list.component.html',
-  imports: [CommonModule, CurrencyPipe, DatePipe, TransactionEditRowComponent],
+  imports: [CommonModule, CurrencyPipe, DecimalPipe, TransactionEditRowComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TransactionListComponent {
@@ -75,4 +76,6 @@ export class TransactionListComponent {
     if (type === 'sell') return '+';
     return '+'; // Dividends are gains
   }
+
+  formatDate = formatDateShort;
 }

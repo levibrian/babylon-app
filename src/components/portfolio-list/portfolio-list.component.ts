@@ -3,6 +3,7 @@ import { CommonModule, CurrencyPipe, DecimalPipe, TitleCasePipe } from '@angular
 import { PortfolioItem } from '../../models/portfolio.model';
 import { Transaction } from '../../models/transaction.model';
 import { TransactionEditRowComponent } from '../transaction-edit-row/transaction-edit-row.component';
+import { formatDateShort } from '../../utils/date-formatter.util';
 
 @Component({
   selector: 'app-portfolio-list',
@@ -145,4 +146,6 @@ export class PortfolioListComponent {
     const action = this.getRebalanceActionText(item);
     return action ? `${action}` : status;
   }
+
+  formatDate = formatDateShort;
 }

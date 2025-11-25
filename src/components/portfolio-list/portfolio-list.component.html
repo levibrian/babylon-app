@@ -86,7 +86,7 @@
                       <span [class]="'px-1.5 py-0.5 inline-flex text-xs leading-4 font-semibold rounded-full ' + getTransactionTypePillClass(transaction.transactionType)">
                         {{ transaction.transactionType | titlecase }}
                       </span>
-                      <p class="text-xs text-gray-500">{{ transaction.date | date:'shortDate' }}</p>
+                      <p class="text-xs text-gray-500">{{ formatDate(transaction.date) }}</p>
                       @if (transaction.transactionType !== 'dividend') {
                         <span class="text-xs text-gray-500">{{ transaction.shares | number:'1.0-4' }} @ {{ transaction.sharePrice | currency:'EUR' }}</span>
                       }

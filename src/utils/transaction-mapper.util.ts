@@ -1,5 +1,5 @@
 import { ApiTransaction } from '../models/api-response.model';
-import { Transaction } from '../models/transaction.model';
+import { Transaction, NewTransactionData } from '../models/transaction.model';
 
 /**
  * Maps an API transaction to a Transaction model.
@@ -32,5 +32,49 @@ export function mapApiTransactionsToTransactions(
   fallbackTicker?: string
 ): Transaction[] {
   return apiTransactions.map(t => mapApiTransactionToTransaction(t, fallbackTicker));
+}
+
+/**
+ * Maps frontend NewTransactionData to backend CreateTransactionRequest format.
+ * Converts camelCase to PascalCase and formats data for the C# API.
+ */
+export interface CreateTransactionRequest {
+  Ticker: string;
+  TransactionType: 'Buy' | 'Sell' | 'Dividend';
+  Date: string | null; // DateOnly format: YYYY-MM-DD
+  SharesQuantity: number;
+  SharePrice: number;
+  Fees: number;
+  UserId: string | null;
+}
+
+export function mapToCreateTransactionRequest(
+  transactionData: NewTransactionData,
+  userId: string | null = null
+): CreateTransactionRequest {
+  // Convert transaction type to capitalized format expected by backend
+  const transactionTypeMap: Record<'buy' | 'sell' | 'dividend', 'Buy' | 'Sell' | 'Dividend'> = {
+    'buy': 'Buy',
+    'sell': 'Sell',
+    'dividend': 'Dividend',
+  };
+  
+  // Convert ISO date string to DateOnly format (YYYY-MM-DD)
+  let dateFormatted: string | null = null;
+  if (transactionData.date) {
+    const dateObj = new Date(transactionData.date);
+    // Format as YYYY-MM-DD
+    dateFormatted = dateObj.toISOString().split('T')[0];
+  }
+  
+  return {
+    Ticker: transactionData.ticker,
+    TransactionType: transactionTypeMap[transactionData.transactionType],
+    Date: dateFormatted,
+    SharesQuantity: transactionData.shares,
+    SharePrice: transactionData.sharePrice,
+    Fees: transactionData.fees,
+    UserId: userId,
+  };
 }
 
