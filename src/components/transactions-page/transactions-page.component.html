@@ -1,6 +1,6 @@
 <main class="flex flex-col lg:flex-row overflow-hidden" style="height: 100vh; max-height: 100vh;">
-  <!-- Left Pane (55% width on large screens, full width on mobile) -->
-  <div class="w-full lg:w-[55%] flex flex-col lg:h-full">
+  <!-- Left Pane (50% width on large screens, full width on mobile) -->
+  <div class="w-full lg:w-1/2 flex flex-col lg:h-full">
     <!-- Top Section (20% height on large screens, auto on mobile) -->
     <div class="min-h-[200px] lg:h-[20%] flex flex-col p-4 sm:p-6">
       <!-- Navigation -->
@@ -54,8 +54,8 @@
     </div>
   </div>
 
-  <!-- Right Pane (45% width on large screens, full width on mobile) - Transactions List or Recurring Investments -->
-  <div class="w-full lg:w-[45%] p-4 sm:p-6" style="height: 100%; overflow-y: auto;">
+  <!-- Right Pane (50% width on large screens, full width on mobile) - Transactions List or Recurring Investments -->
+  <div class="w-full lg:w-1/2 p-4 sm:p-6" style="height: 100%; overflow-y: auto;">
     @if (activeView() === 'transactions') {
       <!-- Transactions List -->
       @if (isLoading() && !isAddingTransaction()) {
