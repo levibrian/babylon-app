@@ -147,5 +147,11 @@ export class PortfolioListComponent {
     return action ? `${action}` : status;
   }
 
+  getPortfolioAvatarClass(item: PortfolioItem): string {
+    // Use green color scheme to match transaction list buy transactions
+    // This ensures "Bitcoin" looks identical in both Portfolio and Transaction views
+    return 'bg-green-100 text-green-800';
+  }
+
   formatDate = formatDateShort;
 }

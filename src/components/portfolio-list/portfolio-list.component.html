@@ -1,36 +1,45 @@
 <div class="flex flex-col">
   <!-- Header Label -->
-  <h2 class="text-sm font-medium text-gray-900 mb-3">Positions</h2>
+  <h2 class="text-sm font-bold tracking-tight text-gray-900 mb-3">Positions</h2>
   
-  <ul class="space-y-3">
+  <ul class="divide-y divide-gray-200">
     @for (item of portfolio(); track item.ticker) {
       <li class="group">
         <!-- Parent Item -->
-        <div class="cursor-pointer bg-white rounded-lg border border-gray-200 p-4 hover:bg-gray-50 transition-colors" (click)="toggleExpand(item.ticker)">
+        <div [class]="'cursor-pointer p-3 hover:bg-gray-50 transition-colors duration-150 border-b border-gray-100 ' + (isExpanded(item.ticker) ? 'bg-gray-50' : '')" (click)="toggleExpand(item.ticker)">
           <div class="flex items-center justify-between">
-            <!-- Left: Company Info -->
-            <div class="flex-1 min-w-0">
-              <div class="flex items-center gap-2 mb-2">
-                <span class="font-bold text-sm text-gray-900 truncate">{{ item.companyName }}</span>
+            <!-- Left: Avatar and Company Info -->
+            <div class="flex items-center gap-3 flex-1 min-w-0">
+              <!-- Avatar -->
+              <div class="flex-shrink-0">
+                <div [class]="'w-12 h-12 rounded-full flex items-center justify-center font-semibold text-base ' + getPortfolioAvatarClass(item)">
+                  {{ item.ticker.substring(0, 1) }}
+                </div>
               </div>
+              
+              <!-- Company Info -->
+              <div class="flex-1 min-w-0">
+                <div class="mb-2">
+                  <span class="text-base font-bold text-gray-900 truncate">{{ item.companyName }}</span>
+                </div>
               
               <!-- Badges Row -->
               <div class="flex items-center gap-2 flex-wrap">
                 <!-- Position Badge -->
-                <div class="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-gray-100 text-xs text-gray-600">
-                  <span>{{ item.totalShares | number:'1.0-4' }} shares</span>
-                  <span>@</span>
-                  <span class="font-medium">{{ item.averageSharePrice | currency:'EUR' }}</span>
+                <div class="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-gray-100 text-xs">
+                  <span class="font-bold text-gray-900">{{ item.totalShares | number:'1.0-4' }}</span>
+                  <span class="font-normal text-gray-500">units • Avg:</span>
+                  <span class="font-normal text-gray-500">{{ item.averageSharePrice | currency:'EUR':'symbol':'1.2-2' }}</span>
                 </div>
 
                 <!-- Allocation Badge -->
                 <div class="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-gray-100 text-xs">
-                  <span class="text-gray-600">C:</span>
+                  <span class="text-xs font-medium text-gray-600">Act:</span>
                   <span [class]="'font-medium ' + getCurrentAllocationColorClass(item)">
                     {{ item.currentAllocationPercentage | number:'1.1-1' }}%
                   </span>
                   <span class="text-gray-400">→</span>
-                  <span class="text-gray-600">T:</span>
+                  <span class="text-xs font-medium text-gray-600">Tgt:</span>
                   <span class="font-medium text-gray-900">{{ item.targetAllocationPercentage | number:'1.1-1' }}%</span>
                 </div>
 
@@ -40,6 +49,7 @@
                     {{ getRebalancingStatusWithAction(item) }}
                   </div>
                 }
+              </div>
               </div>
             </div>
 
@@ -67,54 +77,59 @@
              [class.max-h-[1000px]]="isExpanded(item.ticker)">
           <ul class="bg-gray-50">
             @for (transaction of item.transactions; track transaction.id) {
-              @if (isEditing(transaction.id)) {
-                <li class="border-t border-gray-200">
-                  <app-transaction-edit-row 
-                    [initialState]="transaction"
-                    (save)="handleUpdate($event)" 
-                    (cancel)="cancelEdit()">
-                  </app-transaction-edit-row>
-                </li>
-              } @else {
-                <li class="border-t border-gray-200 group/transaction">
-                  <div class="flex items-center justify-between gap-2 p-2 pl-8 pr-8">
-                    <!-- Left side: Icon, TransactionType, Date, Share Details -->
-                    <div class="flex items-center gap-2 min-w-0 flex-grow">
-                      <svg class="w-4 h-4 text-gray-400 transform rotate-180 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 9l6-6m0 0l6 6m-6-6v12a6 6 0 01-12 0v-3" />
-                      </svg>
-                      <span [class]="'px-1.5 py-0.5 inline-flex text-xs leading-4 font-semibold rounded-full ' + getTransactionTypePillClass(transaction.transactionType)">
-                        {{ transaction.transactionType | titlecase }}
-                      </span>
-                      <p class="text-xs text-gray-500">{{ formatDate(transaction.date) }}</p>
-                      @if (transaction.transactionType !== 'dividend') {
-                        <span class="text-xs text-gray-500">{{ transaction.shares | number:'1.0-4' }} @ {{ transaction.sharePrice | currency:'EUR' }}</span>
-                      }
-                      <!-- Action Buttons - visible on group-hover -->
-                      <div class="flex-shrink-0 flex items-center gap-1 opacity-0 group-hover/transaction:opacity-100 transition-opacity duration-200 ml-auto">
-                        <button (click)="startEdit(transaction)" (click)="$event.stopPropagation()" class="p-1.5 text-gray-500 hover:bg-gray-200 rounded-full transition-colors">
-                          <span class="sr-only">Edit</span>
-                          <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" /></svg>
-                        </button>
-                        <button (click)="handleDelete(transaction)" (click)="$event.stopPropagation()" class="p-1.5 text-gray-500 hover:bg-red-100 hover:text-red-600 rounded-full transition-colors">
-                          <span class="sr-only">Delete</span>
-                          <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" clip-rule="evenodd" /></svg>
-                        </button>
+              <li class="border-t border-gray-200">
+                <div class="flex items-center gap-4 p-2 pl-8 pr-3">
+                  <!-- Column 1: Icon -->
+                  <div class="flex-shrink-0">
+                    @if (transaction.transactionType === 'buy') {
+                      <!-- Arrow Down Icon for Buy -->
+                      <div class="w-6 h-6 rounded-full bg-green-50 flex items-center justify-center p-1">
+                        <svg class="w-4 h-4 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 13.5L12 21m0 0l-7.5-7.5M12 21V3" />
+                        </svg>
                       </div>
-                    </div>
-
-                    <!-- Right side: Total Amount -->
-                    <div class="flex items-center gap-2 flex-shrink-0">
-                      <p class="text-sm font-medium text-right" [class]="{
-                        'text-red-600': transaction.transactionType === 'buy',
-                        'text-green-600': transaction.transactionType === 'sell' || transaction.transactionType === 'dividend'
-                      }">
-                        {{ getValuePrefix(transaction.transactionType) }}{{ getTotalValue(transaction) | currency:'EUR':'symbol':'1.2-2' }}
-                      </p>
-                    </div>
+                    } @else if (transaction.transactionType === 'sell') {
+                      <!-- Arrow Up Icon for Sell -->
+                      <div class="w-6 h-6 rounded-full bg-red-50 flex items-center justify-center p-1">
+                        <svg class="w-4 h-4 text-red-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 10.5L12 3m0 0l7.5 7.5M12 3v18" />
+                        </svg>
+                      </div>
+                    } @else {
+                      <!-- Dividend Icon -->
+                      <div class="w-6 h-6 rounded-full bg-blue-50 flex items-center justify-center p-1">
+                        <svg class="w-4 h-4 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818l.818.182a2.25 2.25 0 002.364 0l.818-.182m-3 0v-6.636m0 0l2.5.545a2.25 2.25 0 002.5 0l2.5-.545M12 6V4.5m0 0l2.5.545a2.25 2.25 0 002.5 0L19.5 4.5M12 6l-2.5.545a2.25 2.25 0 00-2.5 0L4.5 6" />
+                        </svg>
+                      </div>
+                    }
                   </div>
-                </li>
-              }
+
+                  <!-- Column 2: Date -->
+                  <div class="flex-shrink-0 w-20">
+                    <p class="text-sm text-gray-500">{{ formatDate(transaction.date) }}</p>
+                  </div>
+
+                  <!-- Column 3: Details (Shares @ Price) -->
+                  <div class="flex-1 min-w-0 text-left">
+                    @if (transaction.transactionType !== 'dividend') {
+                      <span class="text-sm text-gray-500">{{ transaction.shares | number:'1.0-4' }} units @ {{ transaction.sharePrice | currency:'EUR':'symbol':'1.0-4' }}</span>
+                    } @else {
+                      <span class="text-sm text-gray-500">Dividend</span>
+                    }
+                  </div>
+
+                  <!-- Column 4: Amount (Right Aligned) -->
+                  <div class="flex-shrink-0 text-right pr-8">
+                    <p class="text-sm font-medium" [class]="{
+                      'text-red-600': transaction.transactionType === 'buy',
+                      'text-green-600': transaction.transactionType === 'sell' || transaction.transactionType === 'dividend'
+                    }">
+                      {{ getValuePrefix(transaction.transactionType) }}{{ getTotalValue(transaction) | currency:'EUR':'symbol':'1.2-2' }}
+                    </p>
+                  </div>
+                </div>
+              </li>
             }
           </ul>
         </div>

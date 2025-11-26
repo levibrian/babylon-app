@@ -77,5 +77,33 @@ export class TransactionListComponent {
     return '+'; // Dividends are gains
   }
 
+  getTransactionTypeLabel(transaction: Transaction): string {
+    if (transaction.transactionType === 'sell') {
+      return 'Sell Order';
+    }
+    if (transaction.transactionType === 'dividend') {
+      return 'Dividend';
+    }
+    // For buy transactions
+    if (transaction.fees === 0) {
+      return 'Savings Plan';
+    }
+    return 'Buy Order';
+  }
+
+  getTransactionTypeLabelClass(transaction: Transaction): string {
+    if (transaction.transactionType === 'sell') {
+      return 'text-gray-500';
+    }
+    if (transaction.transactionType === 'dividend') {
+      return 'text-gray-500';
+    }
+    // For buy transactions
+    if (transaction.fees === 0) {
+      return 'text-indigo-600 font-medium';
+    }
+    return 'text-gray-500';
+  }
+
   formatDate = formatDateShort;
 }
