@@ -1,4 +1,5 @@
-import { Component, ChangeDetectionStrategy, ChangeDetectorRef, output, OnInit, inject, signal, computed, ViewChild, ElementRef, AfterViewInit, effect } from '@angular/core';
+import { Component, ChangeDetectionStrategy, ChangeDetectorRef, output, OnInit, inject, signal, computed, ViewChild, ElementRef, AfterViewInit, effect, Signal } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { CommonModule, CurrencyPipe } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, FormArray, Validators } from '@angular/forms';
 import { RecurringScheduleService } from '../../services/recurring-schedule.service';
@@ -98,11 +99,34 @@ export class RecurringInvestmentsListComponent implements OnInit, AfterViewInit 
     return !!(shares && shares > 0 && sharePrice && sharePrice > 0);
   }
 
-  // Get valid rows for execution
+  // Live form changes signal - converts FormArray valueChanges to a signal
+  // Initialized in constructor after gridForm is created
+  private formChanges!: Signal<any[]>;
+
+  // Computed signal for valid transaction count (for button display)
+  // This reacts to form value changes via formChanges signal
+  validTransactionCount = computed(() => {
+    const rawValues = this.formChanges();
+    if (!rawValues || rawValues.length === 0) return 0;
+    
+    return rawValues.filter((row: any) => {
+      const shares = row.shares;
+      const sharePrice = row.sharePrice;
+      return shares && Number(shares) > 0 && sharePrice && Number(sharePrice) > 0;
+    }).length;
+  });
+
+  // Get valid rows for execution (kept for executeTransactions method)
   validRows = computed(() => {
     const rows: number[] = [];
-    for (let i = 0; i < this.rowsFormArray.length; i++) {
-      if (this.isRowValid(i)) {
+    const rawValues = this.formChanges();
+    if (!rawValues) return rows;
+    
+    for (let i = 0; i < rawValues.length; i++) {
+      const row = rawValues[i];
+      const shares = row.shares;
+      const sharePrice = row.sharePrice;
+      if (shares && Number(shares) > 0 && sharePrice && Number(sharePrice) > 0) {
         rows.push(i);
       }
     }
@@ -121,6 +145,10 @@ export class RecurringInvestmentsListComponent implements OnInit, AfterViewInit 
     this.gridForm = this.fb.group({
       rows: this.fb.array([])
     });
+
+    // Initialize formChanges signal from FormArray valueChanges
+    // This makes computed signals reactive to form input changes
+    this.formChanges = toSignal(this.rowsFormArray.valueChanges, { initialValue: [] });
 
     // Watch for schedule changes and trigger change detection
     // Effects must be created in constructor (injection context)
@@ -179,6 +207,7 @@ export class RecurringInvestmentsListComponent implements OnInit, AfterViewInit 
       }
 
       // Trigger change detection
+      // Note: formChanges signal will automatically update via valueChanges subscription
       this.cdr.markForCheck();
     });
 
@@ -375,10 +404,7 @@ export class RecurringInvestmentsListComponent implements OnInit, AfterViewInit 
   }
 
   async executeTransactions(): Promise<void> {
-    console.log('executeTransactions called');
     const validRowIndices = this.validRows();
-    console.log('Valid row indices:', validRowIndices);
-    console.log('Rows form array length:', this.rowsFormArray.length);
     
     if (validRowIndices.length === 0) {
       toast.error('Please fill in at least one row with shares and price');
@@ -388,6 +414,7 @@ export class RecurringInvestmentsListComponent implements OnInit, AfterViewInit 
     const schedules = this.schedules();
     const transactions: NewTransactionData[] = [];
 
+    // Map valid rows to transaction data
     for (const index of validRowIndices) {
       const rowGroup = this.rowsFormArray.at(index) as FormGroup;
       const scheduleId = rowGroup.get('scheduleId')?.value;
@@ -400,6 +427,7 @@ export class RecurringInvestmentsListComponent implements OnInit, AfterViewInit 
       const fees = rowGroup.get('fees')?.value || 0;
       const date = rowGroup.get('date')?.value || new Date().toISOString().substring(0, 10);
       
+      // Double-check validation (should already be validated by validRows)
       if (!shares || !sharePrice || shares <= 0 || sharePrice <= 0) {
         continue;
       }
@@ -416,14 +444,14 @@ export class RecurringInvestmentsListComponent implements OnInit, AfterViewInit 
     }
 
     if (transactions.length === 0) {
+      toast.error('No valid transactions to log');
       return;
     }
 
     try {
-      console.log('Creating transactions:', transactions);
       // Create transactions sequentially to avoid overwhelming the API
+      // Note: TransactionService doesn't have a bulk method, so we call addTransaction for each
       for (const transaction of transactions) {
-        console.log('Adding transaction:', transaction);
         await this.transactionService.addTransaction(transaction);
       }
 
@@ -439,12 +467,10 @@ export class RecurringInvestmentsListComponent implements OnInit, AfterViewInit 
         });
       }
 
-      console.log('Transactions created successfully');
       toast.success(`Successfully logged ${transactions.length} transaction${transactions.length > 1 ? 's' : ''}`);
     } catch (err) {
       console.error('Error executing transactions:', err);
       toast.error('Could not log all transactions. Please try again.');
-      throw err; // Re-throw to see error in console
     }
   }
 }

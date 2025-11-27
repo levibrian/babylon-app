@@ -1,14 +1,13 @@
 import { Component, ChangeDetectionStrategy, input, output, signal } from '@angular/core';
-import { CommonModule, CurrencyPipe, DecimalPipe, TitleCasePipe } from '@angular/common';
+import { CommonModule, CurrencyPipe, DecimalPipe } from '@angular/common';
 import { PortfolioItem } from '../../models/portfolio.model';
 import { Transaction } from '../../models/transaction.model';
-import { TransactionEditRowComponent } from '../transaction-edit-row/transaction-edit-row.component';
 import { formatDateShort } from '../../utils/date-formatter.util';
 
 @Component({
   selector: 'app-portfolio-list',
   templateUrl: './portfolio-list.component.html',
-  imports: [CommonModule, CurrencyPipe, DecimalPipe, TitleCasePipe, TransactionEditRowComponent],
+  imports: [CommonModule, CurrencyPipe, DecimalPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PortfolioListComponent {

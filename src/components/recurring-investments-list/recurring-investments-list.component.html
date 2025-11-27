@@ -10,7 +10,7 @@
   </div>
   
   <!-- Add New Bar -->
-  <div class="mb-4 pb-4 border-b border-gray-200 flex-shrink-0">
+  <div class="mb-2 flex-shrink-0">
     <form [formGroup]="addNewForm" (ngSubmit)="addSchedule()" class="flex flex-col lg:flex-row gap-4 items-end">
       <!-- Ticker Autocomplete -->
       <div class="flex flex-col gap-1 flex-1 relative">
@@ -80,27 +80,25 @@
       </div>
     } @else {
       <!-- Grid Header -->
-      <div class="hidden lg:flex items-center gap-2 pb-2 mb-2 border-b border-gray-50 text-[10px] font-bold text-gray-400 uppercase tracking-widest w-full">
-        <div class="flex-1 min-w-0 max-w-[250px] truncate">Asset</div>
-        <div class="flex items-center justify-end gap-2 flex-shrink-0 ml-auto">
-          <div class="w-[85px] flex-shrink-0">Date</div>
-          <div class="w-[70px] text-right flex-shrink-0">Shares</div>
-          <div class="w-20 text-right flex-shrink-0">Price</div>
-          <div class="w-14 text-right flex-shrink-0">Fees</div>
-          <div class="w-20 text-right flex-shrink-0">Total</div>
-        </div>
+      <div class="hidden lg:flex items-center gap-0 pb-2 border-b border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-widest w-full">
+        <div class="w-[30%] shrink-0 truncate pr-4">Asset</div>
+        <div class="w-[20%] shrink-0">Date</div>
+        <div class="w-[10%] shrink-0 text-right">Shares</div>
+        <div class="w-[15%] shrink-0 text-right">Price</div>
+        <div class="w-[10%] shrink-0 text-right">Fees</div>
+        <div class="w-[15%] shrink-0 text-right">Total</div>
       </div>
 
       <!-- Grid Rows -->
       <form [formGroup]="gridForm" class="w-full min-w-0">
-        <div formArrayName="rows" class="space-y-3 w-full min-w-0">
+        <div formArrayName="rows" class="w-full min-w-0">
           @for (rowGroup of rowsFormArray.controls; track rowGroup.get('scheduleId')?.value; let i = $index) {
             @if (getScheduleForRow(i)) {
               @let schedule = getScheduleForRow(i)!;
-              <div [formGroupName]="i" class="relative group flex flex-col lg:flex-row lg:items-center gap-2 border-b border-gray-50 py-4 hover:bg-gray-50/50 transition-colors w-full">
+              <div [formGroupName]="i" class="relative group flex flex-col lg:flex-row lg:items-center gap-0 border-b border-gray-100 py-2 hover:bg-gray-50/50 transition-colors w-full">
                 <!-- Asset Info (Left) -->
-                <div class="flex-1 min-w-0 max-w-[250px]">
-                  <div class="font-bold text-gray-900 truncate">
+                <div class="w-[30%] shrink-0 truncate pr-4">
+                  <div class="font-bold text-gray-900 truncate text-sm">
                     {{ schedule.securityName }}
                   </div>
                   <div class="flex items-center gap-2 text-xs text-gray-500 truncate">
@@ -111,60 +109,57 @@
                   </div>
                 </div>
 
-                <!-- Inputs (Right Aligned Group) -->
-                <div class="flex flex-col lg:flex-row lg:items-center gap-2 justify-end flex-shrink-0 ml-auto">
-                  <!-- Date -->
-                  <div class="flex flex-col gap-1 w-[85px] flex-shrink-0">
-                    <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest lg:hidden">Date</label>
-                    <input 
-                      type="date"
-                      formControlName="date"
-                      class="w-full py-1 text-sm font-medium text-gray-900 border-transparent bg-transparent hover:bg-gray-50 focus:bg-gray-50 rounded transition-all duration-200 outline-none">
-                  </div>
+                <!-- Date -->
+                <div class="flex flex-col gap-1 w-[20%] shrink-0">
+                  <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest lg:hidden">Date</label>
+                  <input 
+                    type="date"
+                    formControlName="date"
+                    class="w-full py-1 text-sm font-medium text-gray-900 border-transparent bg-transparent hover:bg-gray-50 focus:bg-gray-50 rounded transition-all duration-200 outline-none">
+                </div>
 
-                  <!-- Shares -->
-                  <div class="flex flex-col gap-1 w-[70px] flex-shrink-0">
-                    <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest lg:hidden">Shares</label>
-                    <input 
-                      type="number"
-                      step="0.0001"
-                      formControlName="shares"
-                      placeholder="0.00"
-                      class="w-full py-1 text-sm font-mono text-right text-gray-900 border-transparent bg-transparent hover:bg-gray-50 focus:bg-gray-50 rounded transition-all duration-200 outline-none placeholder-gray-400">
-                  </div>
+                <!-- Shares -->
+                <div class="flex flex-col gap-1 w-[10%] shrink-0">
+                  <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest lg:hidden">Shares</label>
+                  <input 
+                    type="number"
+                    step="0.0001"
+                    formControlName="shares"
+                    placeholder="0.00"
+                    class="w-full py-1 text-sm font-mono text-right text-gray-900 border-transparent bg-transparent hover:bg-gray-50 focus:bg-gray-50 rounded transition-all duration-200 outline-none placeholder-gray-400">
+                </div>
 
-                  <!-- Price -->
-                  <div class="flex flex-col gap-1 w-20 flex-shrink-0">
-                    <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest lg:hidden">Price</label>
-                    <input 
-                      type="number"
-                      step="0.01"
-                      formControlName="sharePrice"
-                      placeholder="Price"
-                      class="w-full py-1 text-sm font-mono text-right text-gray-900 border-transparent bg-transparent hover:bg-gray-50 focus:bg-gray-50 rounded transition-all duration-200 outline-none placeholder-gray-400">
-                  </div>
+                <!-- Price -->
+                <div class="flex flex-col gap-1 w-[15%] shrink-0">
+                  <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest lg:hidden">Price</label>
+                  <input 
+                    type="number"
+                    step="0.01"
+                    formControlName="sharePrice"
+                    placeholder="Price"
+                    class="w-full py-1 text-sm font-mono text-right text-gray-900 border-transparent bg-transparent hover:bg-gray-50 focus:bg-gray-50 rounded transition-all duration-200 outline-none placeholder-gray-400">
+                </div>
 
-                  <!-- Fees -->
-                  <div class="flex flex-col gap-1 w-14 flex-shrink-0">
-                    <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest lg:hidden">Fees</label>
-                    <input 
-                      type="number"
-                      step="0.01"
-                      formControlName="fees"
-                      placeholder="0.00"
-                      class="w-full py-1 text-sm font-mono text-right text-gray-900 border-transparent bg-transparent hover:bg-gray-50 focus:bg-gray-50 rounded transition-all duration-200 outline-none placeholder-gray-400">
-                  </div>
+                <!-- Fees -->
+                <div class="flex flex-col gap-1 w-[10%] shrink-0">
+                  <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest lg:hidden">Fees</label>
+                  <input 
+                    type="number"
+                    step="0.01"
+                    formControlName="fees"
+                    placeholder="0.00"
+                    class="w-full py-1 text-sm font-mono text-right text-gray-900 border-transparent bg-transparent hover:bg-gray-50 focus:bg-gray-50 rounded transition-all duration-200 outline-none placeholder-gray-400">
+                </div>
 
-                  <!-- Total (Read-only) -->
-                  <div class="flex flex-col gap-1 w-20 flex-shrink-0">
-                    <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest lg:hidden">Total</label>
-                    <div class="font-mono text-sm font-bold text-gray-900 text-right py-1">
-                      @if (getRowTotal(i) > 0) {
-                        {{ getRowTotal(i) | currency:'EUR':'symbol':'1.2-2' }}
-                      } @else {
-                        <span class="text-gray-300">—</span>
-                      }
-                    </div>
+                <!-- Total (Read-only) -->
+                <div class="flex flex-col gap-1 w-[15%] shrink-0">
+                  <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest lg:hidden">Total</label>
+                  <div class="font-mono text-sm font-bold text-gray-900 text-right py-1">
+                    @if (getRowTotal(i) > 0) {
+                      {{ getRowTotal(i) | currency:'EUR':'symbol':'1.2-2' }}
+                    } @else {
+                      <span class="text-gray-300">—</span>
+                    }
                   </div>
                 </div>
 
@@ -200,8 +195,8 @@
     <div class="flex-shrink-0 pt-4 border-t border-gray-200 mt-auto">
       <div class="flex items-center justify-between">
         <div class="text-sm text-gray-600">
-          @if (validRows().length > 0) {
-            <span class="font-medium">{{ validRows().length }}</span> transaction{{ validRows().length > 1 ? 's' : '' }} ready to log
+          @if (validTransactionCount() > 0) {
+            <span class="font-medium">{{ validTransactionCount() }}</span> transaction{{ validTransactionCount() > 1 ? 's' : '' }} ready to log
           } @else {
             Fill in shares and price to log transactions
           }
@@ -209,9 +204,9 @@
         <button 
           type="button"
           (click)="executeTransactions(); $event.stopPropagation()"
-          [disabled]="validRows().length === 0"
+          [disabled]="validTransactionCount() === 0"
           class="px-6 py-2 text-sm font-medium text-white bg-gray-900 rounded-md hover:bg-gray-800 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed">
-          Log {{ validRows().length }} Transaction{{ validRows().length !== 1 ? 's' : '' }}
+          Log {{ validTransactionCount() }} Transaction{{ validTransactionCount() !== 1 ? 's' : '' }}
         </button>
       </div>
     </div>
