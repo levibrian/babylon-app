@@ -1,6 +1,7 @@
 import { Component, ChangeDetectionStrategy, inject, Signal, signal, OnDestroy, effect } from '@angular/core';
 import { PortfolioListComponent } from '../portfolio-list/portfolio-list.component';
 import { StrategyPanelComponent } from '../strategy-panel/strategy-panel.component';
+import { PortfolioDashboardComponent } from '../portfolio-dashboard/portfolio-dashboard.component';
 import { PortfolioService } from '../../services/portfolio.service';
 import { TransactionService } from '../../services/transaction.service';
 import { PortfolioItem, PortfolioInsight } from '../../models/portfolio.model';
@@ -13,14 +14,15 @@ import { ErrorStateComponent } from '../common/error-state/error-state.component
 @Component({
   selector: 'app-portfolio-page',
   templateUrl: './portfolio-page.component.html',
-  imports: [PortfolioListComponent, StrategyPanelComponent, RouterLink, CommonModule, PortfolioSkeletonComponent, ErrorStateComponent],
+  imports: [PortfolioListComponent, StrategyPanelComponent, PortfolioDashboardComponent, RouterLink, CommonModule, PortfolioSkeletonComponent, ErrorStateComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PortfolioPageComponent implements OnDestroy {
   portfolioService = inject(PortfolioService);
-  private transactionService = inject(TransactionService);
+  transactionService = inject(TransactionService);
   
   portfolio: Signal<PortfolioItem[]> = this.portfolioService.portfolio;
+  transactions: Signal<Transaction[]> = this.transactionService.transactions;
   totalValue: Signal<number> = this.portfolioService.totalPortfolioValue;
   isLoading: Signal<boolean> = this.portfolioService.loading;
   error: Signal<string | null> = this.portfolioService.error;

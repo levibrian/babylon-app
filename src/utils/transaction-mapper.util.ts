@@ -21,6 +21,7 @@ export function mapApiTransactionToTransaction(apiTransaction: ApiTransaction, f
     fees: apiTransaction.fees,
     totalAmount: apiTransaction.totalAmount,
     securityName: apiTransaction.securityName,
+    securityType: apiTransaction.securityType,
   };
 }
 

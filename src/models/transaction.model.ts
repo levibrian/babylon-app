@@ -1,3 +1,5 @@
+import { SecurityType } from './security.model';
+
 export interface Transaction {
   id: string;
   date: string; // ISO format
@@ -8,6 +10,7 @@ export interface Transaction {
   fees: number;
   totalAmount: number;
   securityName?: string; // Company/security name (optional for backward compatibility)
+  securityType?: SecurityType;
 }
 
 /**

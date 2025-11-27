@@ -57,6 +57,22 @@
     input[type=number] {
       -moz-appearance: textfield;
     }
+
+    /* Fade animation for carousel */
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(4px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .animate-fade-in {
+      animation: fadeIn 0.3s ease-in-out;
+    }
   </style>
 <script type="importmap">
 {

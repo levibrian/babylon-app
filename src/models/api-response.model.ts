@@ -1,3 +1,5 @@
+import { SecurityType } from './security.model';
+
 // Backend API: TransactionDto
 export interface ApiTransaction {
   id: string;
@@ -9,6 +11,7 @@ export interface ApiTransaction {
   totalAmount: number;
   securityName?: string; // Company/security name (optional for backward compatibility)
   ticker?: string; // Ticker symbol (should be included in transactions endpoint response)
+  securityType?: SecurityType;
 }
 
 // Backend API: PositionDto
@@ -24,6 +27,7 @@ export interface ApiPortfolioPosition {
   rebalancingAmount: number;
   rebalancingStatus: string; // "Balanced", "Overweight", or "Underweight"
   currentMarketValue: number | null;
+  securityType?: SecurityType;
   transactions: ApiTransaction[];
 }
 

@@ -285,6 +285,7 @@ export class PortfolioService {
       totalCost: position.totalInvested,
       totalShares: position.totalShares,
       averageSharePrice: position.averageSharePrice,
+      securityType: position.securityType,
       targetAllocationPercentage: position.targetAllocationPercentage, // Already a percentage
       // Use backend's allocation calculations
       currentAllocationPercentage: position.currentAllocationPercentage ?? 0,

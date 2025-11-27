@@ -1,0 +1,93 @@
+<div class="flex flex-col gap-4">
+  <!-- Header with Range Selector -->
+  <div class="flex items-center justify-between">
+    <div class="text-xs font-bold text-gray-400 uppercase tracking-widest">Portfolio History</div>
+    <div class="flex items-center gap-1">
+      @for (range of timeRanges; track range) {
+        <button
+          (click)="selectRange(range)"
+          class="px-2 py-1 text-xs font-mono font-medium rounded-full transition-all duration-200"
+          [class]="selectedRange() === range 
+            ? 'bg-gray-900 text-white' 
+            : 'bg-transparent text-gray-400 hover:text-gray-600'">
+          {{ range }}
+        </button>
+      }
+    </div>
+  </div>
+
+  <!-- Chart Container -->
+  @if (chartPoints().length > 0) {
+    <div class="w-full overflow-x-auto">
+      <svg
+        [attr.width]="width"
+        [attr.height]="height"
+        class="w-full h-auto"
+        viewBox="0 0 800 200"
+        preserveAspectRatio="xMidYMid meet">
+        
+        <!-- Gradient Definition -->
+        <defs>
+          <linearGradient id="areaGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" style="stop-color:#F3F4F6;stop-opacity:0.3" />
+            <stop offset="100%" style="stop-color:#F3F4F6;stop-opacity:0" />
+          </linearGradient>
+        </defs>
+
+        <!-- Gradient Fill Area -->
+        <path
+          [attr.d]="svgAreaPath()"
+          fill="url(#areaGradient)"
+          stroke="none" />
+
+        <!-- Line -->
+        <polyline
+          [attr.points]="svgPath()"
+          fill="none"
+          stroke="#111827"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round" />
+
+        <!-- X-Axis Labels -->
+        <text
+          [attr.x]="padding.left"
+          [attr.y]="height - padding.bottom + 20"
+          class="text-[10px] font-mono fill-gray-500"
+          text-anchor="start">
+          {{ startDateLabel() }}
+        </text>
+        <text
+          [attr.x]="width - padding.right"
+          [attr.y]="height - padding.bottom + 20"
+          class="text-[10px] font-mono fill-gray-500"
+          text-anchor="end">
+          {{ endDateLabel() }}
+        </text>
+
+        <!-- Y-Axis Labels -->
+        <text
+          [attr.x]="padding.left - 10"
+          [attr.y]="padding.top"
+          class="text-[10px] font-mono fill-gray-500"
+          text-anchor="end"
+          dominant-baseline="hanging">
+          {{ maxLabel() }}
+        </text>
+        <text
+          [attr.x]="padding.left - 10"
+          [attr.y]="height - padding.bottom"
+          class="text-[10px] font-mono fill-gray-500"
+          text-anchor="end"
+          dominant-baseline="auto">
+          {{ minLabel() }}
+        </text>
+      </svg>
+    </div>
+  } @else {
+    <div class="flex items-center justify-center h-48 border border-gray-200 rounded-sm bg-gray-50">
+      <p class="text-xs font-mono text-gray-400">No transaction history available</p>
+    </div>
+  }
+</div>
+

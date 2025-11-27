@@ -1,4 +1,5 @@
 import { Transaction } from './transaction.model';
+import { SecurityType } from './security.model';
 
 export interface PortfolioInsight {
   message: string;
@@ -12,6 +13,7 @@ export interface PortfolioItem {
   totalCost: number;
   averageSharePrice: number;
   transactions: Transaction[];
+  securityType?: SecurityType;
 
   // Strategic Allocation fields (from backend - Source of Truth)
   targetAllocationPercentage: number; // e.g., 30 for 30%
