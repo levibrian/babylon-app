@@ -1,5 +1,6 @@
 import { Component, ChangeDetectionStrategy, inject, Signal, signal, OnDestroy, effect } from '@angular/core';
 import { PortfolioListComponent } from '../portfolio-list/portfolio-list.component';
+import { StrategyPanelComponent } from '../strategy-panel/strategy-panel.component';
 import { PortfolioService } from '../../services/portfolio.service';
 import { TransactionService } from '../../services/transaction.service';
 import { PortfolioItem, PortfolioInsight } from '../../models/portfolio.model';
@@ -12,7 +13,7 @@ import { ErrorStateComponent } from '../common/error-state/error-state.component
 @Component({
   selector: 'app-portfolio-page',
   templateUrl: './portfolio-page.component.html',
-  imports: [PortfolioListComponent, RouterLink, CommonModule, PortfolioSkeletonComponent, ErrorStateComponent],
+  imports: [PortfolioListComponent, StrategyPanelComponent, RouterLink, CommonModule, PortfolioSkeletonComponent, ErrorStateComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PortfolioPageComponent implements OnDestroy {
@@ -30,6 +31,9 @@ export class PortfolioPageComponent implements OnDestroy {
 
   currentInsightIndex = signal(0);
   private insightTimeout: any;
+  
+  // Right pane state: 'positions' | 'strategy'
+  activeView = signal<'positions' | 'strategy'>('positions');
 
   constructor() {
     effect(() => {
@@ -88,5 +92,14 @@ export class PortfolioPageComponent implements OnDestroy {
 
   async deleteTransaction(transaction: Transaction): Promise<void> {
     await this.transactionService.deleteTransaction(transaction.id, transaction.ticker);
+  }
+
+  onAssetClick(ticker: string): void {
+    // Switch to positions view when an asset is clicked
+    this.activeView.set('positions');
+  }
+
+  setActiveView(view: 'positions' | 'strategy'): void {
+    this.activeView.set(view);
   }
 }

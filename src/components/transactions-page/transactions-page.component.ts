@@ -28,7 +28,7 @@ export class TransactionsPageComponent {
   totalInvested: Signal<number> = this.portfolioService.totalInvested;
   
   isAddingTransaction = signal(false);
-  activeView = signal<'transactions' | 'recurring'>('transactions');
+  activeView = signal<'transactions' | 'recurring'>('recurring');
   private queryParams = toSignal(this.route.queryParams);
 
   constructor() {

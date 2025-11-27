@@ -41,6 +41,9 @@ export class RecurringInvestmentsListComponent implements OnInit, AfterViewInit 
   // Search query for filtering schedules (initialized to empty string)
   searchQuery = signal('');
 
+  // Add mode toggle for progressive disclosure
+  isAddMode = signal(false);
+
   // FormArray to manage grid inputs - each FormGroup represents a schedule row
   gridForm: FormGroup;
   get rowsFormArray(): FormArray {
@@ -304,6 +307,10 @@ export class RecurringInvestmentsListComponent implements OnInit, AfterViewInit 
       case 'Escape':
         this.showDropdown.set(false);
         this.selectedIndex.set(-1);
+        // Close add mode if open
+        if (this.isAddMode()) {
+          this.closeAddMode();
+        }
         break;
     }
   }
@@ -342,12 +349,8 @@ export class RecurringInvestmentsListComponent implements OnInit, AfterViewInit 
       this.addNewForm.reset({ ticker: '' });
       this.tickerInputValue.set('');
       
-      // Focus ticker input
-      setTimeout(() => {
-        if (this.tickerInputRef?.nativeElement) {
-          this.tickerInputRef.nativeElement.focus();
-        }
-      }, 0);
+      // Close add mode after successful addition
+      this.isAddMode.set(false);
 
       toast.success('Asset added to recurring investments');
     } catch (err) {
@@ -364,6 +367,30 @@ export class RecurringInvestmentsListComponent implements OnInit, AfterViewInit 
       console.error('Error deleting schedule:', err);
       toast.error('Could not remove asset. Please try again.');
     }
+  }
+
+  toggleAddMode(): void {
+    this.isAddMode.update(mode => !mode);
+    if (this.isAddMode()) {
+      // Focus ticker input when opening add mode
+      setTimeout(() => {
+        if (this.tickerInputRef?.nativeElement) {
+          this.tickerInputRef.nativeElement.focus();
+        }
+      }, 0);
+    } else {
+      // Reset form when closing
+      this.addNewForm.reset({ ticker: '' });
+      this.tickerInputValue.set('');
+      this.showDropdown.set(false);
+    }
+  }
+
+  closeAddMode(): void {
+    this.isAddMode.set(false);
+    this.addNewForm.reset({ ticker: '' });
+    this.tickerInputValue.set('');
+    this.showDropdown.set(false);
   }
 
   // Get row FormGroup by schedule ID

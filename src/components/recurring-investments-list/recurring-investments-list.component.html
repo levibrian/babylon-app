@@ -1,68 +1,90 @@
 <div class="h-full overflow-hidden flex flex-col min-w-0 w-full">
   <!-- Navigation Pane -->
-  <div class="flex items-baseline gap-x-3 sm:gap-x-4 mb-3 flex-shrink-0">
+  <div class="flex items-baseline justify-between gap-x-3 sm:gap-x-4 mb-3 flex-shrink-0">
+    <div class="flex items-baseline gap-x-3 sm:gap-x-4">
+      <h2 class="text-sm font-bold tracking-tight text-gray-900">Recurring Investments</h2>
+      <button 
+        (click)="navigateToTransactions.emit()" 
+        class="text-sm font-medium text-gray-400 hover:text-gray-600 transition-colors">
+        Historical Transactions
+      </button>
+    </div>
+    
+    <!-- Add/Cancel Button (toggles between + and X) -->
     <button 
-      (click)="navigateToTransactions.emit()" 
-      class="text-sm font-medium text-gray-400 hover:text-gray-600 transition-colors">
-      Historical Transactions
+      (click)="toggleAddMode()"
+      class="flex items-center justify-center w-8 h-8 rounded-full bg-gray-900 text-white hover:bg-gray-800 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-2"
+      [attr.aria-label]="isAddMode() ? 'Cancel adding asset' : 'Add new asset'">
+      @if (isAddMode()) {
+        <!-- X icon -->
+        <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      } @else {
+        <!-- Plus icon -->
+        <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+        </svg>
+      }
     </button>
-    <h2 class="text-sm font-bold tracking-tight text-gray-900">Recurring Investments</h2>
   </div>
   
-  <!-- Add New Bar -->
-  <div class="mb-2 flex-shrink-0">
-    <form [formGroup]="addNewForm" (ngSubmit)="addSchedule()" class="flex flex-col lg:flex-row gap-4 items-end">
-      <!-- Ticker Autocomplete -->
-      <div class="flex flex-col gap-1 flex-1 relative">
-        <input 
-          #tickerInput
-          id="addTicker" 
-          type="text" 
-          name="recurringTicker"
-          formControlName="ticker" 
-          autocomplete="off"
-          spellcheck="false"
-          (input)="onTickerInput($event)"
-          (focus)="onTickerInputFocus()"
-          (blur)="onTickerInputBlur()"
-          (keydown)="onKeyDown($event)"
-          class="w-full py-2 text-lg font-light text-gray-900 placeholder-gray-400 border-transparent bg-transparent hover:bg-gray-50 focus:bg-gray-50 rounded transition-all duration-200 outline-none uppercase" 
-          placeholder="Type to add asset..."
-          required>
-        
-        <!-- Autocomplete Dropdown -->
-        @if (showDropdown() && filteredSecurities().length > 0) {
-          <ul 
-            class="absolute top-full left-0 mt-1 w-80 bg-white border border-gray-200 rounded-lg shadow-xl z-50 max-h-60 overflow-y-auto"
-            role="listbox">
-            @for (security of filteredSecurities(); track security.id; let i = $index) {
-              <li 
-                (click)="selectSecurity(security)"
-                (mousedown)="$event.preventDefault()"
-                [class]="'cursor-pointer px-4 py-2 hover:bg-gray-50 border-b border-gray-100 last:border-0 ' + (selectedIndex() === i ? 'bg-gray-50' : '')"
-                [attr.aria-selected]="selectedIndex() === i"
-                role="option">
-                <div class="text-sm font-medium text-gray-900 leading-tight mb-0.5 break-words">
-                  {{ security.securityName }}
-                </div>
-                <div class="text-xs text-gray-500">
-                  {{ security.ticker }}
-                </div>
-              </li>
-            }
-          </ul>
-        }
-      </div>
+  <!-- Add New Bar (shown when add mode is on) -->
+  @if (isAddMode()) {
+    <div class="mb-2 flex-shrink-0">
+      <form [formGroup]="addNewForm" (ngSubmit)="addSchedule()" class="flex flex-col lg:flex-row gap-4 items-end">
+        <!-- Ticker Autocomplete -->
+        <div class="flex flex-col gap-1 flex-1 relative">
+          <input 
+            #tickerInput
+            id="addTicker" 
+            type="text" 
+            name="recurringTicker"
+            formControlName="ticker" 
+            autocomplete="off"
+            spellcheck="false"
+            (input)="onTickerInput($event)"
+            (focus)="onTickerInputFocus()"
+            (blur)="onTickerInputBlur()"
+            (keydown)="onKeyDown($event)"
+            class="w-full py-2 text-lg font-light text-gray-900 placeholder-gray-400 border-transparent bg-transparent hover:bg-gray-50 focus:bg-gray-50 rounded transition-all duration-200 outline-none uppercase" 
+            placeholder="Type to add asset..."
+            required>
+          
+          <!-- Autocomplete Dropdown -->
+          @if (showDropdown() && filteredSecurities().length > 0) {
+            <ul 
+              class="absolute top-full left-0 mt-1 w-80 bg-white border border-gray-200 rounded-lg shadow-xl z-50 max-h-60 overflow-y-auto"
+              role="listbox">
+              @for (security of filteredSecurities(); track security.id; let i = $index) {
+                <li 
+                  (click)="selectSecurity(security)"
+                  (mousedown)="$event.preventDefault()"
+                  [class]="'cursor-pointer px-4 py-2 hover:bg-gray-50 border-b border-gray-100 last:border-0 ' + (selectedIndex() === i ? 'bg-gray-50' : '')"
+                  [attr.aria-selected]="selectedIndex() === i"
+                  role="option">
+                  <div class="text-sm font-medium text-gray-900 leading-tight mb-0.5 break-words">
+                    {{ security.securityName }}
+                  </div>
+                  <div class="text-xs text-gray-500">
+                    {{ security.ticker }}
+                  </div>
+                </li>
+              }
+            </ul>
+          }
+        </div>
 
-      <!-- Add Button -->
-      <button 
-        type="submit"
-        [disabled]="addNewForm.invalid"
-        class="px-4 py-2 text-sm font-medium text-white bg-gray-900 rounded-md hover:bg-gray-800 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed">
-        Add
-      </button>
-    </form>
-  </div>
+        <!-- Add Button -->
+        <button 
+          type="submit"
+          [disabled]="addNewForm.invalid"
+          class="px-4 py-2 text-sm font-medium text-white bg-gray-900 rounded-md hover:bg-gray-800 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed">
+          Add
+        </button>
+      </form>
+    </div>
+  }
 
   <!-- Grid Content -->
   <div class="flex-1 overflow-y-auto min-w-0 w-full" style="scrollbar-gutter: stable;">
@@ -81,12 +103,12 @@
     } @else {
       <!-- Grid Header -->
       <div class="hidden lg:flex items-center gap-0 pb-2 border-b border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-widest w-full">
-        <div class="w-[30%] shrink-0 truncate pr-4">Asset</div>
-        <div class="w-[20%] shrink-0">Date</div>
-        <div class="w-[10%] shrink-0 text-right">Shares</div>
-        <div class="w-[15%] shrink-0 text-right">Price</div>
-        <div class="w-[10%] shrink-0 text-right">Fees</div>
-        <div class="w-[15%] shrink-0 text-right">Total</div>
+        <div class="w-[32%] shrink-0 truncate pr-4">Asset</div>
+        <div class="w-[22%] shrink-0">Date</div>
+        <div class="w-[12%] shrink-0 text-right">Shares</div>
+        <div class="w-[16%] shrink-0 text-right">Price</div>
+        <div class="w-[12%] shrink-0 text-right">Fees</div>
+        <div class="w-[16%] shrink-0 text-right">Total</div>
       </div>
 
       <!-- Grid Rows -->
@@ -97,7 +119,7 @@
               @let schedule = getScheduleForRow(i)!;
               <div [formGroupName]="i" class="relative group flex flex-col lg:flex-row lg:items-center gap-0 border-b border-gray-100 py-2 hover:bg-gray-50/50 transition-colors w-full">
                 <!-- Asset Info (Left) -->
-                <div class="w-[30%] shrink-0 truncate pr-4">
+                <div class="w-[32%] shrink-0 truncate pr-4">
                   <div class="font-bold text-gray-900 truncate text-sm">
                     {{ schedule.securityName }}
                   </div>
@@ -110,7 +132,7 @@
                 </div>
 
                 <!-- Date -->
-                <div class="flex flex-col gap-1 w-[20%] shrink-0">
+                <div class="flex flex-col gap-1 w-[22%] shrink-0">
                   <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest lg:hidden">Date</label>
                   <input 
                     type="date"
@@ -119,7 +141,7 @@
                 </div>
 
                 <!-- Shares -->
-                <div class="flex flex-col gap-1 w-[10%] shrink-0">
+                <div class="flex flex-col gap-1 w-[12%] shrink-0">
                   <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest lg:hidden">Shares</label>
                   <input 
                     type="number"
@@ -130,7 +152,7 @@
                 </div>
 
                 <!-- Price -->
-                <div class="flex flex-col gap-1 w-[15%] shrink-0">
+                <div class="flex flex-col gap-1 w-[16%] shrink-0">
                   <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest lg:hidden">Price</label>
                   <input 
                     type="number"
@@ -141,7 +163,7 @@
                 </div>
 
                 <!-- Fees -->
-                <div class="flex flex-col gap-1 w-[10%] shrink-0">
+                <div class="flex flex-col gap-1 w-[12%] shrink-0">
                   <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest lg:hidden">Fees</label>
                   <input 
                     type="number"
@@ -152,7 +174,7 @@
                 </div>
 
                 <!-- Total (Read-only) -->
-                <div class="flex flex-col gap-1 w-[15%] shrink-0">
+                <div class="flex flex-col gap-1 w-[16%] shrink-0">
                   <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest lg:hidden">Total</label>
                   <div class="font-mono text-sm font-bold text-gray-900 text-right py-1">
                     @if (getRowTotal(i) > 0) {

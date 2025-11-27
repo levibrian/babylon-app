@@ -18,6 +18,7 @@ export class PortfolioListComponent {
 
   update = output<Transaction>();
   delete = output<Transaction>();
+  assetClick = output<string>(); // Emit ticker when asset is clicked
 
   isExpanded(ticker: string): boolean {
     return this.expandedTickers().has(ticker);
@@ -33,6 +34,8 @@ export class PortfolioListComponent {
         newTickers.delete(ticker);
       } else {
         newTickers.add(ticker);
+        // Emit asset click when expanding
+        this.assetClick.emit(ticker);
       }
       return newTickers;
     });

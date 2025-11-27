@@ -89,22 +89,49 @@
     </div>
   </div>
 
-  <!-- Right Pane (50% width on large screens, full width on mobile) - Portfolio Positions -->
-  <div class="w-full lg:w-1/2 p-4 sm:p-6" style="height: 100%; overflow-y: auto;">
-    @if (isLoading()) {
-      <app-portfolio-skeleton></app-portfolio-skeleton>
-    } @else if (error() && portfolio().length === 0) {
-      <app-error-state
-        [title]="'Unable to load portfolio'"
-        [message]="error() || 'We couldn\'t connect to Alfred. Please check your connection.'"
-        (retry)="portfolioService.reload()">
-      </app-error-state>
-    } @else {
-      <app-portfolio-list 
-        [portfolio]="portfolio()"
-        (update)="updateTransaction($event)"
-        (delete)="deleteTransaction($event)">
-      </app-portfolio-list>
-    }
+  <!-- Right Pane (50% width on large screens, full width on mobile) -->
+  <div class="w-full lg:w-1/2 flex flex-col" style="height: 100%; overflow: hidden;">
+    <!-- Navigation Pane -->
+    <div class="flex items-baseline gap-x-3 sm:gap-x-4 px-4 sm:px-6 pt-4 sm:pt-6 mb-3 flex-shrink-0">
+      @if (activeView() === 'positions') {
+        <h2 class="text-sm font-bold tracking-tight text-gray-900">Positions</h2>
+        <button
+          (click)="setActiveView('strategy')"
+          class="text-sm font-medium text-gray-400 hover:text-gray-600 transition-colors">
+          Strategy
+        </button>
+      } @else {
+        <button
+          (click)="setActiveView('positions')"
+          class="text-sm font-medium text-gray-400 hover:text-gray-600 transition-colors">
+          Positions
+        </button>
+        <h2 class="text-sm font-bold tracking-tight text-gray-900">Strategy</h2>
+      }
+    </div>
+
+    <!-- Content Area -->
+    <div class="flex-1 overflow-hidden h-full relative px-4 sm:px-6 pb-4 sm:pb-6">
+      @if (activeView() === 'positions') {
+        @if (isLoading()) {
+          <app-portfolio-skeleton></app-portfolio-skeleton>
+        } @else if (error() && portfolio().length === 0) {
+          <app-error-state
+            [title]="'Unable to load portfolio'"
+            [message]="error() || 'We couldn\'t connect to Alfred. Please check your connection.'"
+            (retry)="portfolioService.reload()">
+          </app-error-state>
+        } @else {
+          <app-portfolio-list 
+            [portfolio]="portfolio()"
+            (update)="updateTransaction($event)"
+            (delete)="deleteTransaction($event)"
+            (assetClick)="onAssetClick($event)">
+          </app-portfolio-list>
+        }
+      } @else {
+        <app-strategy-panel [portfolio]="portfolio()"></app-strategy-panel>
+      }
+    </div>
   </div>
 </main>
