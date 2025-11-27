@@ -55,7 +55,7 @@
   </div>
 
   <!-- Right Pane (50% width on large screens, full width on mobile) - Transactions List or Recurring Investments -->
-  <div class="w-full lg:w-1/2 p-4 sm:p-6" style="height: 100%; overflow-y: auto;">
+  <div class="w-full lg:w-1/2 px-3 py-4 sm:py-6" style="height: 100%; overflow-y: auto;">
     @if (activeView() === 'transactions') {
       <!-- Transactions List -->
       @if (isLoading() && !isAddingTransaction()) {

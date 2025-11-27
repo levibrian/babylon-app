@@ -9,6 +9,9 @@ import { formatDateShort } from '../../utils/date-formatter.util';
   templateUrl: './portfolio-list.component.html',
   imports: [CommonModule, CurrencyPipe, DecimalPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  host: {
+    class: 'block h-full overflow-hidden'
+  },
 })
 export class PortfolioListComponent {
   portfolio = input.required<PortfolioItem[]>();
@@ -150,9 +153,32 @@ export class PortfolioListComponent {
   }
 
   getPortfolioAvatarClass(item: PortfolioItem): string {
-    // Use green color scheme to match transaction list buy transactions
-    // This ensures "Bitcoin" looks identical in both Portfolio and Transaction views
-    return 'bg-green-100 text-green-800';
+    // Light background for terminal chic style
+    return 'bg-gray-100';
+  }
+
+  getAvatarColor(ticker: string): string {
+    // Hash the ticker to pick a consistent color
+    const colors = [
+      'text-emerald-600',
+      'text-blue-600',
+      'text-amber-600',
+      'text-purple-600',
+      'text-rose-600',
+      'text-indigo-600',
+      'text-cyan-600',
+      'text-orange-600',
+      'text-pink-600',
+      'text-teal-600',
+    ];
+    
+    // Simple hash function
+    let hash = 0;
+    for (let i = 0; i < ticker.length; i++) {
+      hash = ticker.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    
+    return colors[Math.abs(hash) % colors.length];
   }
 
   formatDate = formatDateShort;

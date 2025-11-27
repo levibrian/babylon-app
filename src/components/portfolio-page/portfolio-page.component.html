@@ -92,7 +92,7 @@
   <!-- Right Pane (50% width on large screens, full width on mobile) -->
   <div class="w-full lg:w-1/2 flex flex-col" style="height: 100%; overflow: hidden;">
     <!-- Navigation Pane -->
-    <div class="flex items-baseline gap-x-3 sm:gap-x-4 px-4 sm:px-6 pt-4 sm:pt-6 mb-3 flex-shrink-0">
+    <div class="flex items-baseline gap-x-3 sm:gap-x-4 px-3 pt-4 sm:pt-6 mb-3 flex-shrink-0">
       @if (activeView() === 'positions') {
         <h2 class="text-sm font-bold tracking-tight text-gray-900">Positions</h2>
         <button
@@ -111,7 +111,7 @@
     </div>
 
     <!-- Content Area -->
-    <div class="flex-1 overflow-hidden h-full relative px-4 sm:px-6 pb-4 sm:pb-6">
+    <div class="flex-1 overflow-hidden min-h-0 px-3 pb-4 sm:pb-6 flex flex-col">
       @if (activeView() === 'positions') {
         @if (isLoading()) {
           <app-portfolio-skeleton></app-portfolio-skeleton>
