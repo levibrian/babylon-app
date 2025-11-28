@@ -6,10 +6,11 @@ import { Transaction, NewTransactionData } from '../../models/transaction.model'
 import { SecurityService } from '../../services/security.service';
 import { Security } from '../../models/security.model';
 import { Subscription } from 'rxjs';
+import { SelectOnFocusDirective } from '../../directives/select-on-focus.directive';
 
 @Component({
   selector: 'app-transaction-edit-row',
-  imports: [CommonModule, ReactiveFormsModule, CurrencyPipe],
+  imports: [CommonModule, ReactiveFormsModule, CurrencyPipe, SelectOnFocusDirective],
   templateUrl: './transaction-edit-row.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

@@ -9,12 +9,13 @@ import { RecurringSchedule, CreateRecurringScheduleRequest } from '../../models/
 import { Security } from '../../models/security.model';
 import { NewTransactionData } from '../../models/transaction.model';
 import { toast } from 'ngx-sonner';
+import { SelectOnFocusDirective } from '../../directives/select-on-focus.directive';
 
 
 @Component({
   selector: 'app-recurring-investments-list',
   templateUrl: './recurring-investments-list.component.html',
-  imports: [CommonModule, ReactiveFormsModule, CurrencyPipe],
+  imports: [CommonModule, ReactiveFormsModule, CurrencyPipe, SelectOnFocusDirective],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class RecurringInvestmentsListComponent implements OnInit, AfterViewInit {
