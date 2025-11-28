@@ -2,6 +2,7 @@ import { Component, ChangeDetectionStrategy, input, inject, signal, computed, On
 import { CommonModule, CurrencyPipe, DecimalPipe } from '@angular/common';
 import { PortfolioItem } from '../../models/portfolio.model';
 import { AllocationService } from '../../services/allocation.service';
+import { SecurityType } from '../../models/security.model';
 import { toast } from 'ngx-sonner';
 
 interface StrategyItem {
@@ -41,6 +42,9 @@ export class StrategyPanelComponent implements OnInit {
 
   allocationService = inject(AllocationService);
 
+  // View mode toggle: 'assets' | 'types'
+  viewMode = signal<'assets' | 'types'>('assets');
+
   // Investment simulator
   investmentAmount = signal<number>(0);
 
@@ -75,9 +79,60 @@ export class StrategyPanelComponent implements OnInit {
     return this.strategyItems().reduce((sum, item) => sum + item.targetPercentage, 0);
   });
 
-  // Computed: Chart segments for visualization
+  // Helper to get security type name (handles both enum values and strings)
+  private getSecurityTypeName(type: SecurityType | string | undefined): string {
+    if (type === undefined || type === null) return 'Stock';
+    
+    // Handle string values (e.g., "ETF", "Stock")
+    if (typeof type === 'string') {
+      const validNames = Object.keys(SecurityType).filter(key => isNaN(Number(key)));
+      if (validNames.includes(type)) {
+        return type === 'MutualFund' ? 'Mutual Fund' : type;
+      }
+    }
+    
+    // Handle numeric enum values
+    if (typeof type === 'number') {
+      const typeNames: Record<SecurityType, string> = {
+        [SecurityType.Stock]: 'Stock',
+        [SecurityType.ETF]: 'ETF',
+        [SecurityType.MutualFund]: 'Mutual Fund',
+        [SecurityType.Bond]: 'Bond',
+        [SecurityType.Crypto]: 'Crypto',
+        [SecurityType.REIT]: 'REIT',
+        [SecurityType.Options]: 'Options',
+        [SecurityType.Commodity]: 'Commodity',
+      };
+      return typeNames[type as SecurityType] || 'Stock';
+    }
+    
+    return 'Stock';
+  }
+  
+  // Helper to get security type from portfolio item (with fallbacks)
+  private getSecurityTypeForItem(ticker: string): SecurityType | string | undefined {
+    const portfolioItem = this.portfolio().find(p => p.ticker.toUpperCase() === ticker.toUpperCase());
+    
+    // Try to get from item's securityType
+    if (portfolioItem?.securityType !== undefined && portfolioItem.securityType !== null) {
+      return portfolioItem.securityType;
+    }
+    
+    // Fallback: try to get from first transaction
+    if (portfolioItem?.transactions && portfolioItem.transactions.length > 0) {
+      const txType = portfolioItem.transactions[0].securityType;
+      if (txType !== undefined && txType !== null) {
+        return txType;
+      }
+    }
+    
+    return undefined;
+  }
+
+  // Computed: Chart segments for visualization (grouped by type or individual assets)
   chartSegments = computed(() => {
     const items = this.strategyItems();
+    const mode = this.viewMode();
     const colors = [
       '#3B82F6', // Blue - Stocks
       '#F59E0B', // Yellow/Orange - Crypto
@@ -89,15 +144,65 @@ export class StrategyPanelComponent implements OnInit {
       '#84CC16', // Lime
     ];
 
-    return items
-      .filter(item => item.currentPercentage > 0 || item.targetPercentage > 0)
-      .map((item, index) => ({
-        ticker: item.ticker,
-        companyName: item.companyName,
-        currentPercentage: item.currentPercentage,
-        targetPercentage: item.targetPercentage,
-        color: colors[index % colors.length],
-      } as ChartSegment));
+    if (mode === 'assets') {
+      // Individual assets view
+      return items
+        .filter(item => item.currentPercentage > 0 || item.targetPercentage > 0)
+        .map((item, index) => ({
+          ticker: item.ticker,
+          companyName: item.companyName,
+          currentPercentage: item.currentPercentage,
+          targetPercentage: item.targetPercentage,
+          color: colors[index % colors.length],
+        } as ChartSegment));
+    } else {
+      // Group by asset type
+      const typeMap = new Map<string, { current: number; target: number }>();
+      
+      items.forEach(item => {
+        const securityType = this.getSecurityTypeForItem(item.ticker);
+        const typeName = this.getSecurityTypeName(securityType);
+        
+        // Debug: log what we're finding
+        const portfolioItem = this.portfolio().find(p => p.ticker.toUpperCase() === item.ticker.toUpperCase());
+        console.log(`Item ${item.ticker}: securityType=${portfolioItem?.securityType}, resolvedType=${typeName}`);
+        
+        if (!typeMap.has(typeName)) {
+          typeMap.set(typeName, { current: 0, target: 0 });
+        }
+        
+        const typeData = typeMap.get(typeName)!;
+        typeData.current += item.currentPercentage;
+        typeData.target += item.targetPercentage;
+      });
+      
+      console.log('Type map:', Array.from(typeMap.entries()));
+
+      // Convert to chart segments
+      const typeColors: Record<string, string> = {
+        'Stock': '#3B82F6',
+        'ETF': '#10B981',
+        'Mutual Fund': '#8B5CF6',
+        'Bond': '#06B6D4',
+        'Crypto': '#F59E0B',
+        'REIT': '#EC4899',
+        'Options': '#F97316',
+        'Commodity': '#84CC16',
+      };
+
+      const segments = Array.from(typeMap.entries())
+        .filter(([_, data]) => data.current > 0 || data.target > 0)
+        .map(([typeName, data], index) => ({
+          ticker: typeName,
+          companyName: typeName,
+          currentPercentage: data.current,
+          targetPercentage: data.target,
+          color: typeColors[typeName] || colors[index % colors.length],
+        } as ChartSegment));
+      
+      // Sort by current percentage descending for better visualization
+      return segments.sort((a, b) => b.currentPercentage - a.currentPercentage);
+    }
   });
 
   // Computed: Total portfolio value for center text
@@ -246,6 +351,11 @@ export class StrategyPanelComponent implements OnInit {
   // Helper to format tooltip text
   getSegmentTooltip(ticker: string, percentage: number): string {
     return `${ticker}: ${percentage.toFixed(2)}%`;
+  }
+
+  // Toggle view mode
+  toggleViewMode(): void {
+    this.viewMode.update(mode => mode === 'assets' ? 'types' : 'assets');
   }
 
   // Custom tooltip state

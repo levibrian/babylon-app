@@ -18,7 +18,17 @@
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
       <!-- Left Column: Portfolio Chart -->
       <div class="flex flex-col h-full overflow-y-auto">
-        <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Portfolio Health</h3>
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest">Portfolio Health</h3>
+          <!-- Toggle Switch -->
+          <button
+            (click)="toggleViewMode()"
+            class="flex items-center gap-1 px-2 py-1 rounded-full bg-gray-100 text-xs font-medium transition-colors">
+            <span [class]="viewMode() === 'assets' ? 'text-gray-900 font-bold' : 'text-gray-500'">Assets</span>
+            <span class="text-gray-400">|</span>
+            <span [class]="viewMode() === 'types' ? 'text-gray-900 font-bold' : 'text-gray-500'">Types</span>
+          </button>
+        </div>
         
         <!-- Stacked Bar Chart -->
         <div class="flex flex-col gap-3">
@@ -63,11 +73,13 @@
           <!-- Legend (if segments exist) -->
           @if (chartSegments().length > 0) {
             <div class="mt-2 pt-2 border-t border-gray-200">
-              <div class="text-xs font-medium text-gray-600 mb-2">Top Holdings:</div>
+              <div class="text-xs font-medium text-gray-600 mb-2">
+                {{ viewMode() === 'assets' ? 'Top Holdings:' : 'Asset Types:' }}
+              </div>
               <div class="flex flex-wrap gap-2">
                 @for (seg of chartSegments().slice(0, 5); track seg.ticker) {
                   <div class="flex items-center gap-1">
-                      <div class="w-3 h-3 rounded-sm" [style.background-color]="seg.color"></div>
+                    <div class="w-3 h-3 rounded-sm" [style.background-color]="seg.color"></div>
                     <span class="text-xs text-gray-600 truncate max-w-[80px]">{{ seg.ticker }}</span>
                   </div>
                 }
