@@ -22,6 +22,19 @@ export class PortfolioHistoryChartComponent {
   // Available time ranges for the selector
   readonly timeRanges: TimeRange[] = ['1W', '1M', '6M', '1Y', 'ALL'];
 
+  // Interactive tooltip state
+  activePoint = signal<{ x: number; y: number; value: number; date: Date; screenX: number; screenY: number; chartWidth: number; containerX: number } | null>(null);
+
+  // Computed: Check if tooltip should flip to left (near right edge)
+  isNearRightEdge = computed(() => {
+    const point = this.activePoint();
+    if (!point) return false;
+    // If past 70% of viewport width, flip to left (accounting for tooltip width ~150px)
+    const viewportWidth = window.innerWidth;
+    const tooltipWidth = 150; // Approximate tooltip width
+    return (point.screenX + tooltipWidth) > viewportWidth;
+  });
+
   // Process transactions into invested capital history with daily buckets
   chartPoints = computed<DataPoint[]>(() => {
     const txs = this.transactions();
@@ -227,6 +240,109 @@ export class PortfolioHistoryChartComponent {
 
   selectRange(range: TimeRange): void {
     this.selectedRange.set(range);
+  }
+
+  // Handle mouse move on chart
+  onChartMouseMove(event: MouseEvent, svgElement: SVGSVGElement): void {
+    const data = this.chartPoints();
+    if (data.length === 0) {
+      this.activePoint.set(null);
+      return;
+    }
+
+    const rect = svgElement.getBoundingClientRect();
+    const mouseX = event.clientX - rect.left;
+    const mouseY = event.clientY - rect.top;
+
+    // Convert mouse X to SVG coordinates
+    const svgPoint = svgElement.createSVGPoint();
+    svgPoint.x = mouseX;
+    svgPoint.y = mouseY;
+    const svgCoords = svgPoint.matrixTransform(svgElement.getScreenCTM()?.inverse());
+
+    const chartWidth = this.width - this.padding.left - this.padding.right;
+    const chartHeight = this.height - this.padding.top - this.padding.bottom;
+
+    // Get date range for X-axis mapping
+    const dates = data.map(d => d.date);
+    const minDate = new Date(Math.min(...dates.map(d => d.getTime())));
+    const maxDate = new Date(Math.max(...dates.map(d => d.getTime())));
+    const dateRange = maxDate.getTime() - minDate.getTime() || 1;
+
+    // Check if mouse is within chart bounds
+    if (svgCoords.x < this.padding.left || svgCoords.x > this.width - this.padding.right) {
+      this.activePoint.set(null);
+      return;
+    }
+
+    // Find closest data point based on X position
+    const relativeX = svgCoords.x - this.padding.left;
+    const dateRatio = relativeX / chartWidth;
+    const targetDate = new Date(minDate.getTime() + dateRatio * dateRange);
+
+    // Find closest point
+    let closestPoint = data[0];
+    let minDistance = Math.abs(targetDate.getTime() - data[0].date.getTime());
+
+    for (const point of data) {
+      const distance = Math.abs(targetDate.getTime() - point.date.getTime());
+      if (distance < minDistance) {
+        minDistance = distance;
+        closestPoint = point;
+      }
+    }
+
+    // Calculate Y position for the point
+    const min = this.minValue();
+    const max = this.maxValue();
+    const valueRange = max - min || 1;
+    const y = this.padding.top + chartHeight - (chartHeight * (closestPoint.value - min) / valueRange);
+    const x = this.padding.left + (chartWidth * (closestPoint.date.getTime() - minDate.getTime()) / dateRange);
+
+    // Convert SVG coordinates to screen coordinates for tooltip
+    // Calculate the scale factor from viewBox to actual rendered size
+    const viewBoxWidth = 800;
+    const viewBoxHeight = 200;
+    const scaleX = rect.width / viewBoxWidth;
+    const scaleY = rect.height / viewBoxHeight;
+    
+    const containerX = x * scaleX;
+    const containerY = y * scaleY;
+    
+    // Convert to screen coordinates (for fixed positioning)
+    const screenX = rect.left + containerX;
+    const screenY = rect.top + containerY;
+
+    this.activePoint.set({
+      x,
+      y,
+      value: closestPoint.value,
+      date: closestPoint.date,
+      screenX,
+      screenY,
+      chartWidth: rect.width,
+      containerX,
+    });
+  }
+
+  // Handle mouse leave
+  onChartMouseLeave(): void {
+    this.activePoint.set(null);
+  }
+
+  // Format date for tooltip
+  formatTooltipDate(date: Date): string {
+    return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+  }
+
+  // Format currency for tooltip
+  formatTooltipCurrency(value: number): string {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'EUR',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(value);
   }
 }
 

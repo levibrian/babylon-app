@@ -50,9 +50,6 @@ export class PortfolioDashboardComponent implements OnInit, OnDestroy {
   transactions = input.required<Transaction[]>();
   private portfolioService = inject(PortfolioService);
 
-  // Grouping mode toggle: 'asset' | 'category'
-  groupingMode = signal<'asset' | 'category'>('category');
-
   // Insights carousel state
   activeInsightIndex = signal(0);
   private carouselInterval: any;
@@ -222,115 +219,6 @@ export class PortfolioDashboardComponent implements OnInit, OnDestroy {
     }
   }
 
-  // Allocation segments grouped by category or asset
-  allocationSegments = computed(() => {
-    const items = this.portfolio();
-    const mode = this.groupingMode();
-    
-    // Calculate current market value for each position
-    // Since we don't have individual position current values, we'll use totalCost
-    // but calculate percentages based on the sum of totalCost (not netWorth)
-    // This ensures percentages add up to 100% correctly
-    const totalCostBasis = items.reduce((sum, item) => sum + item.totalCost, 0);
-    
-    if (totalCostBasis === 0) return [];
-
-    const colors: Record<string, string> = {
-      'Stock': '#2563EB',      // Blue-600
-      'ETF': '#6366F1',        // Indigo-500
-      'Crypto': '#FBBF24',     // Amber-400
-      'MutualFund': '#8B5CF6', // Purple
-      'Bond': '#06B6D4',       // Cyan
-      'REIT': '#EC4899',       // Pink
-      'Options': '#F97316',    // Orange
-      'Commodity': '#84CC16',  // Lime
-      'Cash': '#9CA3AF',       // Gray-400
-    };
-
-    const assetColors = [
-      '#3B82F6', '#10B981', '#F59E0B', '#8B5CF6',
-      '#EC4899', '#06B6D4', '#F97316', '#84CC16',
-    ];
-
-    if (mode === 'category') {
-      // Group by SecurityType
-      const categoryMap = new Map<string, number>();
-      
-      items.forEach(item => {
-        // Try to get securityType from item, then from transactions, then default to Stock
-        // Backend may send as string ("ETF") or number (2), so we handle both
-        let type: SecurityType | string | undefined = item.securityType as any;
-        
-        // If not on item, try to get from first transaction
-        if ((type === undefined || type === null) && item.transactions && item.transactions.length > 0) {
-          type = item.transactions[0].securityType as any;
-        }
-        
-        // If still undefined, default to Stock enum value
-        if (type === undefined || type === null) {
-          type = SecurityType.Stock;
-        }
-        
-        const categoryName = this.getSecurityTypeName(type);
-        const currentValue = item.totalCost;
-        
-        categoryMap.set(
-          categoryName,
-          (categoryMap.get(categoryName) || 0) + currentValue
-        );
-      });
-
-      const segments: AllocationSegment[] = [];
-
-      categoryMap.forEach((value, label) => {
-        const percentage = (value / totalCostBasis) * 100;
-        segments.push({
-          label,
-          value,
-          color: colors[label] || '#6B7280',
-          percentage,
-        });
-      });
-
-      return segments.sort((a, b) => b.value - a.value);
-    } else {
-      // Group by individual asset
-      return items
-        .map((item, index) => ({
-          label: item.ticker,
-          value: item.totalCost,
-          color: assetColors[index % assetColors.length],
-          percentage: (item.totalCost / totalCostBasis) * 100,
-        }))
-        .filter(seg => seg.value > 0)
-        .sort((a, b) => b.value - a.value)
-        .slice(0, 8); // Limit to top 8 for readability
-    }
-  });
-
-  // Doughnut chart conic gradient string
-  doughnutGradient = computed(() => {
-    const segments = this.allocationSegments();
-    if (segments.length === 0) return 'conic-gradient(#E5E7EB 0deg 360deg)';
-
-    let currentAngle = 0;
-    const gradientParts: string[] = [];
-
-    segments.forEach(seg => {
-      const angle = (seg.percentage / 100) * 360;
-      if (angle > 0) {
-        gradientParts.push(`${seg.color} ${currentAngle}deg ${currentAngle + angle}deg`);
-        currentAngle += angle;
-      }
-    });
-
-    // Fill remaining space if segments don't add up to 100%
-    if (currentAngle < 360) {
-      gradientParts.push(`transparent ${currentAngle}deg 360deg`);
-    }
-
-    return `conic-gradient(${gradientParts.join(', ')})`;
-  });
 
   // Monthly income for last 12 months
   monthlyIncome = computed(() => {
@@ -398,9 +286,6 @@ export class PortfolioDashboardComponent implements OnInit, OnDestroy {
     this.activeTooltip.set(null);
   }
 
-  toggleGroupingMode(): void {
-    this.groupingMode.update(mode => mode === 'asset' ? 'category' : 'asset');
-  }
 
   getBarHeight(amount: number): number {
     const max = this.maxMonthlyIncome();

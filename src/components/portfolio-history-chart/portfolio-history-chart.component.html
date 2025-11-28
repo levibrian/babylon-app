@@ -1,30 +1,16 @@
-<div class="flex flex-col gap-4">
-  <!-- Header with Range Selector -->
-  <div class="flex items-center justify-between">
-    <div class="text-xs font-bold text-gray-400 uppercase tracking-widest">Portfolio History</div>
-    <div class="flex items-center gap-1">
-      @for (range of timeRanges; track range) {
-        <button
-          (click)="selectRange(range)"
-          class="px-2 py-1 text-xs font-mono font-medium rounded-full transition-all duration-200"
-          [class]="selectedRange() === range 
-            ? 'bg-gray-900 text-white' 
-            : 'bg-transparent text-gray-400 hover:text-gray-600'">
-          {{ range }}
-        </button>
-      }
-    </div>
-  </div>
-
+<div class="flex flex-col gap-4 relative">
   <!-- Chart Container -->
   @if (chartPoints().length > 0) {
     <div class="w-full overflow-x-auto">
       <svg
+        #chartSvg
         [attr.width]="width"
         [attr.height]="height"
         class="w-full h-auto"
         viewBox="0 0 800 200"
-        preserveAspectRatio="xMidYMid meet">
+        preserveAspectRatio="xMidYMid meet"
+        (mousemove)="onChartMouseMove($event, chartSvg)"
+        (mouseleave)="onChartMouseLeave()">
         
         <!-- Gradient Definition -->
         <defs>
@@ -48,6 +34,37 @@
           stroke-width="2"
           stroke-linecap="round"
           stroke-linejoin="round" />
+
+        <!-- Interactive overlay (transparent rect to capture mouse events) -->
+        <rect
+          [attr.x]="padding.left"
+          [attr.y]="padding.top"
+          [attr.width]="width - padding.left - padding.right"
+          [attr.height]="height - padding.top - padding.bottom"
+          fill="transparent"
+          style="cursor: crosshair;" />
+
+        <!-- Vertical crosshair line (when hovering) -->
+        @if (activePoint(); as point) {
+          <line
+            [attr.x1]="point.x"
+            [attr.y1]="padding.top"
+            [attr.x2]="point.x"
+            [attr.y2]="height - padding.bottom"
+            stroke="#9CA3AF"
+            stroke-width="1"
+            stroke-dasharray="4,4"
+            opacity="0.5" />
+
+          <!-- Dot at intersection -->
+          <circle
+            [attr.cx]="point.x"
+            [attr.cy]="point.y"
+            r="4"
+            fill="#111827"
+            stroke="white"
+            stroke-width="2" />
+        }
 
         <!-- X-Axis Labels -->
         <text
@@ -84,10 +101,39 @@
         </text>
       </svg>
     </div>
+
+    <!-- Tooltip Box (Fixed positioning to escape overflow container) -->
+    @if (activePoint(); as point) {
+      <div
+        class="fixed bg-gray-900 text-white rounded-md p-3 shadow-xl border border-gray-800 z-50 pointer-events-none whitespace-nowrap"
+        [style.left.px]="point.screenX"
+        [style.top.px]="point.screenY - 60"
+        [class.-translate-x-full]="isNearRightEdge()"
+        [class.translate-x-4]="!isNearRightEdge()"
+        [style.margin-left.px]="isNearRightEdge() ? -8 : 0">
+        <div class="text-lg font-mono font-bold">{{ formatTooltipCurrency(point.value) }}</div>
+        <div class="text-xs text-gray-400 mt-1">{{ formatTooltipDate(point.date) }}</div>
+      </div>
+    }
   } @else {
     <div class="flex items-center justify-center h-48 border border-gray-200 rounded-sm bg-gray-50">
       <p class="text-xs font-mono text-gray-400">No transaction history available</p>
     </div>
   }
-</div>
 
+  <!-- Range Selector Controls (Bottom Center) -->
+  <div class="flex justify-center mt-4">
+    <div class="bg-gray-50 rounded-full p-1 inline-flex gap-1">
+      @for (range of timeRanges; track range) {
+        <button
+          (click)="selectRange(range)"
+          class="px-3 py-1 text-xs font-mono transition-all duration-200 rounded-full"
+          [class]="selectedRange() === range 
+            ? 'bg-white shadow-sm text-gray-900 font-bold' 
+            : 'text-gray-400 hover:text-gray-600'">
+          {{ range }}
+        </button>
+      }
+    </div>
+  </div>
+</div>
