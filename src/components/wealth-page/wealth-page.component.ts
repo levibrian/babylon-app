@@ -12,12 +12,12 @@ import { PortfolioSkeletonComponent } from '../ghosting-elements/portfolio-skele
 import { ErrorStateComponent } from '../common/error-state/error-state.component';
 
 @Component({
-  selector: 'app-portfolio-page',
-  templateUrl: './portfolio-page.component.html',
+  selector: 'app-wealth-page',
+  templateUrl: './wealth-page.component.html',
   imports: [PortfolioListComponent, StrategyPanelComponent, PortfolioDashboardComponent, RouterLink, CommonModule, PortfolioSkeletonComponent, ErrorStateComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class PortfolioPageComponent implements OnDestroy {
+export class WealthPageComponent implements OnDestroy {
   portfolioService = inject(PortfolioService);
   transactionService = inject(TransactionService);
   
@@ -105,3 +105,4 @@ export class PortfolioPageComponent implements OnDestroy {
     this.activeView.set(view);
   }
 }
+

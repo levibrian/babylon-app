@@ -25,6 +25,7 @@ export class TransactionEditRowComponent implements OnInit, OnDestroy, AfterView
   transactionForm: FormGroup;
   
   private formChangesSubscription!: Subscription;
+  private isUpdatingValidators = false; // Flag to prevent infinite loops
 
   // Autocomplete state
   tickerInputValue = signal('');
@@ -35,7 +36,9 @@ export class TransactionEditRowComponent implements OnInit, OnDestroy, AfterView
   private sharesValue = signal(0);
   private sharePriceValue = signal(0);
   private feesValue = signal(0);
-  private transactionTypeValue = signal<'buy' | 'sell'>('buy');
+  private taxValue = signal(0);
+  private totalAmountValue = signal(0);
+  private transactionTypeValue = signal<'buy' | 'sell' | 'dividend'>('buy');
   
   filteredSecurities = computed(() => {
     const value = this.tickerInputValue();
@@ -50,7 +53,14 @@ export class TransactionEditRowComponent implements OnInit, OnDestroy, AfterView
     const shares = this.sharesValue();
     const sharePrice = this.sharePriceValue();
     const fees = this.feesValue();
+    const totalAmount = this.totalAmountValue();
+    const tax = this.taxValue();
     const transactionType = this.transactionTypeValue();
+    
+    // Dividend: Show Gross Amount (Net Received + Tax Withheld)
+    if (transactionType === 'dividend') {
+      return totalAmount + tax;
+    }
     
     const baseAmount = shares * sharePrice;
     
@@ -62,12 +72,22 @@ export class TransactionEditRowComponent implements OnInit, OnDestroy, AfterView
       return baseAmount - fees;
     }
   });
+  
+  // Get the label for the total field
+  getTotalLabel(): string {
+    return this.isDividend() ? 'Gross Amount' : 'Total';
+  }
 
   // Get color class for total display
   getTotalColorClass(): string {
     const transactionType = this.transactionTypeValue();
-    return transactionType === 'buy' ? 'text-red-600' : 'text-green-600';
+    if (transactionType === 'buy') return 'text-red-600';
+    if (transactionType === 'dividend') return 'text-purple-600';
+    return 'text-green-600';
   }
+
+  // Check if current transaction type is dividend
+  isDividend = computed(() => this.transactionTypeValue() === 'dividend');
 
   constructor(private fb: FormBuilder) {
     const today = new Date().toISOString().substring(0, 10); // Format YYYY-MM-DD
@@ -77,8 +97,10 @@ export class TransactionEditRowComponent implements OnInit, OnDestroy, AfterView
       date: [today, Validators.required],
       transactionType: ['buy', Validators.required],
       shares: [null, [Validators.required, Validators.min(0.000001)]],
-      sharePrice: [null, [Validators.required, Validators.min(0.01)]],
+      sharePrice: [null],
       fees: [0, [Validators.required, Validators.min(0)]],
+      totalAmount: [null], // For dividends: Net Received
+      tax: [0, [Validators.min(0)]], // For dividends: Tax Withheld
     });
 
     effect(() => {
@@ -120,10 +142,24 @@ export class TransactionEditRowComponent implements OnInit, OnDestroy, AfterView
 
     // Subscribe to form value changes to update reactive signals
     this.formChangesSubscription = this.transactionForm.valueChanges.subscribe(values => {
+      // Skip if we're currently updating validators to prevent infinite loops
+      if (this.isUpdatingValidators) {
+        return;
+      }
+
       this.sharesValue.set(Number(values.shares) || 0);
       this.sharePriceValue.set(Number(values.sharePrice) || 0);
       this.feesValue.set(Number(values.fees) || 0);
-      this.transactionTypeValue.set(values.transactionType || 'buy');
+      this.taxValue.set(Number(values.tax) || 0);
+      this.totalAmountValue.set(Number(values.totalAmount) || 0);
+      const newType = values.transactionType || 'buy';
+      const currentType = this.transactionTypeValue();
+      this.transactionTypeValue.set(newType);
+      
+      // Update validators only if transaction type changed
+      if (newType !== currentType) {
+        this.updateValidators(newType);
+      }
     });
   }
 
@@ -143,8 +179,51 @@ export class TransactionEditRowComponent implements OnInit, OnDestroy, AfterView
     }
   }
 
-  setTransactionType(type: 'buy' | 'sell'): void {
+  setTransactionType(type: 'buy' | 'sell' | 'dividend'): void {
     this.transactionForm.get('transactionType')?.setValue(type);
+    this.updateValidators(type);
+  }
+
+  private updateValidators(type: 'buy' | 'sell' | 'dividend'): void {
+    // Set flag to prevent infinite loops
+    this.isUpdatingValidators = true;
+
+    try {
+      const sharesControl = this.transactionForm.get('shares');
+      const sharePriceControl = this.transactionForm.get('sharePrice');
+      const feesControl = this.transactionForm.get('fees');
+      const totalAmountControl = this.transactionForm.get('totalAmount');
+      const taxControl = this.transactionForm.get('tax');
+
+      if (type === 'dividend') {
+        // Dividend: require shares, totalAmount, tax; hide price and fees
+        sharesControl?.setValidators([Validators.required, Validators.min(0.000001)]);
+        totalAmountControl?.setValidators([Validators.required, Validators.min(0.01)]);
+        taxControl?.setValidators([Validators.required, Validators.min(0)]);
+        sharePriceControl?.clearValidators();
+        sharePriceControl?.setValue(null, { emitEvent: false });
+        feesControl?.clearValidators();
+        feesControl?.setValue(0, { emitEvent: false });
+      } else {
+        // Buy/Sell: require shares, sharePrice, fees; hide totalAmount and tax
+        sharesControl?.setValidators([Validators.required, Validators.min(0.000001)]);
+        sharePriceControl?.setValidators([Validators.required, Validators.min(0.01)]);
+        feesControl?.setValidators([Validators.required, Validators.min(0)]);
+        totalAmountControl?.clearValidators();
+        totalAmountControl?.setValue(null, { emitEvent: false });
+        taxControl?.clearValidators();
+        taxControl?.setValue(0, { emitEvent: false });
+      }
+
+      sharesControl?.updateValueAndValidity({ emitEvent: false });
+      sharePriceControl?.updateValueAndValidity({ emitEvent: false });
+      feesControl?.updateValueAndValidity({ emitEvent: false });
+      totalAmountControl?.updateValueAndValidity({ emitEvent: false });
+      taxControl?.updateValueAndValidity({ emitEvent: false });
+    } finally {
+      // Always reset flag
+      this.isUpdatingValidators = false;
+    }
   }
 
   onSubmit(): void {
@@ -154,18 +233,66 @@ export class TransactionEditRowComponent implements OnInit, OnDestroy, AfterView
     }
     
     const formValue = this.transactionForm.value;
+    const transactionType = formValue.transactionType;
     const initialTx = this.initialState();
 
+    // Prepare payload based on transaction type
+    let payload: NewTransactionData | Transaction;
+    
+    if (transactionType === 'dividend') {
+      // For dividends: sharePrice = 0, fees = 0, totalAmount = Net Received
+      const netReceived = Number(formValue.totalAmount) || 0;
+      const taxWithheld = Number(formValue.tax) || 0;
+      
+      // Debug logging
+      console.log('Dividend payload:', {
+        formValueTotalAmount: formValue.totalAmount,
+        parsedNetReceived: netReceived,
+        formValueTax: formValue.tax,
+        parsedTax: taxWithheld
+      });
+      
+      payload = {
+        ticker: formValue.ticker,
+        date: formValue.date,
+        transactionType: 'dividend',
+        shares: Number(formValue.shares) || 0,
+        sharePrice: 0, // Backend will calculate based on Net+Tax/Shares
+        fees: 0,
+        totalAmount: netReceived, // Net Received
+        tax: taxWithheld,
+      };
+    } else {
+      // For buy/sell: calculate totalAmount from shares * sharePrice +/- fees
+      const shares = Number(formValue.shares) || 0;
+      const sharePrice = Number(formValue.sharePrice) || 0;
+      const fees = Number(formValue.fees) || 0;
+      const baseAmount = shares * sharePrice;
+      const totalAmount = transactionType === 'buy' 
+        ? baseAmount + fees 
+        : baseAmount - fees;
+      
+      payload = {
+        ticker: formValue.ticker,
+        date: formValue.date,
+        transactionType: transactionType,
+        shares: shares,
+        sharePrice: sharePrice,
+        fees: fees,
+        totalAmount: totalAmount,
+      };
+    }
+
     if (initialTx) {
-      // It's an edit, include the ID. The service will recalc amount.
+      // It's an edit, include the ID
       const updatedTransaction: Transaction = {
         ...initialTx,
-        ...formValue,
+        ...payload,
       };
       this.save.emit(updatedTransaction);
     } else {
       // It's a new transaction
-      this.save.emit(formValue as NewTransactionData);
+      this.save.emit(payload as NewTransactionData);
     }
   }
 

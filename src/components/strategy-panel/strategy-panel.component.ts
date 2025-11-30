@@ -11,6 +11,7 @@ import {
 import { CommonModule, CurrencyPipe, DecimalPipe } from '@angular/common';
 import { PortfolioItem } from '../../models/portfolio.model';
 import { AllocationService } from '../../services/allocation.service';
+import { PortfolioService } from '../../services/portfolio.service';
 import { SecurityType } from '../../models/security.model';
 import { toast } from "ngx-sonner";
 import { SelectOnFocusDirective } from '../../directives/select-on-focus.directive';
@@ -51,6 +52,7 @@ export class StrategyPanelComponent implements OnInit {
   portfolio = input.required<PortfolioItem[]>();
 
   allocationService = inject(AllocationService);
+  portfolioService = inject(PortfolioService);
 
   // View mode toggle: 'assets' | 'types'
   viewMode = signal<"assets" | "types">("assets");
@@ -60,6 +62,12 @@ export class StrategyPanelComponent implements OnInit {
 
   // Target editor - local state for inputs (to allow editing before saving)
   private targetInputs = signal<Map<string, number>>(new Map());
+  
+  // Track raw input values during editing to prevent computed signal interference
+  private rawInputValues = signal<Map<string, string>>(new Map());
+  
+  // Track which input is currently focused to prevent value resets during typing
+  private focusedInputTicker = signal<string | null>(null);
 
   // Computed: Merge portfolio with allocation strategy
   strategyItems = computed(() => {
@@ -67,7 +75,7 @@ export class StrategyPanelComponent implements OnInit {
     const targetMap = this.allocationService.targetMap();
     const localInputs = this.targetInputs();
 
-    return portfolioItems.map((item) => {
+    const items = portfolioItems.map((item) => {
       const tickerUpper = item.ticker.toUpperCase();
       // Use local input if exists, otherwise use service target, otherwise use item's target
       const targetPercentage = localInputs.has(tickerUpper)
@@ -82,6 +90,21 @@ export class StrategyPanelComponent implements OnInit {
         currentValue: item.totalCost,
       } as StrategyItem;
     });
+
+    // Only sort if there are no local inputs (i.e., after save, using service values)
+    // During editing, preserve original order to avoid UX disruption
+    if (localInputs.size === 0) {
+      // Sort by target allocation percentage (descending), then by ticker for consistency
+      return items.sort((a, b) => {
+        if (b.targetPercentage !== a.targetPercentage) {
+          return b.targetPercentage - a.targetPercentage;
+        }
+        return a.ticker.localeCompare(b.ticker);
+      });
+    }
+
+    // During editing, preserve original portfolio order
+    return items;
   });
 
   // Computed: Total target percentage
@@ -151,10 +174,8 @@ export class StrategyPanelComponent implements OnInit {
     return undefined;
   }
 
-  // Computed: Chart segments for visualization (grouped by type or individual assets)
-  chartSegments = computed(() => {
-    const items = this.strategyItems();
-    const mode = this.viewMode();
+  // Helper to get consistent color for a ticker or type name
+  private getColorForKey(key: string, mode: "assets" | "types"): string {
     const colors = [
       "#3B82F6", // Blue - Stocks
       "#F59E0B", // Yellow/Orange - Crypto
@@ -166,20 +187,86 @@ export class StrategyPanelComponent implements OnInit {
       "#84CC16", // Lime
     ];
 
+    if (mode === "types") {
+      // For types, use predefined colors
+      const typeColors: Record<string, string> = {
+        Stock: "#3B82F6",
+        ETF: "#10B981",
+        "Mutual Fund": "#8B5CF6",
+        Bond: "#06B6D4",
+        Crypto: "#F59E0B",
+        REIT: "#EC4899",
+        Options: "#F97316",
+        Commodity: "#84CC16",
+      };
+      return typeColors[key] || colors[Math.abs(key.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)) % colors.length];
+    } else {
+      // For assets, use deterministic hash-based color assignment
+      // This ensures the same ticker always gets the same color
+      const hash = key.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+      return colors[Math.abs(hash) % colors.length];
+    }
+  }
+
+  // Helper to ensure consecutive segments have different colors
+  private ensureDistinctConsecutiveColors(segments: ChartSegment[]): ChartSegment[] {
+    if (segments.length === 0) return segments;
+
+    const colors = [
+      "#3B82F6", // Blue - Stocks
+      "#F59E0B", // Yellow/Orange - Crypto
+      "#10B981", // Green - ETFs
+      "#8B5CF6", // Purple
+      "#EC4899", // Pink
+      "#06B6D4", // Cyan
+      "#F97316", // Orange
+      "#84CC16", // Lime
+    ];
+
+    const adjustedSegments = segments.map(seg => ({ ...seg }));
+
+    for (let i = 1; i < adjustedSegments.length; i++) {
+      const prevColor = adjustedSegments[i - 1].color;
+      const currentColor = adjustedSegments[i].color;
+
+      // If consecutive segments have the same color, find a different one
+      if (prevColor === currentColor) {
+        // Find a color that's different from both the previous and next (if exists)
+        const nextColor = i < adjustedSegments.length - 1 ? adjustedSegments[i + 1].color : null;
+        const availableColors = colors.filter(
+          color => color !== prevColor && color !== nextColor
+        );
+
+        if (availableColors.length > 0) {
+          // Use a deterministic selection based on ticker to maintain some consistency
+          const hash = adjustedSegments[i].ticker.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+          adjustedSegments[i].color = availableColors[Math.abs(hash) % availableColors.length];
+        } else {
+          // Fallback: just pick any different color
+          adjustedSegments[i].color = colors.find(color => color !== prevColor) || colors[0];
+        }
+      }
+    }
+
+    return adjustedSegments;
+  }
+
+  // Helper to create chart segments (used by both current and target segments)
+  private createChartSegments(items: StrategyItem[], mode: "assets" | "types"): ChartSegment[] {
     if (mode === "assets") {
-      // Individual assets view
+      // Individual assets view - use consistent colors based on ticker
       return items
         .filter(
           (item) => item.currentPercentage > 0 || item.targetPercentage > 0
         )
         .map(
-          (item, index) =>
+          (item) =>
             ({
               ticker: item.ticker,
               companyName: item.companyName,
               currentPercentage: item.currentPercentage,
               targetPercentage: item.targetPercentage,
-              color: colors[index % colors.length],
+              color: this.getColorForKey(item.ticker.toUpperCase(), "assets"),
             } as ChartSegment)
         );
     } else {
@@ -209,34 +296,56 @@ export class StrategyPanelComponent implements OnInit {
 
       console.log("Type map:", Array.from(typeMap.entries()));
 
-      // Convert to chart segments
-      const typeColors: Record<string, string> = {
-        Stock: "#3B82F6",
-        ETF: "#10B981",
-        "Mutual Fund": "#8B5CF6",
-        Bond: "#06B6D4",
-        Crypto: "#F59E0B",
-        REIT: "#EC4899",
-        Options: "#F97316",
-        Commodity: "#84CC16",
-      };
-
-      const segments = Array.from(typeMap.entries())
+      // Convert to chart segments with consistent colors
+      return Array.from(typeMap.entries())
         .filter(([_, data]) => data.current > 0 || data.target > 0)
         .map(
-          ([typeName, data], index) =>
+          ([typeName, data]) =>
             ({
               ticker: typeName,
               companyName: typeName,
               currentPercentage: data.current,
               targetPercentage: data.target,
-              color: typeColors[typeName] || colors[index % colors.length],
+              color: this.getColorForKey(typeName, "types"),
             } as ChartSegment)
         );
-
-      // Sort by current percentage descending for better visualization
-      return segments.sort((a, b) => b.currentPercentage - a.currentPercentage);
     }
+  }
+
+  // Computed: Chart segments for CURRENT allocation (sorted by current percentage)
+  currentChartSegments = computed(() => {
+    const items = this.strategyItems();
+    const mode = this.viewMode();
+    const segments = this.createChartSegments(items, mode);
+    
+    // Sort by current percentage descending (maintains original order logic)
+    const sorted = segments.sort((a, b) => {
+      if (b.currentPercentage !== a.currentPercentage) {
+        return b.currentPercentage - a.currentPercentage;
+      }
+      return a.ticker.localeCompare(b.ticker);
+    });
+
+    // Ensure consecutive segments have different colors
+    return this.ensureDistinctConsecutiveColors(sorted);
+  });
+
+  // Computed: Chart segments for TARGET allocation (sorted by target percentage)
+  chartSegments = computed(() => {
+    const items = this.strategyItems();
+    const mode = this.viewMode();
+    const segments = this.createChartSegments(items, mode);
+    
+    // Sort by target percentage descending (updates dynamically as user edits)
+    const sorted = segments.sort((a, b) => {
+      if (b.targetPercentage !== a.targetPercentage) {
+        return b.targetPercentage - a.targetPercentage;
+      }
+      return a.ticker.localeCompare(b.ticker);
+    });
+
+    // Ensure consecutive segments have different colors
+    return this.ensureDistinctConsecutiveColors(sorted);
   });
 
   // Computed: Total portfolio value for center text
@@ -249,7 +358,7 @@ export class StrategyPanelComponent implements OnInit {
 
   // Computed: Total current percentage
   totalCurrentPercentage = computed(() => {
-    return this.chartSegments().reduce(
+    return this.currentChartSegments().reduce(
       (sum, s) => sum + s.currentPercentage,
       0
     );
@@ -338,17 +447,107 @@ export class StrategyPanelComponent implements OnInit {
   }
 
   onTargetInputChange(ticker: string, event: Event): void {
-    const value = (event.target as HTMLInputElement).value;
-    const numValue = parseFloat(value);
-    if (isNaN(numValue) || numValue < 0) {
+    const inputElement = event.target as HTMLInputElement;
+    const rawValue = inputElement.value;
+    const tickerUpper = ticker.toUpperCase();
+    
+    // Store the raw string value to prevent computed signal from interfering
+    const currentRaw = this.rawInputValues();
+    const newRaw = new Map(currentRaw);
+    newRaw.set(tickerUpper, rawValue);
+    this.rawInputValues.set(newRaw);
+    
+    // Parse and store numeric value if valid
+    if (rawValue === '' || rawValue === '-' || rawValue === '.') {
+      // Allow empty/incomplete input during typing
       return;
     }
-
+    
+    const numValue = parseFloat(rawValue);
+    if (!isNaN(numValue) && numValue >= 0) {
+      const currentInputs = this.targetInputs();
+      const newInputs = new Map(currentInputs);
+      newInputs.set(tickerUpper, numValue);
+      this.targetInputs.set(newInputs);
+    }
+  }
+  
+  onTargetFocus(ticker: string, event: Event): void {
+    const inputElement = event.target as HTMLInputElement;
     const tickerUpper = ticker.toUpperCase();
-    const currentInputs = this.targetInputs();
-    const newInputs = new Map(currentInputs);
-    newInputs.set(tickerUpper, numValue);
-    this.targetInputs.set(newInputs);
+    
+    // Store current value as raw string when focusing
+    const currentValue = this.getInputValue(ticker);
+    const currentRaw = this.rawInputValues();
+    const newRaw = new Map(currentRaw);
+    newRaw.set(tickerUpper, currentValue.toString());
+    this.rawInputValues.set(newRaw);
+    
+    this.focusedInputTicker.set(tickerUpper);
+  }
+  
+  onTargetBlur(ticker: string, event: Event): void {
+    const inputElement = event.target as HTMLInputElement;
+    const value = inputElement.value.trim();
+    const tickerUpper = ticker.toUpperCase();
+    
+    // Clear raw value on blur
+    const currentRaw = this.rawInputValues();
+    const newRaw = new Map(currentRaw);
+    newRaw.delete(tickerUpper);
+    this.rawInputValues.set(newRaw);
+    
+    // Validate and normalize on blur
+    const numValue = parseFloat(value);
+    
+    if (value === '' || isNaN(numValue) || numValue < 0) {
+      // Reset to the computed value if invalid
+      const currentInputs = this.targetInputs();
+      const newInputs = new Map(currentInputs);
+      newInputs.delete(tickerUpper);
+      this.targetInputs.set(newInputs);
+    } else {
+      // Ensure the value is stored
+      const currentInputs = this.targetInputs();
+      const newInputs = new Map(currentInputs);
+      newInputs.set(tickerUpper, numValue);
+      this.targetInputs.set(newInputs);
+    }
+    
+    this.focusedInputTicker.set(null);
+  }
+  
+  // Get the display value for an input, respecting focus state
+  getInputValue(ticker: string): number {
+    const tickerUpper = ticker.toUpperCase();
+    const localInputs = this.targetInputs();
+    
+    // If there's a local input value, use it
+    if (localInputs.has(tickerUpper)) {
+      return localInputs.get(tickerUpper)!;
+    }
+    
+    // Fall back to computed strategyItems
+    const item = this.strategyItems().find(i => i.ticker.toUpperCase() === tickerUpper);
+    return item?.targetPercentage ?? 0;
+  }
+  
+  // Get the display string value for the input element
+  getInputDisplayValue(ticker: string): string {
+    const tickerUpper = ticker.toUpperCase();
+    const focusedTicker = this.focusedInputTicker();
+    
+    // If this input is focused, use raw value to allow free typing
+    if (focusedTicker === tickerUpper) {
+      const rawValues = this.rawInputValues();
+      if (rawValues.has(tickerUpper)) {
+        return rawValues.get(tickerUpper)!;
+      }
+    }
+    
+    // Otherwise, format the numeric value
+    const numValue = this.getInputValue(ticker);
+    return numValue.toString();
   }
 
   onTargetEnter(event: KeyboardEvent): void {
@@ -385,24 +584,25 @@ export class StrategyPanelComponent implements OnInit {
     }
 
     try {
-      // Build the complete allocation list with all tickers (modified and unmodified)
+      // Build the complete allocation list with ALL portfolio items (modified and unmodified)
+      // The backend expects ALL items to be sent so it can determine what to delete, update, or add
       const allAllocations = this.strategyItems().map(item => ({
         ticker: item.ticker,
         targetPercentage: localInputs.get(item.ticker.toUpperCase()) ?? item.targetPercentage
       }));
 
-      // Use the first item to save (this will send all allocations)
-      // The updateTarget method already sends the complete list
-      if (allAllocations.length > 0) {
-        // We'll use updateTarget with the complete set, but we need to call it once
-        // Since updateTarget rebuilds the full list, we can just update one item
-        // and it will include all our local changes
-        const firstChange = Array.from(localInputs.entries())[0];
-        if (firstChange) {
-          await this.allocationService.updateTarget(undefined, firstChange[0], firstChange[1]);
-          toast.success('Successfully updated target allocations');
-        }
-      }
+      // Send complete list to backend (includes all portfolio items)
+      await this.allocationService.setAllocationStrategy(undefined, allAllocations);
+      
+      // Clear local inputs after successful save - this will trigger recomputation with sorted order
+      // The service will reload the strategy, and computed signals will use service values
+      this.targetInputs.set(new Map());
+      this.rawInputValues.set(new Map());
+      
+      // Reload portfolio data from backend to refresh all portfolio items with updated target allocations
+      await this.portfolioService.reload();
+      
+      toast.success('Successfully updated target allocations');
     } catch (err) {
       console.error('Error updating targets:', err);
       toast.error('Failed to update target allocations');
@@ -466,14 +666,14 @@ export class StrategyPanelComponent implements OnInit {
     });
   }
 
-  // Helper to get segments for current bar
+  // Helper to get segments for current bar (uses currentChartSegments - sorted by current percentage)
   getCurrentBarSegments(): Array<{
     color: string;
     width: number;
     ticker: string;
     percentage: number;
   }> {
-    const segments = this.chartSegments();
+    const segments = this.currentChartSegments();
     const total = segments.reduce((sum, s) => sum + s.currentPercentage, 0);
     if (total === 0) return [];
 

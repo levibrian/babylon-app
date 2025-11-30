@@ -61,7 +61,7 @@ export class TransactionListComponent {
       case 'sell':
         return 'bg-red-100 text-red-800';
       case 'dividend':
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-purple-100 text-purple-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }
@@ -96,7 +96,7 @@ export class TransactionListComponent {
       return 'text-gray-500';
     }
     if (transaction.transactionType === 'dividend') {
-      return 'text-gray-500';
+      return 'text-purple-600';
     }
     // For buy transactions
     if (transaction.fees === 0) {

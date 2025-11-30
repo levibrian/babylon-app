@@ -4,7 +4,7 @@
       
       <!-- ROW 1: Header / Controls -->
       <div class="flex justify-between items-center mb-4">
-        <!-- Buy/Sell Switch -->
+        <!-- Buy/Sell/Dividend Switch -->
         <div class="inline-flex rounded-md shadow-sm" role="group">
           <button 
             type="button" 
@@ -17,8 +17,15 @@
             type="button" 
             (click)="setTransactionType('sell')"
             [class]="transactionForm.get('transactionType')?.value === 'sell' ? 'bg-gray-900 text-white ring-1 ring-gray-900' : 'bg-white text-gray-700 hover:bg-gray-50 ring-1 ring-inset ring-gray-300'"
-            class="-ml-px px-4 py-2 text-sm font-medium rounded-r-md focus:z-10 focus:ring-2 focus:ring-gray-800 transition-colors duration-150">
+            class="-ml-px px-4 py-2 text-sm font-medium focus:z-10 focus:ring-2 focus:ring-gray-800 transition-colors duration-150">
             Sell
+          </button>
+          <button 
+            type="button" 
+            (click)="setTransactionType('dividend')"
+            [class]="transactionForm.get('transactionType')?.value === 'dividend' ? 'bg-gray-900 text-white ring-1 ring-gray-900' : 'bg-white text-gray-700 hover:bg-gray-50 ring-1 ring-inset ring-gray-300'"
+            class="-ml-px px-4 py-2 text-sm font-medium rounded-r-md focus:z-10 focus:ring-2 focus:ring-gray-800 transition-colors duration-150">
+            Dividend
           </button>
         </div>
 
@@ -113,38 +120,75 @@
             required>
         </div>
         
-        <!-- 4. Price Column -->
-        <div class="flex flex-col gap-1 flex-1 min-w-[80px]">
-          <label for="sharePrice" class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Price</label>
-          <input 
-            id="sharePrice" 
-            type="number" 
-            formControlName="sharePrice" 
-            aria-label="Price per Share" 
-            step="0.01"
-            (wheel)="$event.preventDefault()"
-            placeholder="0.00"
-            class="w-full border-b border-gray-200 py-1 text-sm font-medium focus:border-black outline-none bg-transparent placeholder-gray-300" 
-            required>
-        </div>
+        <!-- 4. Price Column (Hidden for Dividend) -->
+        @if (!isDividend()) {
+          <div class="flex flex-col gap-1 flex-1 min-w-[80px]">
+            <label for="sharePrice" class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Price</label>
+            <input 
+              id="sharePrice" 
+              type="number" 
+              formControlName="sharePrice" 
+              aria-label="Price per Share" 
+              step="0.01"
+              (wheel)="$event.preventDefault()"
+              placeholder="0.00"
+              class="w-full border-b border-gray-200 py-1 text-sm font-medium focus:border-black outline-none bg-transparent placeholder-gray-300" 
+              required>
+          </div>
+        }
         
-        <!-- 5. Fees Column -->
-        <div class="flex flex-col gap-1 flex-1 min-w-[60px]">
-          <label for="fees" class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Fees</label>
-          <input 
-            id="fees" 
-            type="number" 
-            formControlName="fees" 
-            placeholder="0.00" 
-            aria-label="Fees" 
-            step="0.01"
-            (wheel)="$event.preventDefault()"
-            class="w-full border-b border-gray-200 py-1 text-sm font-medium focus:border-black outline-none bg-transparent placeholder-gray-300">
-        </div>
+        <!-- 5. Fees Column (Hidden for Dividend) -->
+        @if (!isDividend()) {
+          <div class="flex flex-col gap-1 flex-1 min-w-[60px]">
+            <label for="fees" class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Fees</label>
+            <input 
+              id="fees" 
+              type="number" 
+              formControlName="fees" 
+              placeholder="0.00" 
+              aria-label="Fees" 
+              step="0.01"
+              (wheel)="$event.preventDefault()"
+              class="w-full border-b border-gray-200 py-1 text-sm font-medium focus:border-black outline-none bg-transparent placeholder-gray-300">
+          </div>
+        }
         
-        <!-- 6. Total (Read-only) -->
+        <!-- 4b. Net Received Column (Only for Dividend) -->
+        @if (isDividend()) {
+          <div class="flex flex-col gap-1 flex-1 min-w-[100px]">
+            <label for="totalAmount" class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Net Received (€)</label>
+            <input 
+              id="totalAmount" 
+              type="number" 
+              formControlName="totalAmount" 
+              aria-label="Net Received" 
+              step="0.01"
+              (wheel)="$event.preventDefault()"
+              placeholder="0.00"
+              class="w-full border-b border-gray-200 py-1 text-sm font-medium focus:border-black outline-none bg-transparent placeholder-gray-300" 
+              required>
+          </div>
+        }
+        
+        <!-- 5b. Tax Column (Only for Dividend) -->
+        @if (isDividend()) {
+          <div class="flex flex-col gap-1 flex-1 min-w-[100px]">
+            <label for="tax" class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Tax Withheld (€)</label>
+            <input 
+              id="tax" 
+              type="number" 
+              formControlName="tax" 
+              placeholder="0.00" 
+              aria-label="Tax Withheld" 
+              step="0.01"
+              (wheel)="$event.preventDefault()"
+              class="w-full border-b border-gray-200 py-1 text-sm font-medium focus:border-black outline-none bg-transparent placeholder-gray-300">
+          </div>
+        }
+        
+        <!-- 6. Total / Gross Amount (Read-only) -->
         <div class="flex flex-col gap-1 pb-1 w-auto whitespace-nowrap">
-          <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Total</span>
+          <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{{ getTotalLabel() }}</span>
           <span [class]="'font-bold text-lg ' + getTotalColorClass()">
             {{ estimatedTotal() | currency:'EUR':'symbol':'1.2-2' }}
           </span>

@@ -20,6 +20,7 @@ export function mapApiTransactionToTransaction(apiTransaction: ApiTransaction, f
     sharePrice: apiTransaction.sharePrice,
     fees: apiTransaction.fees,
     totalAmount: apiTransaction.totalAmount,
+    tax: apiTransaction.tax,
     securityName: apiTransaction.securityName,
     securityType: apiTransaction.securityType,
   };
@@ -46,6 +47,8 @@ export interface CreateTransactionRequest {
   SharesQuantity: number;
   SharePrice: number;
   Fees: number;
+  TotalAmount?: number; // Total amount (required for dividends - Net Received)
+  Tax?: number; // Tax withheld (for dividend transactions)
   UserId: string | null;
 }
 
@@ -68,14 +71,27 @@ export function mapToCreateTransactionRequest(
     dateFormatted = dateObj.toISOString().split('T')[0];
   }
   
-  return {
+  // Debug logging
+  console.log('Mapping to CreateTransactionRequest:', {
+    transactionType: transactionData.transactionType,
+    totalAmount: transactionData.totalAmount,
+    tax: transactionData.tax
+  });
+  
+  const request = {
     Ticker: transactionData.ticker,
     TransactionType: transactionTypeMap[transactionData.transactionType],
     Date: dateFormatted,
     SharesQuantity: transactionData.shares,
     SharePrice: transactionData.sharePrice,
     Fees: transactionData.fees,
+    TotalAmount: transactionData.totalAmount, // Include totalAmount (required for dividends, calculated for buy/sell)
+    Tax: transactionData.tax,
     UserId: userId,
   };
+  
+  console.log('Final CreateTransactionRequest:', request);
+  
+  return request;
 }
 

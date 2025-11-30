@@ -63,7 +63,10 @@
                 <span [class]="getTransactionTypeLabelClass(transaction)">
                   {{ getTransactionTypeLabel(transaction) }}
                 </span>
-                @if (transaction.transactionType !== 'dividend') {
+                @if (transaction.transactionType === 'dividend') {
+                  <span>•</span>
+                  <span>{{ transaction.shares | number:'1.0-4' }} shares • Gross: {{ (transaction.sharePrice || 0) | currency:'EUR':'symbol':'1.2-2' }}/sh</span>
+                } @else {
                   <span>•</span>
                   <span>{{ transaction.shares | number:'1.0-4' }} shares @ {{ transaction.sharePrice | currency:'EUR':'symbol':'1.0-4' }}</span>
                 }
@@ -75,13 +78,19 @@
               <!-- Top Line: Amount (Bold) -->
               <div class="font-bold mb-1" [class]="{
                 'text-red-600': transaction.transactionType === 'buy',
-                'text-green-600': transaction.transactionType === 'sell' || transaction.transactionType === 'dividend'
+                'text-green-600': transaction.transactionType === 'sell',
+                'text-purple-600': transaction.transactionType === 'dividend'
               }">
                 {{ getValuePrefix(transaction.transactionType) }}{{ getTotalValue(transaction) | currency:'EUR':'symbol':'1.2-2' }}
               </div>
-              <!-- Bottom Line: Date (Gray, Small) -->
+              <!-- Bottom Line: Date and Tax (for dividends) -->
               <div class="text-xs text-gray-500">
-                {{ formatDate(transaction.date) }}
+                @if (transaction.transactionType === 'dividend' && transaction.tax) {
+                  <div>{{ formatDate(transaction.date) }}</div>
+                  <div class="text-[10px]">(Tax: {{ transaction.tax | currency:'EUR':'symbol':'1.2-2' }})</div>
+                } @else {
+                  {{ formatDate(transaction.date) }}
+                }
               </div>
             </div>
 

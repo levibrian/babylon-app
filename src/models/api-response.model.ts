@@ -9,6 +9,7 @@ export interface ApiTransaction {
   sharePrice: number;
   fees: number;
   totalAmount: number;
+  tax?: number; // Tax withheld (for dividend transactions)
   securityName?: string; // Company/security name (optional for backward compatibility)
   ticker?: string; // Ticker symbol (should be included in transactions endpoint response)
   securityType?: SecurityType;

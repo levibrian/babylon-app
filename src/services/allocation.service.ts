@@ -63,6 +63,12 @@ export class AllocationService {
     }
   }
 
+  /**
+   * Update a single target allocation.
+   * NOTE: This method only sends allocations that are currently in the loaded strategy.
+   * For sending ALL portfolio items (including new ones), use setAllocationStrategy() instead.
+   * The backend expects ALL items to be sent so it can determine what to delete, update, or add.
+   */
   async updateTarget(userId: string = USER_ID, ticker: string, newPercentage: number): Promise<void> {
     const currentStrategy = this._strategy();
     
@@ -71,6 +77,7 @@ export class AllocationService {
     }
 
     // Create a copy of current allocations
+    // WARNING: This only includes allocations already in the strategy, not all portfolio items
     const updatedAllocations: AllocationStrategyDto[] = [...currentStrategy.allocations];
     
     // Find existing allocation for this ticker
@@ -135,6 +142,60 @@ export class AllocationService {
       console.error('Error updating allocation target:', err);
       // Strategy already reverted on error, but ensure error state is set
       this._error.set(err instanceof Error ? err.message : 'Failed to update allocation target');
+      throw err;
+    }
+  }
+
+  /**
+   * Set the complete allocation strategy for all portfolio items.
+   * This method sends ALL allocations (modified and unmodified) to the backend,
+   * which expects the complete list to determine what to delete, update, or add.
+   */
+  async setAllocationStrategy(userId: string = USER_ID, allocations: AllocationStrategyDto[]): Promise<void> {
+    // Calculate total allocated
+    const totalAllocated = allocations.reduce(
+      (sum, alloc) => sum + alloc.targetPercentage,
+      0
+    );
+
+    // Optimistic update: update local signal immediately
+    const previousStrategy = this._strategy();
+    this._strategy.set({
+      allocations: [...allocations],
+      totalAllocated,
+    });
+
+    try {
+      // Send PUT request with complete list of ALL allocations
+      const request: SetAllocationStrategyRequest = {
+        allocations: allocations,
+      };
+
+      const response = await fetch(`${API_BASE_URL}/api/v1/portfolios/allocation?userId=${userId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(request),
+      });
+
+      if (!response.ok) {
+        // Revert optimistic update on error
+        if (previousStrategy) {
+          this._strategy.set(previousStrategy);
+        }
+        const errorText = await response.text();
+        console.error('API Error:', response.status, errorText);
+        throw new Error(`Failed to set allocation strategy: ${response.status} ${response.statusText}`);
+      }
+
+      // Reload to ensure consistency with backend
+      await this.loadStrategy(userId);
+
+    } catch (err) {
+      console.error('Error setting allocation strategy:', err);
+      // Strategy already reverted on error, but ensure error state is set
+      this._error.set(err instanceof Error ? err.message : 'Failed to set allocation strategy');
       throw err;
     }
   }

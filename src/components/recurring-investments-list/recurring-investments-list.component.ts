@@ -460,6 +460,9 @@ export class RecurringInvestmentsListComponent implements OnInit, AfterViewInit 
         continue;
       }
 
+      // Calculate totalAmount for buy transactions: (shares * price) + fees
+      const totalAmount = (shares * sharePrice) + fees;
+
       transactions.push({
         ticker: schedule.ticker,
         date,
@@ -467,6 +470,7 @@ export class RecurringInvestmentsListComponent implements OnInit, AfterViewInit 
         shares,
         sharePrice,
         fees,
+        totalAmount,
         securityName: schedule.securityName,
       });
     }
