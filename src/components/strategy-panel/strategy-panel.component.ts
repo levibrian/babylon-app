@@ -58,7 +58,7 @@ export class StrategyPanelComponent implements OnInit {
   viewMode = signal<"assets" | "types">("assets");
 
   // Target Allocation section expand/collapse
-  isTargetAllocationExpanded = signal<boolean>(true);
+  isTargetAllocationExpanded = signal<boolean>(false);
 
   // Investment simulator
   investmentAmount = signal<number>(0);

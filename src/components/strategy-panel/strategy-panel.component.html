@@ -19,9 +19,10 @@
   }
 
   <!-- Visual Dashboard (Top) - Two Column Grid -->
-  <div class="flex-shrink-0 border-b border-gray-100 bg-white min-h-0 p-6 transition-all duration-300 ease-in-out" 
-       [style.height]="isTargetAllocationExpanded() ? 'calc(50% - 1px)' : 'calc(100% - 49px)'"
-       [style.padding-bottom]="isTargetAllocationExpanded() ? '1.5rem' : '1.5rem'">
+  <div class="flex-1 min-h-0 border-b border-gray-100 bg-white p-3 relative transition-all duration-300 ease-in-out overflow-hidden" 
+       [style.height]="isTargetAllocationExpanded() ? '0' : '100%'"
+       [style.opacity]="isTargetAllocationExpanded() ? '0' : '1'"
+       [style.pointer-events]="isTargetAllocationExpanded() ? 'none' : 'auto'">
     <!-- Main Grid (Full Height) -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
       <!-- Left Column: Portfolio Chart -->
@@ -269,104 +270,107 @@
     </div>
   </div>
 
-  <!-- Target Editor (Bottom) -->
-  <div class="absolute bottom-0 left-0 right-0 flex flex-col bg-white overflow-hidden transition-all duration-300 ease-in-out border-t border-gray-100"
-       [style.height]="isTargetAllocationExpanded() ? '50%' : '48px'"
-       [style.max-height]="isTargetAllocationExpanded() ? '50%' : '48px'">
-    <div class="shrink-0 px-6 py-2 bg-white border-b border-gray-100">
-      <div class="flex items-center justify-between">
-        <div class="flex items-center gap-2">
-          <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest">
-            Target Allocation
-          </h3>
-          <button
-            (click)="toggleTargetAllocation()"
-            class="flex items-center justify-center w-5 h-5 rounded hover:bg-gray-100 transition-colors"
-            [attr.aria-label]="isTargetAllocationExpanded() ? 'Collapse Target Allocation' : 'Expand Target Allocation'">
-            <svg class="w-4 h-4 text-gray-500 transition-transform duration-300" 
-                 [class.rotate-180]="!isTargetAllocationExpanded()"
-                 xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
-            </svg>
-          </button>
-        </div>
-        <div class="flex items-center gap-3">
-          <div class="text-xs font-medium" [class]="getTotalTargetClass()">
-            Total Target: {{ totalTargetPercentage() | number : "1.2-2" }}%
-          </div>
-          @if (isTargetAllocationExpanded()) {
+  <!-- Target Allocation Overlay (slides up from bottom to cover entire right pane when expanded) -->
+  <div class="absolute left-0 right-0 flex flex-col bg-white overflow-hidden transition-all duration-300 ease-in-out z-20 shadow-lg"
+       [style.height]="isTargetAllocationExpanded() ? '100%' : '48px'"
+       [class.bottom-0]="isTargetAllocationExpanded()"
+       [class.bottom-[-1rem]]="!isTargetAllocationExpanded()"
+       [class.sm:bottom-[-1.5rem]]="!isTargetAllocationExpanded()"
+       [style.pointer-events]="isTargetAllocationExpanded() ? 'auto' : 'auto'">
+      <div class="shrink-0 px-6 py-2 bg-white border-b border-gray-100" [style.pointer-events]="'auto'">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest">
+              Target Allocation
+            </h3>
             <button
-              (click)="saveAllTargets()"
-              [disabled]="!hasUnsavedChanges()"
-              [class]="hasUnsavedChanges() ? 'bg-gray-900 hover:bg-gray-800 text-white' : 'bg-gray-200 text-gray-400 cursor-not-allowed'"
-              class="px-3 py-1.5 rounded-md text-xs font-medium transition-colors">
-              Save
+              (click)="toggleTargetAllocation()"
+              class="flex items-center justify-center w-5 h-5 rounded hover:bg-gray-100 transition-colors"
+              [attr.aria-label]="isTargetAllocationExpanded() ? 'Collapse Target Allocation' : 'Expand Target Allocation'">
+              <svg class="w-4 h-4 text-gray-500 transition-transform duration-300" 
+                   [class.rotate-180]="!isTargetAllocationExpanded()"
+                   xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+              </svg>
             </button>
+          </div>
+          <div class="flex items-center gap-3">
+            <div class="text-xs font-medium" [class]="getTotalTargetClass()">
+              Total Target: {{ totalTargetPercentage() | number : "1.2-2" }}%
+            </div>
+            @if (isTargetAllocationExpanded()) {
+              <button
+                (click)="saveAllTargets()"
+                [disabled]="!hasUnsavedChanges()"
+                [class]="hasUnsavedChanges() ? 'bg-gray-900 hover:bg-gray-800 text-white' : 'bg-gray-200 text-gray-400 cursor-not-allowed'"
+                class="px-3 py-1.5 rounded-md text-xs font-medium transition-colors">
+                Save
+              </button>
+            }
+          </div>
+        </div>
+      </div>
+
+      <div class="flex-1 overflow-hidden min-h-0" 
+           [style.height]="isTargetAllocationExpanded() ? '100%' : '0'"
+           [style.opacity]="isTargetAllocationExpanded() ? '1' : '0'"
+           [style.visibility]="isTargetAllocationExpanded() ? 'visible' : 'hidden'">
+        <div class="overflow-y-auto min-h-0 p-2 h-full">
+        @if (allocationService.loading()) {
+        <div class="flex items-center justify-center py-8">
+          <div class="text-sm text-gray-500">Loading strategy...</div>
+        </div>
+        } @else if (allocationService.error()) {
+        <div class="flex items-center justify-center py-8">
+          <div class="text-sm text-red-600">{{ allocationService.error() }}</div>
+        </div>
+        } @else {
+        <div class="space-y-2">
+          @for (item of strategyItems(); track item.ticker) {
+          <div
+            class="flex items-center gap-4 p-3 border border-gray-200 rounded-md hover:bg-gray-50 transition-colors"
+          >
+            <!-- Asset Name -->
+            <div class="flex-1 min-w-0">
+              <div class="text-sm font-bold text-gray-900 truncate">
+                {{ item.companyName }}
+              </div>
+              <div class="text-xs text-gray-500">{{ item.ticker }}</div>
+            </div>
+
+            <!-- Current % Badge -->
+            <div class="flex-shrink-0">
+              <span
+                class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-gray-100 text-gray-700"
+              >
+                {{ item.currentPercentage | number : "1.2-2" }}%
+              </span>
+            </div>
+
+            <!-- Target % Input -->
+            <div class="flex-shrink-0 w-24">
+              <input
+                type="text"
+                [value]="getInputDisplayValue(item.ticker)"
+                (input)="onTargetInputChange(item.ticker, $event)"
+                (focus)="onTargetFocus(item.ticker, $event)"
+                (blur)="onTargetBlur(item.ticker, $event)"
+                (keydown)="onTargetEnter($event)"
+                class="w-full px-2 py-1 text-sm font-mono text-right border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+              />
+            </div>
+          </div>
+          } @if (strategyItems().length === 0) {
+          <div class="flex items-center justify-center py-8">
+            <p class="text-sm text-gray-500">
+              No portfolio positions to configure.
+            </p>
+          </div>
           }
         </div>
-      </div>
-    </div>
-
-    <div class="overflow-hidden transition-all duration-300 ease-in-out"
-         [class.flex-1]="isTargetAllocationExpanded()"
-         [class.max-h-0]="!isTargetAllocationExpanded()"
-         [class.opacity-0]="!isTargetAllocationExpanded()"
-         [class.pointer-events-none]="!isTargetAllocationExpanded()">
-      <div class="overflow-y-auto min-h-0 p-2" [style.height.px]="isTargetAllocationExpanded() ? null : 0">
-      @if (allocationService.loading()) {
-      <div class="flex items-center justify-center py-8">
-        <div class="text-sm text-gray-500">Loading strategy...</div>
-      </div>
-      } @else if (allocationService.error()) {
-      <div class="flex items-center justify-center py-8">
-        <div class="text-sm text-red-600">{{ allocationService.error() }}</div>
-      </div>
-      } @else {
-      <div class="space-y-2">
-        @for (item of strategyItems(); track item.ticker) {
-        <div
-          class="flex items-center gap-4 p-3 border border-gray-200 rounded-md hover:bg-gray-50 transition-colors"
-        >
-          <!-- Asset Name -->
-          <div class="flex-1 min-w-0">
-            <div class="text-sm font-bold text-gray-900 truncate">
-              {{ item.companyName }}
-            </div>
-            <div class="text-xs text-gray-500">{{ item.ticker }}</div>
-          </div>
-
-          <!-- Current % Badge -->
-          <div class="flex-shrink-0">
-            <span
-              class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-gray-100 text-gray-700"
-            >
-              {{ item.currentPercentage | number : "1.2-2" }}%
-            </span>
-          </div>
-
-          <!-- Target % Input -->
-          <div class="flex-shrink-0 w-24">
-            <input
-              type="text"
-              [value]="getInputDisplayValue(item.ticker)"
-              (input)="onTargetInputChange(item.ticker, $event)"
-              (focus)="onTargetFocus(item.ticker, $event)"
-              (blur)="onTargetBlur(item.ticker, $event)"
-              (keydown)="onTargetEnter($event)"
-              class="w-full px-2 py-1 text-sm font-mono text-right border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
-            />
-          </div>
-        </div>
-        } @if (strategyItems().length === 0) {
-        <div class="flex items-center justify-center py-8">
-          <p class="text-sm text-gray-500">
-            No portfolio positions to configure.
-          </p>
-        </div>
         }
-      </div>
-      }
+        </div>
       </div>
     </div>
-  </div>
+
 </div>

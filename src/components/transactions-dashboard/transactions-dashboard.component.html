@@ -1,19 +1,16 @@
 <div class="flex flex-col h-full gap-4 p-6 overflow-hidden">
-  <!-- Header Section: Total Amount Invested & Passive Income -->
-  <div class="flex flex-col md:flex-row md:items-center gap-6 flex-shrink-0 pb-4 border-b border-gray-50">
+  <!-- Header Section: Total Amount Invested, Passive Income, and Milestone Tracker -->
+  <div class="flex flex-col lg:flex-row lg:items-center gap-6 flex-shrink-0 pb-4 border-b border-gray-50">
     <!-- Left: Total Amount Invested (Dominant) -->
-    <div>
+    <div class="flex-shrink-0">
       <div class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Total Amount Invested</div>
-      <div class="text-5xl font-mono font-bold tracking-tight text-gray-900">
+      <div class="text-4xl font-mono font-bold tracking-tight text-gray-900">
         {{ totalInvested() | currency:'EUR':'symbol':'1.2-2' }}
       </div>
     </div>
 
-    <!-- Gap: Auto spacer -->
-    <div class="flex-1"></div>
-
-    <!-- Right: Passive Income -->
-    <div>
+    <!-- Middle: Passive Income -->
+    <div class="flex-shrink-0">
       <div class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1 flex items-center gap-2">
         <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818l.818.182a2.25 2.25 0 002.364 0l.818-.182m-3 0v-6.636m0 0l2.5.545a2.25 2.25 0 002.5 0l2.5-.545M12 6V4.5m0 0l2.5.545a2.25 2.25 0 002.5 0L19.5 4.5M12 6l-2.5.545a2.25 2.25 0 00-2.5 0L4.5 6" />
@@ -23,6 +20,14 @@
       <div class="font-mono text-xl font-medium text-gray-900">
         {{ totalIncome() | currency:'EUR':'symbol':'1.2-2' }}
       </div>
+    </div>
+
+    <!-- Right: Milestone Tracker (Compact) -->
+    <div class="flex-1 min-w-0">
+      <app-milestone-tracker 
+        [currentValue]="totalInvested()"
+        [monthlyContribution]="estimatedMonthlyContribution()">
+      </app-milestone-tracker>
     </div>
   </div>
 
@@ -53,10 +58,10 @@
                 (mouseleave)="hideTooltip()">
                 <!-- Grouped bars: Income (left) and Deposits (right) side by side -->
                 <div class="flex items-end justify-center gap-1 w-full flex-1" style="min-height: 0;">
-                  <!-- Income Bar (Gray) - scaled to combined max -->
+                  <!-- Income Bar (Purple) - scaled to combined max -->
                   @if (monthData.income > 0) {
                     <div 
-                      class="w-6 rounded-t-sm transition-all duration-200 group-hover:opacity-90 bg-gray-900"
+                      class="w-6 rounded-t-sm transition-all duration-200 group-hover:opacity-90 bg-purple-600"
                       [style.height.%]="getBarHeight(monthData.income, maxCombinedCashFlow())"
                       style="min-height: 4px;">
                     </div>
@@ -82,7 +87,7 @@
         <!-- Legend -->
         <div class="flex items-center justify-center gap-6 mt-2 flex-shrink-0">
           <div class="flex items-center gap-2">
-            <div class="w-4 h-4 bg-gray-900 rounded-sm"></div>
+            <div class="w-4 h-4 bg-purple-600 rounded-sm"></div>
             <span class="text-xs text-gray-600">Income</span>
           </div>
           <div class="flex items-center gap-2">

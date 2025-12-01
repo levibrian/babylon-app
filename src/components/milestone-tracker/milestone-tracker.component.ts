@@ -25,20 +25,32 @@ export class MilestoneTrackerComponent {
     const current = this.currentValue();
     const next = this.nextMilestone();
     const nextIndex = this.milestones.indexOf(next);
-    return nextIndex > 0 ? this.milestones[nextIndex - 1] : 0;
+    
+    // If we're at the first milestone or before it, previous is 0
+    if (nextIndex <= 0) return 0;
+    
+    // Find the highest milestone that is <= current value
+    // This ensures we use the correct starting point for progress calculation
+    for (let i = nextIndex - 1; i >= 0; i--) {
+      if (this.milestones[i] <= current) {
+        return this.milestones[i];
+      }
+    }
+    
+    return 0;
   });
 
-  // Calculate progress percentage
+  // Calculate progress percentage (from 0 to next milestone)
   progressPercentage = computed(() => {
     const current = this.currentValue();
-    const prev = this.previousMilestone();
     const next = this.nextMilestone();
     
-    if (next === prev) return 100;
-    if (current <= prev) return 0;
+    if (next === 0) return 100;
+    if (current <= 0) return 0;
     if (current >= next) return 100;
     
-    return ((current - prev) / (next - prev)) * 100;
+    const progress = (current / next) * 100;
+    return Math.max(0, Math.min(100, progress)); // Clamp between 0 and 100
   });
 
   // Calculate months to reach next milestone
@@ -65,17 +77,16 @@ export class MilestoneTrackerComponent {
     return date;
   });
 
-  // Get current value position on the bar (as percentage)
+  // Get current value position on the bar (as percentage from 0 to next milestone)
   currentValuePosition = computed(() => {
     const current = this.currentValue();
-    const prev = this.previousMilestone();
     const next = this.nextMilestone();
     
-    if (next === prev) return 100;
-    if (current <= prev) return 0;
+    if (next === 0) return 100;
+    if (current <= 0) return 0;
     if (current >= next) return 100;
     
-    return ((current - prev) / (next - prev)) * 100;
+    return (current / next) * 100;
   });
 }
 

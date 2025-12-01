@@ -2,6 +2,7 @@ import { Component, ChangeDetectionStrategy, input, computed, signal } from '@an
 import { CommonModule, CurrencyPipe } from '@angular/common';
 import { Transaction } from '../../models/transaction.model';
 import { PortfolioHistoryChartComponent } from '../portfolio-history-chart/portfolio-history-chart.component';
+import { MilestoneTrackerComponent } from '../milestone-tracker/milestone-tracker.component';
 
 interface MonthlyData {
   month: string;
@@ -19,7 +20,7 @@ interface CombinedMonthlyData {
 @Component({
   selector: 'app-transactions-dashboard',
   templateUrl: './transactions-dashboard.component.html',
-  imports: [CommonModule, CurrencyPipe, PortfolioHistoryChartComponent],
+  imports: [CommonModule, CurrencyPipe, PortfolioHistoryChartComponent, MilestoneTrackerComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TransactionsDashboardComponent {
@@ -197,5 +198,30 @@ export class TransactionsDashboardComponent {
   hideTooltip(): void {
     this.activeTooltip.set(null);
   }
+
+  // Estimate monthly contribution from recent buy transactions
+  estimatedMonthlyContribution = computed(() => {
+    const transactions = this.transactions();
+    const buyTransactions = transactions.filter(t => t.transactionType === 'buy');
+    
+    if (buyTransactions.length === 0) return 0;
+    
+    // Get transactions from last 6 months
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+    
+    const recentBuys = buyTransactions.filter(t => {
+      const txDate = new Date(t.date);
+      return txDate >= sixMonthsAgo;
+    });
+    
+    if (recentBuys.length === 0) return 0;
+    
+    // Calculate total invested in last 6 months
+    const totalInvested = recentBuys.reduce((sum, t) => sum + Math.abs(t.totalAmount), 0);
+    
+    // Average monthly contribution over 6 months
+    return totalInvested / 6;
+  });
 }
 

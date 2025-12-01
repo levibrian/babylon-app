@@ -5,7 +5,7 @@
   </div>
 
   <!-- Progress Bar -->
-  <div class="relative w-full h-6 bg-gray-100 rounded-full overflow-hidden">
+  <div class="relative w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
     <!-- Progress Fill -->
     <div 
       class="h-full bg-gray-900 rounded-full transition-all duration-500 ease-out"
@@ -14,10 +14,10 @@
     
     <!-- Current Value Marker -->
     <div 
-      class="absolute top-0 bottom-0 w-0.5 bg-gray-600 z-10 transition-all duration-500 ease-out"
+      class="absolute top-1/2 -translate-y-1/2 w-0.5 h-3 bg-gray-400 z-10 transition-all duration-500 ease-out rounded-full"
       [style.left.%]="currentValuePosition()">
-      <div class="absolute -top-5 left-1/2 -translate-x-1/2 whitespace-nowrap">
-        <div class="text-[10px] font-mono text-gray-600 font-medium">
+      <div class="absolute -top-6 left-1/2 -translate-x-1/2 whitespace-nowrap">
+        <div class="text-[10px] font-mono text-gray-500 font-medium">
           {{ currentValue() | currency:'EUR':'symbol':'1.0-0' }}
         </div>
       </div>
