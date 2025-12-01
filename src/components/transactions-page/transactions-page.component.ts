@@ -3,6 +3,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { TransactionListComponent } from '../transaction-list/transaction-list.component';
 import { RecurringInvestmentsListComponent } from '../recurring-investments-list/recurring-investments-list.component';
+import { TransactionsDashboardComponent } from '../transactions-dashboard/transactions-dashboard.component';
 import { TransactionService } from '../../services/transaction.service';
 import { PortfolioService } from '../../services/portfolio.service';
 import { Transaction, NewTransactionData } from '../../models/transaction.model';
@@ -13,7 +14,7 @@ import { ErrorStateComponent } from '../common/error-state/error-state.component
 @Component({
   selector: 'app-transactions-page',
   templateUrl: './transactions-page.component.html',
-  imports: [TransactionListComponent, RecurringInvestmentsListComponent, RouterLink, CommonModule, TransactionSkeletonComponent, ErrorStateComponent],
+  imports: [TransactionListComponent, RecurringInvestmentsListComponent, TransactionsDashboardComponent, RouterLink, CommonModule, TransactionSkeletonComponent, ErrorStateComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TransactionsPageComponent {
@@ -28,7 +29,7 @@ export class TransactionsPageComponent {
   totalInvested: Signal<number> = this.portfolioService.totalInvested;
   
   isAddingTransaction = signal(false);
-  activeView = signal<'transactions' | 'recurring'>('recurring');
+  activeView = signal<'transactions' | 'recurring'>('transactions');
   private queryParams = toSignal(this.route.queryParams);
 
   constructor() {

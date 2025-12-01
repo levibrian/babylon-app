@@ -1,0 +1,81 @@
+<div class="bg-white border border-gray-100 rounded-lg p-4 shadow-sm hover:shadow-md transition-all">
+  <!-- Header: Icon + Title -->
+  <div class="flex items-center gap-3 mb-3">
+    <svg 
+      class="w-5 h-5 flex-shrink-0"
+      [class]="getIconClass()"
+      xmlns="http://www.w3.org/2000/svg" 
+      fill="none" 
+      viewBox="0 0 24 24" 
+      stroke-width="2" 
+      stroke="currentColor">
+      <path 
+        stroke-linecap="round" 
+        stroke-linejoin="round" 
+        [attr.d]="getIconPath()" />
+    </svg>
+    <h3 class="font-bold text-gray-900 text-sm">{{ getTitle() }}</h3>
+  </div>
+
+  <!-- Body: Message -->
+  <p class="text-sm text-gray-600 mb-4">{{ insight().message }}</p>
+
+  <!-- Visual Context: Bar Chart (if available) -->
+  @if (insight().visualContext; as context) {
+    <div class="space-y-2 mb-4">
+      <!-- Now Row -->
+      <div>
+        <div class="flex items-center justify-between mb-1">
+          <span class="text-xs text-gray-500">Now</span>
+          <span class="text-xs font-medium text-gray-700">{{ context.now | number:'1.1-1' }}%</span>
+        </div>
+        <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
+          <div 
+            class="h-full bg-rose-600 rounded-full transition-all"
+            [style.width]="getBarWidth(context.now)">
+          </div>
+        </div>
+      </div>
+
+      <!-- Target Row -->
+      <div>
+        <div class="flex items-center justify-between mb-1">
+          <span class="text-xs text-gray-500">Target</span>
+          <span class="text-xs font-medium text-gray-700">{{ context.target | number:'1.1-1' }}%</span>
+        </div>
+        <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
+          <div 
+            class="h-full bg-gray-400 rounded-full transition-all"
+            [style.width]="getBarWidth(context.target)">
+          </div>
+        </div>
+      </div>
+
+      <!-- After Row -->
+      <div>
+        <div class="flex items-center justify-between mb-1">
+          <span class="text-xs text-gray-500">After</span>
+          <span class="text-xs font-medium text-gray-700">{{ context.after | number:'1.1-1' }}%</span>
+        </div>
+        <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
+          <div 
+            class="h-full bg-emerald-600 rounded-full transition-all"
+            [style.width]="getBarWidth(context.after)">
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Action Button (if actionLabel exists) -->
+  @if (insight().actionLabel) {
+    <div class="flex justify-end mt-4">
+      <button
+        (click)="onActionClick()"
+        class="px-4 py-1.5 text-xs font-medium text-white bg-gray-900 rounded-md hover:bg-gray-800 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-2">
+        {{ insight().actionLabel }}
+      </button>
+    </div>
+  }
+</div>
+

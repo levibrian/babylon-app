@@ -78,13 +78,13 @@ export class WealthPageComponent implements OnDestroy {
 
   getInsightSeverityClass(severity: PortfolioInsight['severity']): string {
     switch (severity) {
-      case 'warning':
-        return 'text-red-600';
-      case 'positive':
-        return 'text-green-600';
-      case 'info':
+      case 'Warning':
+        return 'text-amber-600';
+      case 'Critical':
+        return 'text-rose-600';
+      case 'Info':
       default:
-        return 'text-gray-600';
+        return 'text-blue-600';
     }
   }
 

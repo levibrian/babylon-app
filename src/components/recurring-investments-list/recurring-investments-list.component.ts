@@ -5,8 +5,9 @@ import { ReactiveFormsModule, FormBuilder, FormGroup, FormArray, Validators } fr
 import { RecurringScheduleService } from '../../services/recurring-schedule.service';
 import { TransactionService } from '../../services/transaction.service';
 import { SecurityService } from '../../services/security.service';
+import { PortfolioService } from '../../services/portfolio.service';
 import { RecurringSchedule, CreateRecurringScheduleRequest } from '../../models/recurring-schedule.model';
-import { Security } from '../../models/security.model';
+import { Security, SecurityType } from '../../models/security.model';
 import { NewTransactionData } from '../../models/transaction.model';
 import { toast } from 'ngx-sonner';
 import { SelectOnFocusDirective } from '../../directives/select-on-focus.directive';
@@ -17,6 +18,9 @@ import { SelectOnFocusDirective } from '../../directives/select-on-focus.directi
   templateUrl: './recurring-investments-list.component.html',
   imports: [CommonModule, ReactiveFormsModule, CurrencyPipe, SelectOnFocusDirective],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  host: {
+    class: 'block h-full overflow-hidden'
+  },
 })
 export class RecurringInvestmentsListComponent implements OnInit, AfterViewInit {
   navigateToTransactions = output<void>();
@@ -26,6 +30,7 @@ export class RecurringInvestmentsListComponent implements OnInit, AfterViewInit 
   private recurringScheduleService = inject(RecurringScheduleService);
   private transactionService = inject(TransactionService);
   private securityService = inject(SecurityService);
+  private portfolioService = inject(PortfolioService);
   private fb = inject(FormBuilder);
   private cdr = inject(ChangeDetectorRef);
 
@@ -42,6 +47,9 @@ export class RecurringInvestmentsListComponent implements OnInit, AfterViewInit 
   // Search query for filtering schedules (initialized to empty string)
   searchQuery = signal('');
 
+  // Asset type filter (null means "Display All")
+  selectedAssetType = signal<SecurityType | null>(null);
+
   // Add mode toggle for progressive disclosure
   isAddMode = signal(false);
 
@@ -51,6 +59,46 @@ export class RecurringInvestmentsListComponent implements OnInit, AfterViewInit 
     return this.gridForm.get('rows') as FormArray;
   }
 
+  // ============================================================================
+  // Constants
+  // ============================================================================
+
+  /**
+   * Maps security type strings (from API) to SecurityType enum values
+   */
+  private static readonly SECURITY_TYPE_MAP: Record<string, SecurityType> = {
+    'Stock': SecurityType.Stock,
+    'ETF': SecurityType.ETF,
+    'MutualFund': SecurityType.MutualFund,
+    'Mutual Fund': SecurityType.MutualFund,
+    'Bond': SecurityType.Bond,
+    'Crypto': SecurityType.Crypto,
+    'REIT': SecurityType.REIT,
+    'Options': SecurityType.Options,
+    'Commodity': SecurityType.Commodity,
+  };
+
+  /**
+   * Maps SecurityType enum values to display names
+   */
+  private static readonly SECURITY_TYPE_NAMES: Record<SecurityType, string> = {
+    [SecurityType.Stock]: 'Stock',
+    [SecurityType.ETF]: 'ETF',
+    [SecurityType.MutualFund]: 'Mutual Fund',
+    [SecurityType.Bond]: 'Bond',
+    [SecurityType.Crypto]: 'Crypto',
+    [SecurityType.REIT]: 'REIT',
+    [SecurityType.Options]: 'Options',
+    [SecurityType.Commodity]: 'Commodity',
+  };
+
+  private static readonly MIN_SECURITY_TYPE = 1;
+  private static readonly MAX_SECURITY_TYPE = 8;
+
+  // ============================================================================
+  // Computed Signals
+  // ============================================================================
+
   filteredSecurities = computed(() => {
     const value = this.tickerInputValue();
     if (!value || value.trim().length === 0) {
@@ -59,25 +107,202 @@ export class RecurringInvestmentsListComponent implements OnInit, AfterViewInit 
     return this.securityService.filterSecurities(value);
   });
 
-  // Filtered schedules - returns all schedules if searchQuery is empty/null
-  filteredSchedules = computed(() => {
-    const query = this.searchQuery();
-    const allSchedules = this.schedules();
-    
-    // If search query is empty or null, return all schedules
-    if (!query || query.trim().length === 0) {
-      return allSchedules;
+  // ============================================================================
+  // Private Helper Methods - Security Type Conversion
+  // ============================================================================
+
+  /**
+   * Converts securityType (string or number) to SecurityType enum value.
+   * Handles both API string responses and numeric enum values.
+   */
+  private convertSecurityTypeToEnum(type: string | number | SecurityType | undefined | null): SecurityType | undefined {
+    if (type === undefined || type === null) {
+      return undefined;
     }
     
-    // Filter schedules by ticker or security name (case-insensitive)
-    const searchTerm = query.toLowerCase().trim();
-    return allSchedules.filter(schedule =>
-      schedule.ticker.toLowerCase().includes(searchTerm) ||
-      schedule.securityName.toLowerCase().includes(searchTerm)
+    // If it's already a number, validate and return
+    if (typeof type === 'number') {
+      return (type >= RecurringInvestmentsListComponent.MIN_SECURITY_TYPE && 
+              type <= RecurringInvestmentsListComponent.MAX_SECURITY_TYPE) 
+        ? type as SecurityType 
+        : undefined;
+    }
+    
+    // If it's a string, convert using the mapping
+    if (typeof type === 'string') {
+      return RecurringInvestmentsListComponent.SECURITY_TYPE_MAP[type];
+    }
+    
+    return undefined;
+  }
+
+  /**
+   * Gets the security type for a schedule by looking up the security.
+   * Tries SecurityService first (by securityId, then by ticker), then falls back to
+   * PortfolioService and TransactionService.
+   */
+  private getSecurityTypeForSchedule(schedule: RecurringSchedule): SecurityType | undefined {
+    // Try SecurityService first (most reliable source)
+    const security = this.findSecurityForSchedule(schedule);
+    if (security?.securityType !== undefined && security.securityType !== null) {
+      return this.convertSecurityTypeToEnum(security.securityType);
+    }
+
+    // Fallback to PortfolioService
+    const portfolioItem = this.findPortfolioItemForSchedule(schedule);
+    if (portfolioItem?.securityType !== undefined && portfolioItem.securityType !== null) {
+      return this.convertSecurityTypeToEnum(portfolioItem.securityType);
+    }
+
+    // Last fallback: TransactionService
+    const transaction = this.findLatestTransactionForSchedule(schedule);
+    if (transaction?.securityType !== undefined && transaction.securityType !== null) {
+      return this.convertSecurityTypeToEnum(transaction.securityType);
+    }
+
+    return undefined;
+  }
+
+  /**
+   * Finds a security for a schedule, trying securityId first, then ticker.
+   */
+  private findSecurityForSchedule(schedule: RecurringSchedule): Security | undefined {
+    const securities = this.securityService.securities();
+    
+    // Try by securityId first (most direct)
+    if (schedule.securityId) {
+      const byId = securities.find(s => s.id === schedule.securityId);
+      if (byId) return byId;
+    }
+    
+    // Fallback to ticker lookup
+    return securities.find(
+      s => s.ticker.toUpperCase() === schedule.ticker.toUpperCase()
     );
+  }
+
+  /**
+   * Finds a portfolio item for a schedule by ticker.
+   */
+  private findPortfolioItemForSchedule(schedule: RecurringSchedule) {
+    const portfolioItems = this.portfolioService.portfolio();
+    return portfolioItems.find(
+      p => p.ticker.toUpperCase() === schedule.ticker.toUpperCase()
+    );
+  }
+
+  /**
+   * Finds the most recent transaction for a schedule by ticker.
+   */
+  private findLatestTransactionForSchedule(schedule: RecurringSchedule) {
+    const transactions = this.transactionService.transactions();
+    return transactions
+      .filter(tx => tx.ticker.toUpperCase() === schedule.ticker.toUpperCase())
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0];
+  }
+
+
+  // ============================================================================
+  // Public Helper Methods - Template Use
+  // ============================================================================
+
+  /**
+   * Gets the display name for a SecurityType enum value.
+   * Used in templates to display security type names.
+   */
+  getSecurityTypeName(type: SecurityType | undefined | null): string {
+    if (type === undefined || type === null) {
+      return 'Stock';
+    }
+    
+    // Validate it's a valid SecurityType enum value
+    const typeValue = typeof type === 'number' ? type : Number(type);
+    if (isNaN(typeValue) || 
+        typeValue < RecurringInvestmentsListComponent.MIN_SECURITY_TYPE || 
+        typeValue > RecurringInvestmentsListComponent.MAX_SECURITY_TYPE) {
+      return 'Stock';
+    }
+    
+    return RecurringInvestmentsListComponent.SECURITY_TYPE_NAMES[typeValue as SecurityType] || 'Stock';
+  }
+
+  /**
+   * Converts SecurityType enum value to string for HTML select element.
+   */
+  securityTypeToString(type: SecurityType | null): string {
+    return type !== null ? String(type) : '';
+  }
+
+  /**
+   * Converts string value from HTML select to SecurityType enum value.
+   */
+  stringToSecurityType(value: string): SecurityType | null {
+    if (!value || value === '') {
+      return null;
+    }
+    const num = Number(value);
+    return isNaN(num) ? null : num as SecurityType;
+  }
+
+  /**
+   * Computes distinct security types from all recurring schedules.
+   * Looks up security types from SecurityService and returns unique, sorted enum values.
+   */
+  availableAssetTypes = computed(() => {
+    const allSchedules = this.schedules();
+    const typeSet = new Set<SecurityType>();
+    
+    allSchedules.forEach(schedule => {
+      const security = this.findSecurityForSchedule(schedule);
+      if (security?.securityType !== undefined && security.securityType !== null) {
+        const securityTypeValue = this.convertSecurityTypeToEnum(security.securityType);
+        if (securityTypeValue !== undefined) {
+          typeSet.add(securityTypeValue);
+        }
+      }
+    });
+    
+    return Array.from(typeSet).sort((a, b) => a - b);
   });
 
-  // Computed totals for each row
+  /**
+   * Filters schedules by search query and/or selected asset type.
+   * This computed signal depends on schedules and securities to ensure reactivity.
+   */
+  filteredSchedules = computed(() => {
+    const query = this.searchQuery();
+    const assetTypeFilter = this.selectedAssetType();
+    const allSchedules = this.schedules();
+    
+    let filtered = allSchedules;
+    
+    // Filter by search query (ticker or security name)
+    if (query && query.trim().length > 0) {
+      const searchTerm = query.toLowerCase().trim();
+      filtered = filtered.filter(schedule =>
+        schedule.ticker.toLowerCase().includes(searchTerm) ||
+        schedule.securityName.toLowerCase().includes(searchTerm)
+      );
+    }
+    
+    // Filter by asset type
+    if (assetTypeFilter !== null) {
+      filtered = filtered.filter(schedule => {
+        const scheduleType = this.getSecurityTypeForSchedule(schedule);
+        return scheduleType === assetTypeFilter;
+      });
+    }
+    
+    return filtered;
+  });
+
+  // ============================================================================
+  // Form Helper Methods
+  // ============================================================================
+
+  /**
+   * Calculates the total amount for a row (shares * price + fees).
+   */
   getRowTotal(index: number): number {
     const rowGroup = this.rowsFormArray.at(index) as FormGroup;
     if (!rowGroup) return 0;
@@ -92,7 +317,9 @@ export class RecurringInvestmentsListComponent implements OnInit, AfterViewInit 
     return shares * sharePrice + fees;
   }
 
-  // Check if row has valid data
+  /**
+   * Checks if a row has valid data (shares and price are positive numbers).
+   */
   isRowValid(index: number): boolean {
     const rowGroup = this.rowsFormArray.at(index) as FormGroup;
     if (!rowGroup) return false;
@@ -220,13 +447,36 @@ export class RecurringInvestmentsListComponent implements OnInit, AfterViewInit 
   }
 
   ngOnInit(): void {
-    // Always reload schedules when component initializes
+    this.loadData();
+    this.setupTickerInputSubscription();
+  }
+
+  ngAfterViewInit(): void {
+    this.focusTickerInput();
+  }
+
+  // ============================================================================
+  // Private Setup Methods
+  // ============================================================================
+
+  /**
+   * Loads schedules and ensures securities are available.
+   */
+  private loadData(): void {
     this.recurringScheduleService.loadSchedules().then(() => {
-      // Force change detection after schedules load
       this.cdr.markForCheck();
     });
+    
+    // Ensure securities are loaded for asset type filtering
+    if (this.securityService.securities().length === 0) {
+      this.securityService.reload();
+    }
+  }
 
-    // Subscribe to ticker input changes for autocomplete
+  /**
+   * Sets up subscription to ticker input changes for autocomplete functionality.
+   */
+  private setupTickerInputSubscription(): void {
     this.addNewForm.get('ticker')?.valueChanges.subscribe(value => {
       this.tickerInputValue.set(value || '');
       const filtered = this.filteredSecurities();
@@ -235,24 +485,25 @@ export class RecurringInvestmentsListComponent implements OnInit, AfterViewInit 
     });
   }
 
-  ngAfterViewInit(): void {
-    // Force focus on ticker input immediately when component loads
-    // This triggers change detection and ensures the grid displays
+  /**
+   * Focuses the ticker input field and triggers change detection.
+   */
+  private focusTickerInput(): void {
     setTimeout(() => {
       if (this.tickerInputRef?.nativeElement) {
         this.tickerInputRef.nativeElement.focus();
-        // Trigger change detection after focus
         this.cdr.markForCheck();
       }
     }, 0);
     
-    // Also trigger change detection after a short delay to ensure schedules are displayed
     setTimeout(() => {
       this.cdr.markForCheck();
     }, 100);
   }
 
-  // Autocomplete methods
+  // ============================================================================
+  // Autocomplete Methods
+  // ============================================================================
   selectSecurity(security: Security): void {
     this.addNewForm.get('ticker')?.setValue(security.ticker.toUpperCase());
     this.tickerInputValue.set(security.ticker.toUpperCase());
@@ -316,6 +567,13 @@ export class RecurringInvestmentsListComponent implements OnInit, AfterViewInit 
     }
   }
 
+  // ============================================================================
+  // Schedule Management Methods
+  // ============================================================================
+
+  /**
+   * Adds a new recurring investment schedule.
+   */
   async addSchedule(): Promise<void> {
     if (this.addNewForm.invalid) {
       this.addNewForm.markAllAsTouched();
@@ -345,56 +603,62 @@ export class RecurringInvestmentsListComponent implements OnInit, AfterViewInit 
       };
 
       await this.recurringScheduleService.addSchedule(request);
-      
-      // Reset form
-      this.addNewForm.reset({ ticker: '' });
-      this.tickerInputValue.set('');
-      
-      // Close add mode after successful addition
+      this.resetAddForm();
       this.isAddMode.set(false);
-
       toast.success('Asset added to recurring investments');
     } catch (err) {
-      console.error('Error adding schedule:', err);
       toast.error('Could not add asset. Please try again.');
     }
   }
 
+  /**
+   * Deletes a recurring investment schedule.
+   */
   async deleteSchedule(id: string): Promise<void> {
     try {
       await this.recurringScheduleService.deleteSchedule(id);
       toast.success('Asset removed from recurring investments');
     } catch (err) {
-      console.error('Error deleting schedule:', err);
       toast.error('Could not remove asset. Please try again.');
     }
   }
 
+  /**
+   * Toggles the add mode for progressive disclosure.
+   */
   toggleAddMode(): void {
     this.isAddMode.update(mode => !mode);
     if (this.isAddMode()) {
-      // Focus ticker input when opening add mode
       setTimeout(() => {
         if (this.tickerInputRef?.nativeElement) {
           this.tickerInputRef.nativeElement.focus();
         }
       }, 0);
     } else {
-      // Reset form when closing
-      this.addNewForm.reset({ ticker: '' });
-      this.tickerInputValue.set('');
-      this.showDropdown.set(false);
+      this.resetAddForm();
     }
   }
 
+  /**
+   * Closes add mode and resets the form.
+   */
   closeAddMode(): void {
     this.isAddMode.set(false);
+    this.resetAddForm();
+  }
+
+  /**
+   * Resets the add form to its initial state.
+   */
+  private resetAddForm(): void {
     this.addNewForm.reset({ ticker: '' });
     this.tickerInputValue.set('');
     this.showDropdown.set(false);
   }
 
-  // Get row FormGroup by schedule ID
+  /**
+   * Gets the FormGroup for a row by schedule ID.
+   */
   getRowFormGroup(scheduleId: string): FormGroup | null {
     for (let i = 0; i < this.rowsFormArray.length; i++) {
       const rowGroup = this.rowsFormArray.at(i) as FormGroup;
@@ -405,12 +669,16 @@ export class RecurringInvestmentsListComponent implements OnInit, AfterViewInit 
     return null;
   }
 
-  // Get row FormGroup by index
+  /**
+   * Gets the FormGroup for a row by index.
+   */
   getRowFormGroupByIndex(index: number): FormGroup {
     return this.rowsFormArray.at(index) as FormGroup;
   }
 
-  // Get schedule for a row by index
+  /**
+   * Gets the schedule for a row by its index in the FormArray.
+   */
   getScheduleForRow(index: number): RecurringSchedule | null {
     const rowGroup = this.rowsFormArray.at(index) as FormGroup;
     if (!rowGroup) return null;
@@ -421,7 +689,21 @@ export class RecurringInvestmentsListComponent implements OnInit, AfterViewInit 
     return this.schedules().find(s => s.id === scheduleId) || null;
   }
 
-  // Avatar helper
+  /**
+   * Checks if a schedule is in the filtered list.
+   * Used in template to conditionally render rows.
+   */
+  isScheduleInFilteredList(scheduleId: string): boolean {
+    return this.filteredSchedules().some(s => s.id === scheduleId);
+  }
+
+  // ============================================================================
+  // UI Helper Methods
+  // ============================================================================
+
+  /**
+   * Gets a consistent avatar color class for a ticker symbol.
+   */
   getAvatarClass(ticker: string): string {
     const colors = [
       'bg-blue-500', 'bg-green-500', 'bg-purple-500', 'bg-pink-500',
@@ -431,6 +713,16 @@ export class RecurringInvestmentsListComponent implements OnInit, AfterViewInit 
     return colors[hash % colors.length];
   }
 
+  /**
+   * Handles asset type filter dropdown change event.
+   */
+  onAssetTypeFilterChange(type: SecurityType | null): void {
+    this.selectedAssetType.set(type);
+  }
+
+  /**
+   * Executes transactions for all valid rows in the grid.
+   */
   async executeTransactions(): Promise<void> {
     const validRowIndices = this.validRows();
     
@@ -440,9 +732,31 @@ export class RecurringInvestmentsListComponent implements OnInit, AfterViewInit 
     }
 
     const schedules = this.schedules();
+    const transactions = this.buildTransactionsFromRows(validRowIndices, schedules);
+
+    if (transactions.length === 0) {
+      toast.error('No valid transactions to log');
+      return;
+    }
+
+    try {
+      await this.createTransactions(transactions);
+      this.resetFormInputs();
+      toast.success(`Successfully logged ${transactions.length} transaction${transactions.length > 1 ? 's' : ''}`);
+    } catch (err) {
+      toast.error('Could not log all transactions. Please try again.');
+    }
+  }
+
+  /**
+   * Builds transaction data from valid form rows.
+   */
+  private buildTransactionsFromRows(
+    validRowIndices: number[], 
+    schedules: RecurringSchedule[]
+  ): NewTransactionData[] {
     const transactions: NewTransactionData[] = [];
 
-    // Map valid rows to transaction data
     for (const index of validRowIndices) {
       const rowGroup = this.rowsFormArray.at(index) as FormGroup;
       const scheduleId = rowGroup.get('scheduleId')?.value;
@@ -455,12 +769,11 @@ export class RecurringInvestmentsListComponent implements OnInit, AfterViewInit 
       const fees = rowGroup.get('fees')?.value || 0;
       const date = rowGroup.get('date')?.value || new Date().toISOString().substring(0, 10);
       
-      // Double-check validation (should already be validated by validRows)
+      // Validate row data
       if (!shares || !sharePrice || shares <= 0 || sharePrice <= 0) {
         continue;
       }
 
-      // Calculate totalAmount for buy transactions: (shares * price) + fees
       const totalAmount = (shares * sharePrice) + fees;
 
       transactions.push({
@@ -475,34 +788,32 @@ export class RecurringInvestmentsListComponent implements OnInit, AfterViewInit 
       });
     }
 
-    if (transactions.length === 0) {
-      toast.error('No valid transactions to log');
-      return;
+    return transactions;
+  }
+
+  /**
+   * Creates transactions sequentially via the TransactionService.
+   */
+  private async createTransactions(transactions: NewTransactionData[]): Promise<void> {
+    for (const transaction of transactions) {
+      await this.transactionService.addTransaction(transaction);
     }
+  }
 
-    try {
-      // Create transactions sequentially to avoid overwhelming the API
-      // Note: TransactionService doesn't have a bulk method, so we call addTransaction for each
-      for (const transaction of transactions) {
-        await this.transactionService.addTransaction(transaction);
-      }
-
-      // Reset form inputs but keep rows
-      const today = new Date().toISOString().substring(0, 10);
-      for (let i = 0; i < this.rowsFormArray.length; i++) {
-        const rowGroup = this.rowsFormArray.at(i) as FormGroup;
-        rowGroup.patchValue({
-          date: today,
-          shares: null,
-          sharePrice: null,
-          fees: 0,
-        });
-      }
-
-      toast.success(`Successfully logged ${transactions.length} transaction${transactions.length > 1 ? 's' : ''}`);
-    } catch (err) {
-      console.error('Error executing transactions:', err);
-      toast.error('Could not log all transactions. Please try again.');
+  /**
+   * Resets form inputs to default values while keeping the rows.
+   */
+  private resetFormInputs(): void {
+    const today = new Date().toISOString().substring(0, 10);
+    for (let i = 0; i < this.rowsFormArray.length; i++) {
+      const rowGroup = this.rowsFormArray.at(i) as FormGroup;
+      rowGroup.patchValue({
+        date: today,
+        shares: null,
+        sharePrice: null,
+        fees: 0,
+      });
     }
   }
 }
+

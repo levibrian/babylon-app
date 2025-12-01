@@ -1,16 +1,14 @@
-<div class="h-full overflow-hidden flex flex-col min-w-0 w-full">
-  <!-- Navigation Pane -->
-  <div class="flex items-baseline justify-between gap-x-3 sm:gap-x-4 mb-3 flex-shrink-0">
+<div class="h-full overflow-hidden flex flex-col min-w-0 w-full px-3 pb-4 sm:pb-6 pt-4 sm:pt-6">
+  <!-- Navigation Pane with Add Button -->
+  <div class="flex items-center justify-between mb-3 flex-shrink-0">
     <div class="flex items-baseline gap-x-3 sm:gap-x-4">
-      <h2 class="text-sm font-bold tracking-tight text-gray-900">Recurring Investments</h2>
       <button 
         (click)="navigateToTransactions.emit()" 
         class="text-sm font-medium text-gray-400 hover:text-gray-600 transition-colors">
         Historical Transactions
       </button>
+      <h2 class="text-sm font-bold tracking-tight text-gray-900">Recurring Investments</h2>
     </div>
-    
-    <!-- Add/Cancel Button (toggles between + and X) -->
     <button 
       (click)="toggleAddMode()"
       class="flex items-center justify-center w-8 h-8 rounded-full bg-gray-900 text-white hover:bg-gray-800 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-2"
@@ -87,7 +85,7 @@
   }
 
   <!-- Grid Content -->
-  <div class="flex-1 overflow-y-auto min-w-0 w-full" style="scrollbar-gutter: stable;">
+  <div class="flex-1 overflow-y-auto min-h-0" style="scrollbar-gutter: stable;">
     @if (loading()) {
       <div class="flex items-center justify-center py-12">
         <div class="text-sm text-gray-500">Loading...</div>
@@ -115,7 +113,7 @@
       <form [formGroup]="gridForm" class="w-full min-w-0">
         <div formArrayName="rows" class="w-full min-w-0">
           @for (rowGroup of rowsFormArray.controls; track rowGroup.get('scheduleId')?.value; let i = $index) {
-            @if (getScheduleForRow(i)) {
+            @if (getScheduleForRow(i) && isScheduleInFilteredList(getScheduleForRow(i)!.id)) {
               @let schedule = getScheduleForRow(i)!;
               <div [formGroupName]="i" class="relative group flex flex-col lg:flex-row lg:items-center gap-0 border-b border-gray-100 py-2 hover:bg-gray-50/50 transition-colors w-full">
                 <!-- Asset Info (Left) -->
@@ -214,14 +212,27 @@
 
   <!-- Execute Footer (Sticky) -->
   @if (filteredSchedules().length > 0) {
-    <div class="flex-shrink-0 pt-4 border-t border-gray-200 mt-auto">
+    <div class="flex-shrink-0 pt-4 border-t border-gray-200 mt-auto -mx-3 px-3 -mb-4 sm:-mb-6 pb-4 sm:pb-6">
       <div class="flex items-center justify-between">
-        <div class="text-sm text-gray-600">
-          @if (validTransactionCount() > 0) {
-            <span class="font-medium">{{ validTransactionCount() }}</span> transaction{{ validTransactionCount() > 1 ? 's' : '' }} ready to log
-          } @else {
-            Fill in shares and price to log transactions
-          }
+        <div class="flex items-center gap-4">
+          <!-- Asset Type Filter Dropdown -->
+          <select
+            [value]="securityTypeToString(selectedAssetType())"
+            (change)="onAssetTypeFilterChange(stringToSecurityType($any($event.target).value))"
+            class="text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md px-3 py-1.5 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-1 transition-colors cursor-pointer">
+            <option value="">Display All</option>
+            @for (type of availableAssetTypes(); track type) {
+              <option [value]="securityTypeToString(type)">{{ getSecurityTypeName(type) }}</option>
+            }
+          </select>
+          
+          <div class="text-sm text-gray-600">
+            @if (validTransactionCount() > 0) {
+              <span class="font-medium">{{ validTransactionCount() }}</span> transaction{{ validTransactionCount() > 1 ? 's' : '' }} ready to log
+            } @else {
+              Fill in shares and price to log transactions
+            }
+          </div>
         </div>
         <button 
           type="button"

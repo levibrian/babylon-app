@@ -32,10 +32,22 @@ export interface ApiPortfolioPosition {
   transactions: ApiTransaction[];
 }
 
-// Backend API: PortfolioInsightDto (if present)
+// Backend API: VisualContextDto
+export interface ApiVisualContext {
+  now: number;
+  target: number;
+  after: number;
+}
+
+// Backend API: PortfolioInsightDto
 export interface ApiPortfolioInsight {
-    message: string;
-    severity: 'warning' | 'info' | 'positive';
+  type: 'Rebalancing' | 'PerformanceMilestone' | 'DiversificationWarning';
+  message: string;
+  ticker?: string | null;
+  amount?: number | null;
+  severity: 'Info' | 'Warning' | 'Critical';
+  actionLabel?: string | null;
+  visualContext?: ApiVisualContext | null;
 }
 
 // Backend API: PortfolioResponse

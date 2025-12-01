@@ -97,11 +97,15 @@ export class TransactionService {
 
   async updateTransaction(transaction: Transaction): Promise<void> {
     try {
+      // Map transaction to backend format (same as create request)
+      // The mapper accepts NewTransactionData, but Transaction extends it, so this works
+      const requestBody = mapToCreateTransactionRequest(transaction, USER_ID);
+      
       // Real API call to update transaction
       const response = await fetch(`${API_BASE_URL}/api/v1/transactions/${USER_ID}/${transaction.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(transaction),
+        body: JSON.stringify(requestBody),
       });
 
       if (!response.ok) {

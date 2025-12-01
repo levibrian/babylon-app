@@ -1,10 +1,12 @@
-import { Component, ChangeDetectionStrategy, input, computed, Signal, inject, signal, OnDestroy, OnInit } from '@angular/core';
+import { Component, ChangeDetectionStrategy, input, computed, Signal, inject } from '@angular/core';
 import { CommonModule, CurrencyPipe } from '@angular/common';
-import { PortfolioItem } from '../../models/portfolio.model';
-import { Transaction } from '../../models/transaction.model';
+import { Router } from '@angular/router';
+import { PortfolioItem, PortfolioInsight } from '../../models/portfolio.model';
+import { Transaction, NewTransactionData } from '../../models/transaction.model';
 import { PortfolioService } from '../../services/portfolio.service';
 import { SecurityType } from '../../models/security.model';
-import { PortfolioHistoryChartComponent } from '../portfolio-history-chart/portfolio-history-chart.component';
+import { InsightCardComponent } from '../insight-card/insight-card.component';
+import { MilestoneTrackerComponent } from '../milestone-tracker/milestone-tracker.component';
 
 interface AllocationSegment {
   label: string;
@@ -13,24 +15,12 @@ interface AllocationSegment {
   percentage: number;
 }
 
-interface MonthlyIncome {
-  month: string;
-  amount: number;
-  monthIndex: number;
-}
-
 interface DiversityAnalysis {
   score: number;
   label: string;
   color: string;
   warnings: string[];
   positiveFactors: string[];
-}
-
-interface PortfolioInsight {
-  label: string;
-  status: 'good' | 'warning' | 'critical';
-  icon: string;
 }
 
 interface HealthScore {
@@ -42,17 +32,15 @@ interface HealthScore {
 @Component({
   selector: 'app-portfolio-dashboard',
   templateUrl: './portfolio-dashboard.component.html',
-  imports: [CommonModule, CurrencyPipe, PortfolioHistoryChartComponent],
+  imports: [CommonModule, CurrencyPipe, InsightCardComponent, MilestoneTrackerComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class PortfolioDashboardComponent implements OnInit, OnDestroy {
+export class PortfolioDashboardComponent {
   portfolio = input.required<PortfolioItem[]>();
   transactions = input.required<Transaction[]>();
   private portfolioService = inject(PortfolioService);
+  private router = inject(Router);
 
-  // Insights carousel state
-  activeInsightIndex = signal(0);
-  private carouselInterval: any;
 
   // Computed KPIs
   netWorth = computed(() => {
@@ -83,91 +71,55 @@ export class PortfolioDashboardComponent implements OnInit, OnDestroy {
       .reduce((sum, t) => sum + t.totalAmount, 0);
   });
 
-  // Portfolio Insights (Analyst's Note)
-  portfolioInsights = computed<PortfolioInsight[]>(() => {
-    const items = this.portfolio();
-    const insights: PortfolioInsight[] = [];
-
-    if (items.length === 0) {
-      return [{
-        label: 'No portfolio data available',
-        status: 'critical',
-        icon: 'alert',
-      }];
-    }
-
-    // Calculate metrics
-    const assetCount = items.length;
-    const maxConcentrationItem = [...items].sort((a, b) => b.currentAllocationPercentage - a.currentAllocationPercentage)[0];
-    const maxConcentration = maxConcentrationItem?.currentAllocationPercentage || 0;
+  // Estimate monthly contribution from recent buy transactions
+  estimatedMonthlyContribution = computed(() => {
+    const transactions = this.transactions();
+    const buyTransactions = transactions.filter(t => t.transactionType === 'buy');
     
-    const uniqueTypes = new Set<SecurityType | string>();
-    items.forEach(item => {
-      const type = item.securityType ?? (item.transactions?.[0]?.securityType);
-      if (type !== undefined && type !== null) {
-        uniqueTypes.add(type as any);
-      }
+    if (buyTransactions.length === 0) return 0;
+    
+    // Get transactions from last 6 months
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+    
+    const recentBuys = buyTransactions.filter(t => {
+      const txDate = new Date(t.date);
+      return txDate >= sixMonthsAgo;
     });
-    const assetClasses = uniqueTypes.size;
-
-    // Rule 1: Asset Count
-    if (assetCount > 5) {
-      insights.push({
-        label: 'Well diversified (>5 assets)',
-        status: 'good',
-        icon: 'check',
-      });
-    } else {
-      insights.push({
-        label: 'Concentrated portfolio',
-        status: 'warning',
-        icon: 'alert',
-      });
-    }
-
-    // Rule 2: Max Concentration
-    if (maxConcentration < 25) {
-      insights.push({
-        label: 'No single asset > 25%',
-        status: 'good',
-        icon: 'check',
-      });
-    } else {
-      insights.push({
-        label: `High exposure to ${maxConcentrationItem.ticker} (${maxConcentration.toFixed(1)}%)`,
-        status: 'warning',
-        icon: 'alert',
-      });
-    }
-
-    // Rule 3: Asset Classes
-    if (assetClasses >= 3) {
-      insights.push({
-        label: 'Multiple asset classes',
-        status: 'good',
-        icon: 'check',
-      });
-    } else {
-      insights.push({
-        label: 'Limited asset class exposure',
-        status: 'warning',
-        icon: 'alert',
-      });
-    }
-
-    return insights;
+    
+    if (recentBuys.length === 0) return 0;
+    
+    // Calculate total invested in last 6 months
+    const totalInvested = recentBuys.reduce((sum, t) => sum + t.totalAmount, 0);
+    
+    // Average monthly contribution over 6 months
+    return totalInvested / 6;
   });
 
-  // Health Score
+  // Portfolio Insights from backend API
+  portfolioInsights = computed<PortfolioInsight[]>(() => {
+    const backendInsights = this.portfolioService.insights();
+    
+    // If no insights from backend, return empty array (or fallback message)
+    if (!backendInsights || backendInsights.length === 0) {
+      return [];
+    }
+    
+    return backendInsights;
+  });
+
+  // Health Score (computed from backend insights)
   healthScore = computed<HealthScore>(() => {
     const insights = this.portfolioInsights();
     let score = 10;
 
     insights.forEach(insight => {
-      if (insight.status === 'warning') {
+      if (insight.severity === 'Warning') {
         score -= 2;
-      } else if (insight.status === 'critical') {
+      } else if (insight.severity === 'Critical') {
         score -= 3;
+      } else if (insight.severity === 'Info') {
+        score -= 0.5; // Info insights have minimal impact
       }
     });
 
@@ -194,104 +146,60 @@ export class PortfolioDashboardComponent implements OnInit, OnDestroy {
     };
   });
 
-  // Active insight for carousel
-  activeInsight = computed(() => {
-    const insights = this.portfolioInsights();
-    const index = this.activeInsightIndex();
-    if (insights.length === 0) return null;
-    return insights[index % insights.length];
-  });
 
-  ngOnInit(): void {
-    // Start carousel rotation
-    this.carouselInterval = setInterval(() => {
-      const insights = this.portfolioInsights();
-      if (insights.length > 0) {
-        const currentIndex = this.activeInsightIndex();
-        this.activeInsightIndex.set((currentIndex + 1) % insights.length);
-      }
-    }, 3500); // Rotate every 3.5 seconds
-  }
-
-  ngOnDestroy(): void {
-    if (this.carouselInterval) {
-      clearInterval(this.carouselInterval);
+  /**
+   * Handles insight card action execution.
+   * Navigates to transactions page with pre-filled form data based on insight type.
+   */
+  handleInsightAction(insight: PortfolioInsight): void {
+    if (!insight.ticker || !insight.amount) {
+      console.warn('Insight missing required data for action:', insight);
+      return;
     }
-  }
 
+    const portfolioItem = this.portfolio().find(p => p.ticker === insight.ticker);
+    if (!portfolioItem) {
+      console.warn('Portfolio item not found for ticker:', insight.ticker);
+      return;
+    }
 
-  // Monthly income for last 12 months
-  monthlyIncome = computed(() => {
-    const transactions = this.transactions();
-    // Filter for dividend transactions
-    const incomeTransactions = transactions.filter(t => 
-      t.transactionType === 'dividend'
-    );
-    
-    // Get last 12 months
-    const now = new Date();
-    const months: MonthlyIncome[] = [];
-    
-    for (let i = 11; i >= 0; i--) {
-      const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const monthIndex = date.getMonth();
-      // Get first letter of month abbreviation (J, F, M, A, M, J, J, A, S, O, N, D)
-      const monthLabel = date.toLocaleDateString('en-US', { month: 'short' }).charAt(0).toUpperCase();
+    if (insight.type === 'Rebalancing') {
+      // Determine if it's a buy or sell based on amount sign or rebalancing status
+      const isSell = portfolioItem.rebalancingStatus === 'Overweight' || (insight.amount && insight.amount > 0);
+      const transactionType = isSell ? 'sell' : 'buy';
       
-      const monthStart = new Date(date.getFullYear(), date.getMonth(), 1);
-      const monthEnd = new Date(date.getFullYear(), date.getMonth() + 1, 0, 23, 59, 59);
-      
-      const amount = incomeTransactions
-        .filter(t => {
-          const txDate = new Date(t.date);
-          return txDate >= monthStart && txDate <= monthEnd;
-        })
-        .reduce((sum, t) => sum + t.totalAmount, 0);
-      
-      months.push({
-        month: monthLabel,
-        amount,
-        monthIndex,
+      // Navigate to transactions page with query params for pre-filling
+      this.router.navigate(['/transactions'], {
+        queryParams: {
+          add: 'true',
+          ticker: insight.ticker,
+          type: transactionType,
+          amount: Math.abs(insight.amount),
+          shares: portfolioItem.totalShares > 0 ? Math.abs(insight.amount) / portfolioItem.averageSharePrice : undefined
+        }
+      });
+    } else if (insight.type === 'PerformanceMilestone' && insight.actionLabel?.toLowerCase().includes('dividend')) {
+      // For dividend insights
+      this.router.navigate(['/transactions'], {
+        queryParams: {
+          add: 'true',
+          ticker: insight.ticker,
+          type: 'dividend',
+          shares: portfolioItem.totalShares
+        }
+      });
+    } else {
+      // Default: navigate to transactions page
+      this.router.navigate(['/transactions'], {
+        queryParams: {
+          add: 'true',
+          ticker: insight.ticker
+        }
       });
     }
-    
-    return months;
-  });
-
-  maxMonthlyIncome = computed(() => {
-    const months = this.monthlyIncome();
-    if (months.length === 0) return 1;
-    return Math.max(...months.map(m => m.amount), 1);
-  });
-
-  // Tooltip state
-  activeTooltip = signal<{ x: number; y: number; text: string } | null>(null);
-
-  showTooltip(event: MouseEvent, amount: number): void {
-    const formatted = new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'EUR',
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(amount);
-    
-    this.activeTooltip.set({
-      x: event.clientX,
-      y: event.clientY,
-      text: formatted,
-    });
-  }
-
-  hideTooltip(): void {
-    this.activeTooltip.set(null);
   }
 
 
-  getBarHeight(amount: number): number {
-    const max = this.maxMonthlyIncome();
-    if (max === 0) return 0;
-    return Math.max((amount / max) * 100, 1);
-  }
 
   // Helper function to get enum name from numeric value or string name
   private getSecurityTypeName(typeValue: SecurityType | string | undefined): string {
@@ -416,6 +324,49 @@ export class PortfolioDashboardComponent implements OnInit, OnDestroy {
       warnings,
       positiveFactors,
     };
+  });
+
+  // Health Checklist Booleans
+  isDiversified = computed(() => {
+    return this.portfolio().length > 5;
+  });
+
+  isSafeConcentration = computed(() => {
+    const items = this.portfolio();
+    const totalValue = this.netWorth();
+    if (items.length === 0 || totalValue === 0) return false;
+    
+    const sortedByValue = [...items].sort((a, b) => b.totalCost - a.totalCost);
+    const topHolding = sortedByValue[0];
+    const topHoldingPercentage = (topHolding.totalCost / totalValue) * 100;
+    
+    return topHoldingPercentage < 25;
+  });
+
+  isMultiAsset = computed(() => {
+    const items = this.portfolio();
+    const uniqueTypes = new Set<SecurityType>();
+    items.forEach(item => {
+      if (item.securityType !== undefined) {
+        uniqueTypes.add(item.securityType);
+      } else {
+        uniqueTypes.add(SecurityType.Stock);
+      }
+    });
+    return uniqueTypes.size > 1;
+  });
+
+  assetClassCount = computed(() => {
+    const items = this.portfolio();
+    const uniqueTypes = new Set<SecurityType>();
+    items.forEach(item => {
+      if (item.securityType !== undefined) {
+        uniqueTypes.add(item.securityType);
+      } else {
+        uniqueTypes.add(SecurityType.Stock);
+      }
+    });
+    return uniqueTypes.size;
   });
 }
 

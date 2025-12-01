@@ -4,11 +4,11 @@ export interface Transaction {
   id: string;
   date: string; // ISO format
   ticker: string; // e.g., 'AAPL'
-  transactionType: 'buy' | 'sell' | 'dividend';
-  shares: number;
+  transactionType: 'buy' | 'sell' | 'dividend' | 'split';
+  shares: number; // For splits: represents the split ratio (e.g., 2.0 for 2-for-1)
   sharePrice: number;
   fees: number;
-  totalAmount: number;
+  totalAmount: number; // Always 0 for splits
   tax?: number; // Tax withheld (for dividend transactions)
   securityName?: string; // Company/security name (optional for backward compatibility)
   securityType?: SecurityType;

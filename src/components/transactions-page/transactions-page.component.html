@@ -1,90 +1,67 @@
 <main class="flex flex-col lg:flex-row overflow-hidden" style="height: 100vh; max-height: 100vh;">
   <!-- Left Pane (50% width on large screens, full width on mobile) -->
-  <div class="w-full lg:w-1/2 flex flex-col lg:h-full">
-    <!-- Top Section (20% height on large screens, auto on mobile) -->
-    <div class="min-h-[200px] lg:h-[20%] flex flex-col p-4 sm:p-6">
-      <!-- Navigation -->
-      <div class="flex items-baseline gap-x-3 sm:gap-x-4 mb-4 flex-wrap">
-        <a routerLink="/wealth" class="text-xl sm:text-2xl font-medium text-gray-400 hover:text-gray-600 transition-colors">
-          Wealth
-        </a>
-        <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-gray-900">
-          Transactions
-        </h1>
-      </div>
-
-      <!-- Total Amount Invested -->
-      @if (isLoading() && !isAddingTransaction()) {
-        <div class="flex-1">
-          <div class="h-4 bg-gray-200 rounded w-40 mb-2 animate-pulse"></div>
-          <div class="h-8 sm:h-10 bg-gray-200 rounded w-48 animate-pulse"></div>
-        </div>
-      } @else {
-        <div class="flex-1">
-          <h2 class="text-sm font-medium text-gray-500 mb-2">Total Amount Invested</h2>
-          <p class="text-2xl sm:text-3xl font-bold tracking-tight text-gray-900">
-            {{ totalInvested() | currency:'EUR':'symbol':'1.2-2' }}
-          </p>
-        </div>
-      }
+  <div class="w-full lg:w-1/2 flex flex-col lg:h-full overflow-hidden min-h-0">
+    <!-- Navigation -->
+    <div class="flex items-baseline gap-x-3 sm:gap-x-4 p-4 sm:p-6 pb-2 flex-wrap flex-shrink-0">
+      <a routerLink="/wealth" class="text-xl sm:text-2xl font-medium text-gray-400 hover:text-gray-600 transition-colors">
+        Wealth
+      </a>
+      <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-gray-900">
+        Transactions
+      </h1>
     </div>
 
-    <!-- Bottom Section (80% height on large screens, auto on mobile) - Placeholder for dashboards/metrics -->
-    <div class="min-h-[300px] lg:h-[80%] p-4 sm:p-6 overflow-y-auto">
-      @if (isLoading() && !isAddingTransaction()) {
-        <div class="space-y-4">
-          <div class="h-32 bg-gray-100 rounded-lg animate-pulse"></div>
-          <div class="h-32 bg-gray-100 rounded-lg animate-pulse"></div>
-          <div class="h-32 bg-gray-100 rounded-lg animate-pulse"></div>
-        </div>
-      } @else if (error()) {
-        <div class="flex items-center justify-center min-h-[300px]">
-          <p class="text-gray-500">Error loading dashboard data</p>
+    <!-- Dashboard Section -->
+    <div class="flex-1 overflow-hidden min-h-0">
+      @if (isLoading()) {
+        <div class="p-4 sm:p-6">
+          <div class="space-y-4">
+            <div class="h-4 bg-gray-200 rounded w-40 mb-2 animate-pulse"></div>
+            <div class="h-12 bg-gray-200 rounded w-64 animate-pulse"></div>
+          </div>
         </div>
       } @else {
-        <!-- Placeholder for future dashboards/metrics -->
-        <div class="flex flex-col items-center justify-center min-h-[300px] lg:h-full text-gray-400">
-          <svg class="w-16 h-16 sm:w-24 sm:h-24 mb-4 opacity-50" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
-          </svg>
-          <p class="text-base sm:text-lg font-medium">Dashboard & Metrics</p>
-          <p class="text-xs sm:text-sm mt-2">Coming soon...</p>
-        </div>
+        <app-transactions-dashboard 
+          [transactions]="transactions()"
+          [totalInvested]="totalInvested()" />
       }
     </div>
   </div>
 
   <!-- Right Pane (50% width on large screens, full width on mobile) - Transactions List or Recurring Investments -->
-  <div class="w-full lg:w-1/2 px-3 py-4 sm:py-6" style="height: 100%; overflow-y: auto;">
-    @if (activeView() === 'transactions') {
-      <!-- Transactions List -->
-      @if (isLoading() && !isAddingTransaction()) {
-        <app-transaction-skeleton></app-transaction-skeleton>
-      } @else if (error() && transactions().length === 0) {
-        <app-error-state
-          [title]="'Unable to load transactions'"
-          [message]="error() || 'We couldn\'t connect to Alfred. Please check your connection.'"
-          (retry)="transactionService.reload()">
-        </app-error-state>
+  <div class="w-full lg:w-1/2 flex flex-col overflow-hidden min-h-0 border-l border-gray-200">
+    <!-- Content Area -->
+    <div class="flex-1 overflow-hidden min-h-0 flex flex-col">
+      @if (activeView() === 'transactions') {
+        <!-- Historical Transactions View -->
+        @if (isLoading() && !isAddingTransaction()) {
+          <app-transaction-skeleton></app-transaction-skeleton>
+        } @else if (error() && transactions().length === 0) {
+          <app-error-state
+            [title]="'Unable to load transactions'"
+            [message]="error() || 'We couldn\'t connect to Alfred. Please check your connection.'"
+            (retry)="transactionService.reload()">
+          </app-error-state>
+        } @else {
+          <app-transaction-list 
+            [transactions]="transactions()" 
+            [isAdding]="isAddingTransaction()"
+            [isLoading]="isLoading()"
+            [error]="error()"
+            (save)="saveTransaction($event)"
+            (cancel)="cancelNewTransaction()"
+            (update)="updateTransaction($event)"
+            (delete)="deleteTransaction($event)"
+            (toggleAdd)="toggleAddTransaction()"
+            (navigateToRecurring)="navigateToRecurring()">
+          </app-transaction-list>
+        }
       } @else {
-        <app-transaction-list 
-          [transactions]="transactions()" 
-          [isAdding]="isAddingTransaction()"
-          [isLoading]="isLoading()"
-          [error]="error()"
-          (save)="saveTransaction($event)"
-          (cancel)="cancelNewTransaction()"
-          (update)="updateTransaction($event)"
-          (delete)="deleteTransaction($event)"
-          (toggleAdd)="toggleAddTransaction()"
-          (navigateToRecurring)="navigateToRecurring()">
-        </app-transaction-list>
+        <!-- Recurring Investments List -->
+        <app-recurring-investments-list
+          (navigateToTransactions)="navigateToTransactions()">
+        </app-recurring-investments-list>
       }
-    } @else {
-      <!-- Recurring Investments List -->
-      <app-recurring-investments-list
-        (navigateToTransactions)="navigateToTransactions()">
-      </app-recurring-investments-list>
-    }
+    </div>
   </div>
 </main>

@@ -1,152 +1,54 @@
 <div class="h-full flex flex-col gap-12 p-6 overflow-y-auto">
-  <!-- Section 1: Wealth Header -->
-  <div class="flex flex-col md:flex-row md:items-center gap-6 flex-shrink-0 pb-8 border-b border-gray-50">
+  <!-- Section 1: Wealth Header - Net Worth, All-Time P&L, and Milestone Tracker -->
+  <div class="flex flex-col lg:flex-row lg:items-center gap-6 flex-shrink-0 pb-8 border-b border-gray-50">
     <!-- Left: Net Worth (Dominant) -->
-    <div>
+    <div class="flex-shrink-0">
       <div class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Net Worth</div>
       <div class="text-5xl font-mono font-bold tracking-tight text-gray-900">
         {{ netWorth() | currency:'EUR':'symbol':'1.2-2' }}
       </div>
     </div>
 
-    <!-- Gap: Auto spacer -->
-    <div class="flex-1"></div>
-
-    <!-- Right: Metrics Group -->
-    <div class="flex flex-row gap-8 md:gap-12">
-      <!-- All-Time P&L -->
-      <div>
-        <div class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">All-Time P&L</div>
-        <div class="font-mono text-xl font-medium" [class]="absolutePnL() >= 0 ? 'text-emerald-600' : 'text-rose-600'">
-          {{ absolutePnL() >= 0 ? '+' : '' }}{{ absolutePnL() | currency:'EUR':'symbol':'1.2-2' }}
-          <span class="text-sm">({{ percentPnL() | number:'1.2-2' }}%)</span>
-        </div>
+    <!-- Middle: All-Time P&L -->
+    <div class="flex-shrink-0">
+      <div class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">All-Time P&L</div>
+      <div class="font-mono text-xl font-medium" [class]="absolutePnL() >= 0 ? 'text-emerald-600' : 'text-rose-600'">
+        {{ absolutePnL() >= 0 ? '+' : '' }}{{ absolutePnL() | currency:'EUR':'symbol':'1.2-2' }}
+        <span class="text-sm">({{ percentPnL() | number:'1.2-2' }}%)</span>
       </div>
+    </div>
 
-      <!-- Passive Income -->
-      <div>
-        <div class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1 flex items-center gap-2">
-          <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818l.818.182a2.25 2.25 0 002.364 0l.818-.182m-3 0v-6.636m0 0l2.5.545a2.25 2.25 0 002.5 0l2.5-.545M12 6V4.5m0 0l2.5.545a2.25 2.25 0 002.5 0L19.5 4.5M12 6l-2.5.545a2.25 2.25 0 00-2.5 0L4.5 6" />
-          </svg>
-          Passive Income
-        </div>
-        <div class="font-mono text-xl font-medium text-gray-900">
-          {{ totalIncome() | currency:'EUR':'symbol':'1.2-2' }}
-        </div>
-      </div>
+    <!-- Right: Milestone Tracker (Compact) -->
+    <div class="flex-1 min-w-0">
+      <app-milestone-tracker 
+        [currentValue]="netWorth()"
+        [monthlyContribution]="estimatedMonthlyContribution()">
+      </app-milestone-tracker>
     </div>
   </div>
 
-  <!-- Section 2: Insights Carousel (Full Width) -->
+  <!-- Section 2: Insights Cards (Full Width) -->
   <div class="w-full flex-shrink-0 pb-8 border-b border-gray-50">
-    <div class="flex flex-col gap-3">
+    <div class="flex flex-col gap-4">
       <!-- Title - Top Left -->
-      <div class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-6">Insights</div>
+      <div class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Insights</div>
       
-      <!-- Active Insight (Icon + Text) - Centered -->
-      <div class="flex flex-col items-center justify-center gap-3">
-        @if (activeInsight(); as insight) {
-          <div class="flex items-center gap-2 animate-fade-in">
-            @if (insight.icon === 'check') {
-              <svg 
-                class="w-4 h-4 flex-shrink-0"
-                [class]="{
-                  'text-emerald-600': insight.status === 'good',
-                  'text-amber-600': insight.status === 'warning',
-                  'text-rose-600': insight.status === 'critical'
-                }"
-                xmlns="http://www.w3.org/2000/svg" 
-                fill="none" 
-                viewBox="0 0 24 24" 
-                stroke-width="2.5" 
-                stroke="currentColor">
-                <path 
-                  stroke-linecap="round" 
-                  stroke-linejoin="round" 
-                  d="M4.5 12.75l6 6 9-13.5" />
-              </svg>
-            } @else {
-              <svg 
-                class="w-4 h-4 flex-shrink-0"
-                [class]="{
-                  'text-emerald-600': insight.status === 'good',
-                  'text-amber-600': insight.status === 'warning',
-                  'text-rose-600': insight.status === 'critical'
-                }"
-                xmlns="http://www.w3.org/2000/svg" 
-                fill="none" 
-                viewBox="0 0 24 24" 
-                stroke-width="2" 
-                stroke="currentColor">
-                <path 
-                  stroke-linecap="round" 
-                  stroke-linejoin="round" 
-                  d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
-              </svg>
-            }
-            <p class="text-sm font-mono text-gray-500">
-              {{ insight.label }}
-            </p>
-          </div>
-        }
-        
-        <!-- Navigation Dots - Below Text -->
-        @if (portfolioInsights().length > 1) {
-          <div class="flex items-center gap-1.5 justify-center">
-            @for (insight of portfolioInsights(); track insight.label; let i = $index) {
-              <button
-                (click)="activeInsightIndex.set(i)"
-                class="w-1.5 h-1.5 rounded-full transition-all duration-200"
-                [class]="activeInsightIndex() === i ? 'bg-gray-900 w-2 h-2' : 'bg-gray-300'"
-                [attr.aria-label]="'Go to insight ' + (i + 1)">
-              </button>
-            }
-          </div>
-        }
-      </div>
+      <!-- Insight Cards Grid -->
+      @if (portfolioInsights().length > 0) {
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          @for (insight of portfolioInsights(); track insight.message) {
+            <app-insight-card 
+              [insight]="insight"
+              (executeAction)="handleInsightAction($event)">
+            </app-insight-card>
+          }
+        </div>
+      } @else {
+        <div class="text-sm text-gray-400 text-center py-8">
+          No insights available at this time.
+        </div>
+      }
     </div>
   </div>
 
-  <!-- Section 3: Portfolio History (Full Width) -->
-  <div class="flex-shrink-0 pb-8 border-b border-gray-50 min-h-[300px]">
-    <app-portfolio-history-chart [transactions]="transactions()" />
-  </div>
-
-  <!-- Section 4: Passive Flow Bar Chart (Full Width) -->
-  <div class="flex flex-col gap-4 flex-shrink-0">
-    <div class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-6">Passive Flow (Last 12M)</div>
-    @if (maxMonthlyIncome() > 0) {
-      <div class="flex items-end justify-center gap-3 h-48 relative w-full">
-        @for (monthData of monthlyIncome(); track monthData.monthIndex) {
-          <div 
-            class="flex flex-col items-center gap-2 group cursor-pointer"
-            style="width: 3rem;"
-            (mousemove)="showTooltip($event, monthData.amount)"
-            (mouseleave)="hideTooltip()">
-            <div 
-              class="w-12 rounded-t-sm transition-all duration-200 group-hover:opacity-80 min-h-[2px]"
-              [class]="monthData.amount > 0 ? 'bg-gray-900' : 'bg-gray-200'"
-              [style.height.%]="getBarHeight(monthData.amount)">
-            </div>
-            <div class="text-[10px] font-mono text-gray-500 text-center">{{ monthData.month }}</div>
-          </div>
-        }
-      </div>
-    } @else {
-      <div class="flex items-center justify-center h-48 border border-gray-200 rounded-sm bg-gray-50 w-full">
-        <p class="text-xs font-mono text-gray-400">No income history yet</p>
-      </div>
-    }
-  </div>
-
-  <!-- Custom Tooltip -->
-  @if (activeTooltip(); as tooltip) {
-    <div 
-      class="fixed z-50 pointer-events-none bg-gray-900 text-white text-xs font-mono font-medium py-1.5 px-3 rounded shadow-lg transform -translate-x-1/2 -translate-y-full mt-[-8px]"
-      [style.left.px]="tooltip.x"
-      [style.top.px]="tooltip.y">
-      {{ tooltip.text }}
-    </div>
-  }
 </div>

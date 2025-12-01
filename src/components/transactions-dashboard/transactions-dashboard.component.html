@@ -1,0 +1,111 @@
+<div class="flex flex-col h-full gap-4 p-6 overflow-hidden">
+  <!-- Header Section: Total Amount Invested & Passive Income -->
+  <div class="flex flex-col md:flex-row md:items-center gap-6 flex-shrink-0 pb-4 border-b border-gray-50">
+    <!-- Left: Total Amount Invested (Dominant) -->
+    <div>
+      <div class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Total Amount Invested</div>
+      <div class="text-5xl font-mono font-bold tracking-tight text-gray-900">
+        {{ totalInvested() | currency:'EUR':'symbol':'1.2-2' }}
+      </div>
+    </div>
+
+    <!-- Gap: Auto spacer -->
+    <div class="flex-1"></div>
+
+    <!-- Right: Passive Income -->
+    <div>
+      <div class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1 flex items-center gap-2">
+        <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818l.818.182a2.25 2.25 0 002.364 0l.818-.182m-3 0v-6.636m0 0l2.5.545a2.25 2.25 0 002.5 0l2.5-.545M12 6V4.5m0 0l2.5.545a2.25 2.25 0 002.5 0L19.5 4.5M12 6l-2.5.545a2.25 2.25 0 00-2.5 0L4.5 6" />
+        </svg>
+        Passive Income
+      </div>
+      <div class="font-mono text-xl font-medium text-gray-900">
+        {{ totalIncome() | currency:'EUR':'symbol':'1.2-2' }}
+      </div>
+    </div>
+  </div>
+
+  <!-- Portfolio History Chart -->
+  <div class="flex-shrink-0 pb-4 border-b border-gray-50" style="flex: 0 0 auto;">
+    <div class="mb-3">
+      <div class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Portfolio History</div>
+    </div>
+    <div style="height: 180px;">
+      <app-portfolio-history-chart [transactions]="transactions()" />
+    </div>
+  </div>
+
+  <!-- Cash Flow Chart -->
+  <div class="flex flex-col gap-2 flex-1 min-h-0 overflow-hidden">
+    <div class="flex-shrink-0">
+      <div class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Cash Flow</div>
+    </div>
+    @if (maxCombinedCashFlow() > 0) {
+      <div class="flex-1 min-h-0 flex flex-col">
+        <div class="flex-1 relative w-full" style="min-height: 0;">
+          <div class="flex items-end justify-center gap-2 h-full px-4">
+            @for (monthData of combinedMonthlyData(); track monthData.monthIndex) {
+              <div 
+                class="flex flex-col items-center justify-end gap-1 group cursor-pointer"
+                style="width: calc((100% - 88px) / 12); min-width: 2rem; height: 100%;"
+                (mousemove)="showCombinedTooltip($event, monthData)"
+                (mouseleave)="hideTooltip()">
+                <!-- Grouped bars: Income (left) and Deposits (right) side by side -->
+                <div class="flex items-end justify-center gap-1 w-full flex-1" style="min-height: 0;">
+                  <!-- Income Bar (Gray) - scaled to combined max -->
+                  @if (monthData.income > 0) {
+                    <div 
+                      class="w-6 rounded-t-sm transition-all duration-200 group-hover:opacity-90 bg-gray-900"
+                      [style.height.%]="getBarHeight(monthData.income, maxCombinedCashFlow())"
+                      style="min-height: 4px;">
+                    </div>
+                  } @else {
+                    <div class="w-6" style="height: 0;"></div>
+                  }
+                  <!-- Deposits Bar (Green) - scaled to combined max -->
+                  @if (monthData.deposits > 0) {
+                    <div 
+                      class="w-6 rounded-t-sm transition-all duration-200 group-hover:opacity-90 bg-emerald-600"
+                      [style.height.%]="getBarHeight(monthData.deposits, maxCombinedCashFlow())"
+                      style="min-height: 4px;">
+                    </div>
+                  } @else {
+                    <div class="w-6" style="height: 0;"></div>
+                  }
+                </div>
+                <div class="text-[10px] font-mono text-gray-500 text-center flex-shrink-0" style="height: 16px; line-height: 16px;">{{ monthData.month }}</div>
+              </div>
+            }
+          </div>
+        </div>
+        <!-- Legend -->
+        <div class="flex items-center justify-center gap-6 mt-2 flex-shrink-0">
+          <div class="flex items-center gap-2">
+            <div class="w-4 h-4 bg-gray-900 rounded-sm"></div>
+            <span class="text-xs text-gray-600">Income</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <div class="w-4 h-4 bg-emerald-600 rounded-sm"></div>
+            <span class="text-xs text-gray-600">Deposits</span>
+          </div>
+        </div>
+      </div>
+    } @else {
+      <div class="flex items-center justify-center flex-1 border border-gray-200 rounded-sm bg-gray-50 w-full">
+        <p class="text-xs font-mono text-gray-400">No transaction history yet</p>
+      </div>
+    }
+  </div>
+
+  <!-- Custom Tooltip -->
+  @if (activeTooltip(); as tooltip) {
+    <div 
+      class="fixed z-50 pointer-events-none bg-gray-900 text-white text-xs font-mono font-medium py-1.5 px-3 rounded shadow-lg transform -translate-x-1/2 -translate-y-full mt-[-8px]"
+      [style.left.px]="tooltip.x"
+      [style.top.px]="tooltip.y"
+      [innerHTML]="tooltip.text">
+    </div>
+  }
+</div>
+

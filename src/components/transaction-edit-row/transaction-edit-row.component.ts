@@ -38,7 +38,7 @@ export class TransactionEditRowComponent implements OnInit, OnDestroy, AfterView
   private feesValue = signal(0);
   private taxValue = signal(0);
   private totalAmountValue = signal(0);
-  private transactionTypeValue = signal<'buy' | 'sell' | 'dividend'>('buy');
+  private transactionTypeValue = signal<'buy' | 'sell' | 'dividend' | 'split'>('buy');
   
   filteredSecurities = computed(() => {
     const value = this.tickerInputValue();
@@ -56,6 +56,11 @@ export class TransactionEditRowComponent implements OnInit, OnDestroy, AfterView
     const totalAmount = this.totalAmountValue();
     const tax = this.taxValue();
     const transactionType = this.transactionTypeValue();
+    
+    // Split: Always $0.00 (no money exchanged)
+    if (transactionType === 'split') {
+      return 0;
+    }
     
     // Dividend: Show Gross Amount (Net Received + Tax Withheld)
     if (transactionType === 'dividend') {
@@ -83,11 +88,54 @@ export class TransactionEditRowComponent implements OnInit, OnDestroy, AfterView
     const transactionType = this.transactionTypeValue();
     if (transactionType === 'buy') return 'text-red-600';
     if (transactionType === 'dividend') return 'text-purple-600';
+    if (transactionType === 'split') return 'text-gray-600';
     return 'text-green-600';
+  }
+  
+  // Get split ratio display text
+  getSplitRatioDisplay(): string {
+    const ratio = this.splitRatio();
+    const forEvery = this.splitForEvery();
+    const youReceive = this.splitYouReceive();
+    
+    if (ratio > 1) {
+      return `${youReceive}-for-${forEvery} forward split`;
+    } else if (ratio < 1 && ratio > 0) {
+      return `${forEvery}-for-${youReceive} reverse split`;
+    }
+    return '';
+  }
+  
+  // Tooltip state
+  activeTooltip = signal<{ x: number; y: number; text: string } | null>(null);
+  
+  showTooltip(event: MouseEvent, text: string): void {
+    this.activeTooltip.set({
+      x: event.clientX,
+      y: event.clientY,
+      text,
+    });
+  }
+  
+  hideTooltip(): void {
+    this.activeTooltip.set(null);
   }
 
   // Check if current transaction type is dividend
   isDividend = computed(() => this.transactionTypeValue() === 'dividend');
+  
+  // Check if current transaction type is split
+  isSplit = computed(() => this.transactionTypeValue() === 'split');
+  
+  // Split ratio state (X-for-Y format)
+  splitForEvery = signal(1);
+  splitYouReceive = signal(2);
+  splitRatio = computed(() => {
+    const forEvery = this.splitForEvery();
+    const youReceive = this.splitYouReceive();
+    if (forEvery <= 0) return 0;
+    return youReceive / forEvery;
+  });
 
   constructor(private fb: FormBuilder) {
     const today = new Date().toISOString().substring(0, 10); // Format YYYY-MM-DD
@@ -111,6 +159,31 @@ export class TransactionEditRowComponent implements OnInit, OnDestroy, AfterView
                 date: new Date(state.date).toISOString().substring(0, 10),
             });
             this.tickerInputValue.set(state.ticker || '');
+            
+            // Initialize split ratio if editing a split transaction
+            if (state.transactionType === 'split' && state.shares > 0) {
+              // Convert ratio back to X-for-Y format
+              const ratio = state.shares;
+              if (ratio >= 1) {
+                // Forward split: e.g., 2.0 -> 2-for-1, 3.0 -> 3-for-1
+                this.splitForEvery.set(1);
+                this.splitYouReceive.set(ratio);
+              } else if (ratio > 0) {
+                // Reverse split: e.g., 0.5 -> 1-for-2, 0.333 -> 1-for-3
+                this.splitForEvery.set(Math.round(1 / ratio));
+                this.splitYouReceive.set(1);
+              } else {
+                // Fallback to default
+                this.splitForEvery.set(1);
+                this.splitYouReceive.set(2);
+              }
+              // Update the form's shares field with the ratio
+              this.transactionForm.get('shares')?.setValue(ratio, { emitEvent: false });
+            } else if (state.transactionType === 'split') {
+              // Split transaction but no shares value, use defaults
+              this.splitForEvery.set(1);
+              this.splitYouReceive.set(2);
+            }
         } else {
             this.transactionForm.reset({
                 date: today,
@@ -121,6 +194,8 @@ export class TransactionEditRowComponent implements OnInit, OnDestroy, AfterView
                 sharePrice: null
             });
             this.tickerInputValue.set('');
+            this.splitForEvery.set(1);
+            this.splitYouReceive.set(2);
             // Focus ticker input when adding a new transaction
             setTimeout(() => {
               if (this.tickerInputRef?.nativeElement) {
@@ -179,12 +254,65 @@ export class TransactionEditRowComponent implements OnInit, OnDestroy, AfterView
     }
   }
 
-  setTransactionType(type: 'buy' | 'sell' | 'dividend'): void {
+  setTransactionType(type: 'buy' | 'sell' | 'dividend' | 'split'): void {
     this.transactionForm.get('transactionType')?.setValue(type);
     this.updateValidators(type);
+    
+    // Initialize split ratio when switching to split
+    if (type === 'split') {
+      const currentShares = this.transactionForm.get('shares')?.value;
+      if (currentShares && currentShares > 0) {
+        // Convert existing shares value (ratio) back to X-for-Y format
+        const ratio = currentShares;
+        if (ratio >= 1) {
+          // Forward split: e.g., 2.0 -> 2-for-1, 3.0 -> 3-for-1
+          this.splitForEvery.set(1);
+          this.splitYouReceive.set(ratio);
+        } else if (ratio > 0) {
+          // Reverse split: e.g., 0.5 -> 1-for-2
+          this.splitForEvery.set(Math.round(1 / ratio));
+          this.splitYouReceive.set(1);
+        } else {
+          // Fallback to default
+          this.splitForEvery.set(1);
+          this.splitYouReceive.set(2);
+        }
+      } else {
+        // No existing value, use defaults
+        this.splitForEvery.set(1);
+        this.splitYouReceive.set(2);
+      }
+      // Update shares field with calculated ratio
+      const ratio = this.splitRatio();
+      this.transactionForm.get('shares')?.setValue(ratio, { emitEvent: false });
+    }
+  }
+  
+  onSplitRatioChange(): void {
+    if (this.isSplit()) {
+      const ratio = this.splitRatio();
+      const sharesControl = this.transactionForm.get('shares');
+      if (sharesControl && sharesControl.value !== ratio) {
+        sharesControl.setValue(ratio, { emitEvent: false });
+      }
+    }
+  }
+  
+  onSplitYouReceiveChange(event: Event): void {
+    const value = (event.target as HTMLInputElement).value;
+    const numValue = parseFloat(value) || 1;
+    this.splitYouReceive.set(numValue);
+    this.onSplitRatioChange();
+  }
+  
+  onSplitForEveryChange(event: Event): void {
+    const value = (event.target as HTMLInputElement).value;
+    const numValue = parseInt(value, 10) || 1;
+    this.splitForEvery.set(numValue);
+    this.onSplitRatioChange();
   }
 
-  private updateValidators(type: 'buy' | 'sell' | 'dividend'): void {
+  private updateValidators(type: 'buy' | 'sell' | 'dividend' | 'split'): void {
     // Set flag to prevent infinite loops
     this.isUpdatingValidators = true;
 
@@ -204,15 +332,32 @@ export class TransactionEditRowComponent implements OnInit, OnDestroy, AfterView
         sharePriceControl?.setValue(null, { emitEvent: false });
         feesControl?.clearValidators();
         feesControl?.setValue(0, { emitEvent: false });
+      } else if (type === 'split') {
+        // Split: require shares (ratio), sharePrice = 0, fees = 0, tax = 0
+        sharesControl?.setValidators([Validators.required, Validators.min(0.000001)]);
+        sharePriceControl?.clearValidators();
+        sharePriceControl?.setValue(0, { emitEvent: false });
+        sharePriceControl?.disable({ emitEvent: false });
+        feesControl?.clearValidators();
+        feesControl?.setValue(0, { emitEvent: false });
+        feesControl?.disable({ emitEvent: false });
+        totalAmountControl?.clearValidators();
+        totalAmountControl?.setValue(0, { emitEvent: false });
+        taxControl?.clearValidators();
+        taxControl?.setValue(0, { emitEvent: false });
+        taxControl?.disable({ emitEvent: false });
       } else {
         // Buy/Sell: require shares, sharePrice, fees; hide totalAmount and tax
         sharesControl?.setValidators([Validators.required, Validators.min(0.000001)]);
         sharePriceControl?.setValidators([Validators.required, Validators.min(0.01)]);
+        sharePriceControl?.enable({ emitEvent: false });
         feesControl?.setValidators([Validators.required, Validators.min(0)]);
+        feesControl?.enable({ emitEvent: false });
         totalAmountControl?.clearValidators();
         totalAmountControl?.setValue(null, { emitEvent: false });
         taxControl?.clearValidators();
         taxControl?.setValue(0, { emitEvent: false });
+        taxControl?.enable({ emitEvent: false });
       }
 
       sharesControl?.updateValueAndValidity({ emitEvent: false });
@@ -235,6 +380,13 @@ export class TransactionEditRowComponent implements OnInit, OnDestroy, AfterView
     const formValue = this.transactionForm.value;
     const transactionType = formValue.transactionType;
     const initialTx = this.initialState();
+    
+    // For split transactions, ensure we have the latest ratio values
+    if (transactionType === 'split') {
+      // Force update the form's shares field with the current computed ratio
+      const currentRatio = this.splitRatio();
+      this.transactionForm.get('shares')?.setValue(currentRatio, { emitEvent: false });
+    }
 
     // Prepare payload based on transaction type
     let payload: NewTransactionData | Transaction;
@@ -262,6 +414,38 @@ export class TransactionEditRowComponent implements OnInit, OnDestroy, AfterView
         totalAmount: netReceived, // Net Received
         tax: taxWithheld,
       };
+    } else if (transactionType === 'split') {
+      // For splits: sharePrice = 0, fees = 0, tax = 0, totalAmount = 0, shares = ratio
+      // Use the computed split ratio directly instead of form value to ensure accuracy
+      // Force read the latest signal values
+      const forEvery = this.splitForEvery();
+      const youReceive = this.splitYouReceive();
+      const splitRatio = youReceive / forEvery; // Calculate directly to ensure accuracy
+      
+      // Debug logging for split ratio
+      console.log('Split transaction payload:', {
+        splitForEvery: forEvery,
+        splitYouReceive: youReceive,
+        calculatedRatio: splitRatio,
+        computedRatio: this.splitRatio(),
+        formSharesValue: formValue.shares
+      });
+      
+      // Also update the form's shares field to keep it in sync
+      this.transactionForm.get('shares')?.setValue(splitRatio, { emitEvent: false });
+      
+      payload = {
+        ticker: formValue.ticker,
+        date: formValue.date,
+        transactionType: 'split',
+        shares: splitRatio, // Split ratio (e.g., 3.0 for 3-for-1)
+        sharePrice: 0, // MUST be 0 for splits
+        fees: 0,
+        totalAmount: 0, // Always 0 for splits
+        tax: 0,
+      };
+      
+      console.log('Split payload created:', payload);
     } else {
       // For buy/sell: calculate totalAmount from shares * sharePrice +/- fees
       const shares = Number(formValue.shares) || 0;

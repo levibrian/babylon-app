@@ -57,6 +57,9 @@ export class StrategyPanelComponent implements OnInit {
   // View mode toggle: 'assets' | 'types'
   viewMode = signal<"assets" | "types">("assets");
 
+  // Target Allocation section expand/collapse
+  isTargetAllocationExpanded = signal<boolean>(true);
+
   // Investment simulator
   investmentAmount = signal<number>(0);
 
@@ -349,6 +352,53 @@ export class StrategyPanelComponent implements OnInit {
   });
 
   // Computed: Total portfolio value for center text
+  // Health Checklist Computed Signals
+  netWorth = computed(() => {
+    return this.portfolioService.totalPortfolioValue();
+  });
+
+  isDiversified = computed(() => {
+    return this.portfolio().length > 5;
+  });
+
+  isSafeConcentration = computed(() => {
+    const items = this.portfolio();
+    const totalValue = this.netWorth();
+    if (items.length === 0 || totalValue === 0) return false;
+    
+    const sortedByValue = [...items].sort((a, b) => b.totalCost - a.totalCost);
+    const topHolding = sortedByValue[0];
+    const topHoldingPercentage = (topHolding.totalCost / totalValue) * 100;
+    
+    return topHoldingPercentage < 25;
+  });
+
+  isMultiAsset = computed(() => {
+    const items = this.portfolio();
+    const uniqueTypes = new Set<SecurityType>();
+    items.forEach(item => {
+      if (item.securityType !== undefined) {
+        uniqueTypes.add(item.securityType);
+      } else {
+        uniqueTypes.add(SecurityType.Stock);
+      }
+    });
+    return uniqueTypes.size > 1;
+  });
+
+  assetClassCount = computed(() => {
+    const items = this.portfolio();
+    const uniqueTypes = new Set<SecurityType>();
+    items.forEach(item => {
+      if (item.securityType !== undefined) {
+        uniqueTypes.add(item.securityType);
+      } else {
+        uniqueTypes.add(SecurityType.Stock);
+      }
+    });
+    return uniqueTypes.size;
+  });
+
   totalPortfolioValue = computed(() => {
     return this.strategyItems().reduce(
       (sum, item) => sum + item.currentValue,
@@ -631,6 +681,11 @@ export class StrategyPanelComponent implements OnInit {
   // Toggle view mode
   toggleViewMode(): void {
     this.viewMode.update((mode) => (mode === "assets" ? "types" : "assets"));
+  }
+
+  // Toggle Target Allocation section expand/collapse
+  toggleTargetAllocation(): void {
+    this.isTargetAllocationExpanded.update((current) => !current);
   }
 
   // Custom tooltip state

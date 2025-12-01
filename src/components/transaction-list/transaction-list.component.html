@@ -1,13 +1,13 @@
-<div class="flex flex-col">
+<div class="flex flex-col h-full overflow-hidden min-h-0 px-3 pb-4 sm:pb-6 pt-4 sm:pt-6">
   <!-- Navigation Pane with Add Button -->
-  <div class="flex items-center justify-between mb-3">
+  <div class="flex items-center justify-between mb-3 flex-shrink-0">
     <div class="flex items-baseline gap-x-3 sm:gap-x-4">
+      <h2 class="text-sm font-bold tracking-tight text-gray-900">Historical Transactions</h2>
       <button 
         (click)="navigateToRecurring.emit()" 
         class="text-sm font-medium text-gray-400 hover:text-gray-600 transition-colors">
         Recurring Investments
       </button>
-      <h2 class="text-sm font-bold tracking-tight text-gray-900">Historical Transactions</h2>
     </div>
     @if (!isLoading() && !error()) {
       <button 
@@ -29,11 +29,42 @@
     }
   </div>
   
-  <ul class="divide-y divide-gray-200">
+  <!-- Search Bar -->
+  <div class="mb-4 flex-shrink-0">
+    <div class="relative">
+      <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+        <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.328 3.329a.75.75 0 11-1.06 1.06l-3.329-3.328A7 7 0 012 9z" clip-rule="evenodd" />
+        </svg>
+      </div>
+      <input
+        type="text"
+        [value]="searchQuery()"
+        (input)="searchQuery.set($any($event.target).value)"
+        placeholder="Search by ticker or security name..."
+        class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-gray-900 focus:border-gray-900 text-sm"
+      />
+      @if (searchQuery()) {
+        <button
+          type="button"
+          (click)="searchQuery.set('')"
+          class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+        >
+          <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+            <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z" />
+          </svg>
+        </button>
+      }
+    </div>
+  </div>
+  
+  <!-- Scrollable Content -->
+  <div class="flex-1 overflow-y-auto min-h-0" style="scrollbar-gutter: stable;">
+    <ul class="divide-y divide-gray-200">
     @if (isAdding()) {
       <app-transaction-edit-row (save)="save.emit($event)" (cancel)="cancel.emit()"></app-transaction-edit-row>
     }
-    @for (transaction of transactions(); track transaction.id) {
+    @for (transaction of filteredTransactions(); track transaction.id) {
       @if (isEditing(transaction.id)) {
         <app-transaction-edit-row 
           [initialState]="transaction"
@@ -66,6 +97,9 @@
                 @if (transaction.transactionType === 'dividend') {
                   <span>•</span>
                   <span>{{ transaction.shares | number:'1.0-4' }} shares • Gross: {{ (transaction.sharePrice || 0) | currency:'EUR':'symbol':'1.2-2' }}/sh</span>
+                } @else if (transaction.transactionType === 'split') {
+                  <span>•</span>
+                  <span>{{ getSplitRatioDisplay(transaction) }}</span>
                 } @else {
                   <span>•</span>
                   <span>{{ transaction.shares | number:'1.0-4' }} shares @ {{ transaction.sharePrice | currency:'EUR':'symbol':'1.0-4' }}</span>
@@ -79,9 +113,14 @@
               <div class="font-bold mb-1" [class]="{
                 'text-red-600': transaction.transactionType === 'buy',
                 'text-green-600': transaction.transactionType === 'sell',
-                'text-purple-600': transaction.transactionType === 'dividend'
+                'text-purple-600': transaction.transactionType === 'dividend',
+                'text-gray-600': transaction.transactionType === 'split'
               }">
-                {{ getValuePrefix(transaction.transactionType) }}{{ getTotalValue(transaction) | currency:'EUR':'symbol':'1.2-2' }}
+                @if (transaction.transactionType === 'split') {
+                  —
+                } @else {
+                  {{ getValuePrefix(transaction.transactionType) }}{{ getTotalValue(transaction) | currency:'EUR':'symbol':'1.2-2' }}
+                }
               </div>
               <!-- Bottom Line: Date and Tax (for dividends) -->
               <div class="text-xs text-gray-500">
@@ -121,14 +160,23 @@
       @if (!isAdding()) {
         <li class="p-8 text-center">
           <div class="flex flex-col items-center">
-            <svg class="w-16 h-16 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18 9 11.25l4.306 4.306a11.95 11.95 0 0 1 5.814-5.518l2.74-1.22m0 0-5.94-2.281m5.94 2.28-2.28 5.941" />
-            </svg>
-            <h3 class="mt-4 text-xl font-semibold text-gray-900">Your Investing Journey Begins!</h3>
-            <p class="mt-2 text-base text-gray-600 max-w-md mx-auto">This is the beginning of your journey as an investor. Start adding transactions and you will be able to see how your wealth starts to build in the Portfolio view.</p>
+            @if (searchQuery()) {
+              <svg class="w-16 h-16 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607z" />
+              </svg>
+              <h3 class="mt-4 text-xl font-semibold text-gray-900">No transactions found</h3>
+              <p class="mt-2 text-base text-gray-600 max-w-md mx-auto">No transactions match your search query "{{ searchQuery() }}". Try a different search term.</p>
+            } @else {
+              <svg class="w-16 h-16 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18 9 11.25l4.306 4.306a11.95 11.95 0 0 1 5.814-5.518l2.74-1.22m0 0-5.94-2.281m5.94 2.28-2.28 5.941" />
+              </svg>
+              <h3 class="mt-4 text-xl font-semibold text-gray-900">Your Investing Journey Begins!</h3>
+              <p class="mt-2 text-base text-gray-600 max-w-md mx-auto">This is the beginning of your journey as an investor. Start adding transactions and you will be able to see how your wealth starts to build in the Portfolio view.</p>
+            }
           </div>
         </li>
       }
     }
-  </ul>
+    </ul>
+  </div>
 </div>

@@ -1,0 +1,39 @@
+<div class="flex flex-col gap-2">
+  <!-- Header: Next Milestone -->
+  <div class="text-xs font-bold text-gray-400 uppercase tracking-widest">
+    Next Milestone: {{ nextMilestone() | currency:'EUR':'symbol':'1.0-0' }}
+  </div>
+
+  <!-- Progress Bar -->
+  <div class="relative w-full h-6 bg-gray-100 rounded-full overflow-hidden">
+    <!-- Progress Fill -->
+    <div 
+      class="h-full bg-gray-900 rounded-full transition-all duration-500 ease-out"
+      [style.width.%]="progressPercentage()">
+    </div>
+    
+    <!-- Current Value Marker -->
+    <div 
+      class="absolute top-0 bottom-0 w-0.5 bg-gray-600 z-10 transition-all duration-500 ease-out"
+      [style.left.%]="currentValuePosition()">
+      <div class="absolute -top-5 left-1/2 -translate-x-1/2 whitespace-nowrap">
+        <div class="text-[10px] font-mono text-gray-600 font-medium">
+          {{ currentValue() | currency:'EUR':'symbol':'1.0-0' }}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer: Current Value and ETA -->
+  <div class="flex justify-between items-center text-[10px] text-gray-500">
+    <div class="font-mono">
+      Current: {{ currentValue() | currency:'EUR':'symbol':'1.2-2' }}
+    </div>
+    @if (projectedDate(); as date) {
+      <div class="font-mono">
+        ETA: {{ date | date:'MMM yyyy' }}
+      </div>
+    }
+  </div>
+</div>
+

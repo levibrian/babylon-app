@@ -1,10 +1,21 @@
-<li class="p-3 sm:p-4 bg-gray-50">
+<li class="p-3 sm:p-4 bg-gray-50 relative">
+  <!-- Custom Tooltip -->
+  @if (activeTooltip(); as tooltip) {
+    <div
+      class="fixed z-50 pointer-events-none bg-gray-900 text-white text-xs font-medium py-1.5 px-3 rounded shadow-lg transform -translate-x-1/2 -translate-y-full mt-[-8px]"
+      [style.left.px]="tooltip.x"
+      [style.top.px]="tooltip.y"
+    >
+      {{ tooltip.text }}
+    </div>
+  }
+  
   <form [formGroup]="transactionForm" (ngSubmit)="onSubmit()">
     <div class="flex flex-col w-full">
       
       <!-- ROW 1: Header / Controls -->
       <div class="flex justify-between items-center mb-4">
-        <!-- Buy/Sell/Dividend Switch -->
+        <!-- Buy/Sell/Dividend/Split Switch -->
         <div class="inline-flex rounded-md shadow-sm" role="group">
           <button 
             type="button" 
@@ -24,8 +35,15 @@
             type="button" 
             (click)="setTransactionType('dividend')"
             [class]="transactionForm.get('transactionType')?.value === 'dividend' ? 'bg-gray-900 text-white ring-1 ring-gray-900' : 'bg-white text-gray-700 hover:bg-gray-50 ring-1 ring-inset ring-gray-300'"
-            class="-ml-px px-4 py-2 text-sm font-medium rounded-r-md focus:z-10 focus:ring-2 focus:ring-gray-800 transition-colors duration-150">
+            class="-ml-px px-4 py-2 text-sm font-medium focus:z-10 focus:ring-2 focus:ring-gray-800 transition-colors duration-150">
             Dividend
+          </button>
+          <button 
+            type="button" 
+            (click)="setTransactionType('split')"
+            [class]="transactionForm.get('transactionType')?.value === 'split' ? 'bg-gray-900 text-white ring-1 ring-gray-900' : 'bg-white text-gray-700 hover:bg-gray-50 ring-1 ring-inset ring-gray-300'"
+            class="-ml-px px-4 py-2 text-sm font-medium rounded-r-md focus:z-10 focus:ring-2 focus:ring-gray-800 transition-colors duration-150">
+            Split
           </button>
         </div>
 
@@ -52,7 +70,7 @@
       <!-- ROW 2: Data Entry (Full Width) -->
       <div class="flex flex-col lg:flex-row w-full gap-5 items-end">
         <!-- 1. Ticker Column -->
-        <div class="flex flex-col gap-1 flex-[3] relative">
+        <div class="flex flex-col gap-1 flex-1 relative">
           <label for="ticker" class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Ticker</label>
           <input 
             #tickerInput
@@ -96,7 +114,7 @@
         </div>
         
         <!-- 2. Date Column -->
-        <div class="flex flex-col gap-1 w-32">
+        <div class="flex flex-col gap-1 flex-1">
           <label for="date" class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Date</label>
           <input 
             id="date" 
@@ -107,22 +125,62 @@
             required>
         </div>
         
-        <!-- 3. Shares Column -->
-        <div class="flex flex-col gap-1 flex-1 min-w-[80px]">
-          <label for="shares" class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Shares</label>
-          <input 
-            id="shares" 
-            type="number" 
-            formControlName="shares" 
-            aria-label="Shares" 
-            (wheel)="$event.preventDefault()"
-            class="w-full border-b border-gray-200 py-1 text-sm font-medium focus:border-black outline-none bg-transparent placeholder-gray-300" 
-            required>
-        </div>
+        <!-- 3. Shares Column (or Split Ratio for splits) -->
+        @if (isSplit()) {
+          <!-- Split Ratio Input (X-for-Y format) -->
+          <div class="flex flex-col gap-1 flex-1">
+            <div class="flex items-center gap-1">
+              <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Split Ratio</label>
+              <button
+                type="button"
+                class="flex items-center justify-center w-3.5 h-3.5 rounded-full bg-gray-300 hover:bg-gray-400 text-white text-[10px] font-bold transition-colors cursor-help"
+                (mouseenter)="showTooltip($event, getSplitRatioDisplay())"
+                (mouseleave)="hideTooltip()"
+                (mousemove)="showTooltip($event, getSplitRatioDisplay())"
+                aria-label="Split ratio information"
+              >
+                ?
+              </button>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <input 
+                type="number" 
+                [value]="splitYouReceive()"
+                (input)="onSplitYouReceiveChange($event)"
+                min="0.01"
+                step="0.01"
+                (wheel)="$event.preventDefault()"
+                class="w-14 border-b border-gray-200 py-1 text-sm font-medium focus:border-black outline-none bg-transparent text-center" 
+                required>
+              <span class="text-xs text-gray-500">-for-</span>
+              <input 
+                type="number" 
+                [value]="splitForEvery()"
+                (input)="onSplitForEveryChange($event)"
+                min="1"
+                step="1"
+                (wheel)="$event.preventDefault()"
+                class="w-14 border-b border-gray-200 py-1 text-sm font-medium focus:border-black outline-none bg-transparent text-center" 
+                required>
+            </div>
+          </div>
+        } @else {
+          <div class="flex flex-col gap-1 flex-1">
+            <label for="shares" class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Shares</label>
+            <input 
+              id="shares" 
+              type="number" 
+              formControlName="shares" 
+              aria-label="Shares" 
+              (wheel)="$event.preventDefault()"
+              class="w-full border-b border-gray-200 py-1 text-sm font-medium focus:border-black outline-none bg-transparent placeholder-gray-300" 
+              required>
+          </div>
+        }
         
-        <!-- 4. Price Column (Hidden for Dividend) -->
-        @if (!isDividend()) {
-          <div class="flex flex-col gap-1 flex-1 min-w-[80px]">
+        <!-- 4. Price Column (Hidden for Dividend and Split) -->
+        @if (!isDividend() && !isSplit()) {
+          <div class="flex flex-col gap-1 flex-1">
             <label for="sharePrice" class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Price</label>
             <input 
               id="sharePrice" 
@@ -137,9 +195,31 @@
           </div>
         }
         
-        <!-- 5. Fees Column (Hidden for Dividend) -->
-        @if (!isDividend()) {
-          <div class="flex flex-col gap-1 flex-1 min-w-[60px]">
+        <!-- 4c. Share Price Info (Only for Split) -->
+        @if (isSplit()) {
+          <div class="flex flex-col gap-1 flex-1">
+            <div class="flex items-center gap-1">
+              <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Share Price</label>
+              <button
+                type="button"
+                class="flex items-center justify-center w-3.5 h-3.5 rounded-full bg-gray-300 hover:bg-gray-400 text-white text-[10px] font-bold transition-colors cursor-help"
+                (mouseenter)="showTooltip($event, 'Stock splits don\'t involve money exchange')"
+                (mouseleave)="hideTooltip()"
+                (mousemove)="showTooltip($event, 'Stock splits don\'t involve money exchange')"
+                aria-label="Share price information"
+              >
+                ?
+              </button>
+            </div>
+            <div class="py-1 text-sm font-medium text-gray-400">
+              €0.00
+            </div>
+          </div>
+        }
+        
+        <!-- 5. Fees Column (Hidden for Dividend and Split) -->
+        @if (!isDividend() && !isSplit()) {
+          <div class="flex flex-col gap-1 flex-1">
             <label for="fees" class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Fees</label>
             <input 
               id="fees" 
@@ -155,7 +235,7 @@
         
         <!-- 4b. Net Received Column (Only for Dividend) -->
         @if (isDividend()) {
-          <div class="flex flex-col gap-1 flex-1 min-w-[100px]">
+          <div class="flex flex-col gap-1 flex-1">
             <label for="totalAmount" class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Net Received (€)</label>
             <input 
               id="totalAmount" 
@@ -172,7 +252,7 @@
         
         <!-- 5b. Tax Column (Only for Dividend) -->
         @if (isDividend()) {
-          <div class="flex flex-col gap-1 flex-1 min-w-[100px]">
+          <div class="flex flex-col gap-1 flex-1">
             <label for="tax" class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Tax Withheld (€)</label>
             <input 
               id="tax" 
@@ -186,13 +266,15 @@
           </div>
         }
         
-        <!-- 6. Total / Gross Amount (Read-only) -->
-        <div class="flex flex-col gap-1 pb-1 w-auto whitespace-nowrap">
-          <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{{ getTotalLabel() }}</span>
-          <span [class]="'font-bold text-lg ' + getTotalColorClass()">
-            {{ estimatedTotal() | currency:'EUR':'symbol':'1.2-2' }}
-          </span>
-        </div>
+        <!-- 6. Total / Gross Amount (Read-only) - Hidden for Split -->
+        @if (!isSplit()) {
+          <div class="flex flex-col gap-1 pb-1 w-auto whitespace-nowrap">
+            <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{{ getTotalLabel() }}</span>
+            <span [class]="'font-bold text-lg ' + getTotalColorClass()">
+              {{ estimatedTotal() | currency:'EUR':'symbol':'1.2-2' }}
+            </span>
+          </div>
+        }
       </div>
     </div>
   </form>

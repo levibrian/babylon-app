@@ -1,9 +1,20 @@
 import { Transaction } from './transaction.model';
 import { SecurityType } from './security.model';
 
+export interface VisualContext {
+  now: number; // Current percentage/value
+  target: number; // Target percentage/value
+  after: number; // After action percentage/value
+}
+
 export interface PortfolioInsight {
   message: string;
-  severity: 'warning' | 'info' | 'positive';
+  severity: 'Info' | 'Warning' | 'Critical';
+  type?: 'Rebalancing' | 'PerformanceMilestone' | 'DiversificationWarning';
+  ticker?: string | null;
+  amount?: number | null;
+  actionLabel?: string | null; // e.g., "Sell €242", "Buy €150"
+  visualContext?: VisualContext | null; // For bar chart visualization
 }
 
 export interface PortfolioItem {

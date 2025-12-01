@@ -8,8 +8,8 @@ import { Transaction, NewTransactionData } from '../models/transaction.model';
 export function mapApiTransactionToTransaction(apiTransaction: ApiTransaction, fallbackTicker?: string): Transaction {
   // Convert Unix timestamp to ISO string
   const date = new Date(apiTransaction.date * 1000).toISOString();
-  // Convert transaction type from "Buy"/"Sell" to lowercase "buy"/"sell"
-  const transactionType = apiTransaction.transactionType.toLowerCase() as 'buy' | 'sell' | 'dividend';
+  // Convert transaction type from "Buy"/"Sell"/"Dividend"/"Split" to lowercase
+  const transactionType = apiTransaction.transactionType.toLowerCase() as 'buy' | 'sell' | 'dividend' | 'split';
   
   return {
     id: apiTransaction.id,
@@ -42,12 +42,12 @@ export function mapApiTransactionsToTransactions(
  */
 export interface CreateTransactionRequest {
   Ticker: string;
-  TransactionType: 'Buy' | 'Sell' | 'Dividend';
+  TransactionType: number; // Enum: Buy=0, Sell=1, Dividend=2, Split=3
   Date: string | null; // DateOnly format: YYYY-MM-DD
   SharesQuantity: number;
   SharePrice: number;
   Fees: number;
-  TotalAmount?: number; // Total amount (required for dividends - Net Received)
+  TotalAmount?: number; // Total amount (required for dividends - Net Received, always 0 for splits)
   Tax?: number; // Tax withheld (for dividend transactions)
   UserId: string | null;
 }
@@ -56,11 +56,13 @@ export function mapToCreateTransactionRequest(
   transactionData: NewTransactionData,
   userId: string | null = null
 ): CreateTransactionRequest {
-  // Convert transaction type to capitalized format expected by backend
-  const transactionTypeMap: Record<'buy' | 'sell' | 'dividend', 'Buy' | 'Sell' | 'Dividend'> = {
-    'buy': 'Buy',
-    'sell': 'Sell',
-    'dividend': 'Dividend',
+  // Convert transaction type to numeric enum value expected by backend
+  // Backend enum: Buy=0, Sell=1, Dividend=2, Split=3
+  const transactionTypeMap: Record<'buy' | 'sell' | 'dividend' | 'split', number> = {
+    'buy': 0,
+    'sell': 1,
+    'dividend': 2,
+    'split': 3,
   };
   
   // Convert ISO date string to DateOnly format (YYYY-MM-DD)
@@ -74,6 +76,9 @@ export function mapToCreateTransactionRequest(
   // Debug logging
   console.log('Mapping to CreateTransactionRequest:', {
     transactionType: transactionData.transactionType,
+    transactionTypeEnum: transactionTypeMap[transactionData.transactionType],
+    shares: transactionData.shares,
+    sharesQuantity: transactionData.shares, // This will be mapped to SharesQuantity
     totalAmount: transactionData.totalAmount,
     tax: transactionData.tax
   });
@@ -82,15 +87,16 @@ export function mapToCreateTransactionRequest(
     Ticker: transactionData.ticker,
     TransactionType: transactionTypeMap[transactionData.transactionType],
     Date: dateFormatted,
-    SharesQuantity: transactionData.shares,
-    SharePrice: transactionData.sharePrice,
-    Fees: transactionData.fees,
-    TotalAmount: transactionData.totalAmount, // Include totalAmount (required for dividends, calculated for buy/sell)
-    Tax: transactionData.tax,
+    SharesQuantity: transactionData.shares, // This is the split ratio for split transactions
+    SharePrice: transactionData.sharePrice, // Must be 0 for splits
+    Fees: transactionData.fees, // Typically 0 for splits
+    TotalAmount: transactionData.totalAmount, // Include totalAmount (required for dividends, always 0 for splits)
+    Tax: transactionData.tax, // Typically 0 for splits
     UserId: userId,
   };
   
   console.log('Final CreateTransactionRequest:', request);
+  console.log('SharesQuantity value:', request.SharesQuantity, 'Type:', typeof request.SharesQuantity);
   
   return request;
 }
