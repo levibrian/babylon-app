@@ -1,6 +1,6 @@
-<div class="flex flex-col flex-1 min-h-0 overflow-hidden" style="height: 100%;">
+<div class="flex flex-col h-full overflow-hidden" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0;">
   <!-- Scrollable List -->
-  <div class="overflow-y-auto" style="flex: 1 1 0%; min-height: 0; height: 0;">
+  <div class="flex-1 overflow-y-auto min-h-0" style="overflow-y: scroll !important;">
     @if (upcomingEvents().length > 0) {
       <div class="space-y-2">
         @for (event of upcomingEvents(); track event.ticker + event.date.getTime()) {

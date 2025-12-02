@@ -106,11 +106,11 @@
     </div>
 
     <!-- Right: Upcoming Events Widget (50% width) -->
-    <div class="flex flex-col gap-2 min-h-0 overflow-hidden">
+    <div class="flex flex-col gap-2 min-h-0 overflow-hidden" style="height: 100%;">
       <div class="flex-shrink-0">
         <div class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Upcoming Payouts</div>
       </div>
-      <div class="flex-1 min-h-0 flex flex-col overflow-hidden">
+      <div class="flex-1 min-h-0 flex flex-col overflow-hidden" style="position: relative;">
         <app-passive-income-calendar [portfolio]="portfolio()" />
       </div>
     </div>

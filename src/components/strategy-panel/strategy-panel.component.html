@@ -75,7 +75,7 @@
                 (mousemove)="
                   showTooltip(
                     $event,
-                    getSegmentTooltip(seg.ticker, seg.percentage),
+                    getSegmentTooltip(seg.ticker, seg.percentage, seg.currentValue),
                     seg.color
                   )
                 "
@@ -110,7 +110,7 @@
                 (mousemove)="
                   showTooltip(
                     $event,
-                    getSegmentTooltip(seg.ticker, seg.percentage),
+                    getSegmentTooltip(seg.ticker, seg.percentage, seg.targetAmount),
                     seg.color
                   )
                 "

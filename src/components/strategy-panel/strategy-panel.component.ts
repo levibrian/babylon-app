@@ -258,17 +258,17 @@ export class StrategyPanelComponent implements OnInit {
   private createChartSegments(items: StrategyItem[], mode: "assets" | "types"): ChartSegment[] {
     if (mode === "assets") {
       // Individual assets view - use consistent colors based on ticker
-      return items
+    return items
         .filter(
           (item) => item.currentPercentage > 0 || item.targetPercentage > 0
         )
         .map(
           (item) =>
             ({
-              ticker: item.ticker,
-              companyName: item.companyName,
-              currentPercentage: item.currentPercentage,
-              targetPercentage: item.targetPercentage,
+        ticker: item.ticker,
+        companyName: item.companyName,
+        currentPercentage: item.currentPercentage,
+        targetPercentage: item.targetPercentage,
               color: this.getColorForKey(item.ticker.toUpperCase(), "assets"),
             } as ChartSegment)
         );
@@ -512,7 +512,7 @@ export class StrategyPanelComponent implements OnInit {
       // Allow empty/incomplete input during typing
       return;
     }
-    
+
     const numValue = parseFloat(rawValue);
     if (!isNaN(numValue) && numValue >= 0) {
       const currentInputs = this.targetInputs();
@@ -558,12 +558,12 @@ export class StrategyPanelComponent implements OnInit {
       this.targetInputs.set(newInputs);
     } else {
       // Ensure the value is stored
-      const currentInputs = this.targetInputs();
-      const newInputs = new Map(currentInputs);
-      newInputs.set(tickerUpper, numValue);
-      this.targetInputs.set(newInputs);
-    }
-    
+    const currentInputs = this.targetInputs();
+    const newInputs = new Map(currentInputs);
+    newInputs.set(tickerUpper, numValue);
+    this.targetInputs.set(newInputs);
+  }
+
     this.focusedInputTicker.set(null);
   }
   
@@ -673,9 +673,15 @@ export class StrategyPanelComponent implements OnInit {
     return 'text-green-600 font-bold';
   }
 
-  // Helper to format tooltip text
-  getSegmentTooltip(ticker: string, percentage: number): string {
-    return `${ticker}: ${percentage.toFixed(2)}%`;
+  // Helper to format tooltip text - shows percentage and amount
+  getSegmentTooltip(ticker: string, percentage: number, amount: number): string {
+    const formattedAmount = new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'EUR',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(amount);
+    return `${ticker}: ${percentage.toFixed(2)}% (${formattedAmount})`;
   }
 
   // Toggle view mode
@@ -727,19 +733,35 @@ export class StrategyPanelComponent implements OnInit {
     width: number;
     ticker: string;
     percentage: number;
+    currentValue: number;
   }> {
     const segments = this.currentChartSegments();
+    const items = this.strategyItems();
     const total = segments.reduce((sum, s) => sum + s.currentPercentage, 0);
     if (total === 0) return [];
-
+    
     return segments
       .filter((s) => s.currentPercentage > 0)
-      .map((s) => ({
-        color: s.color,
-        width: (s.currentPercentage / total) * 100,
-        ticker: s.ticker,
-        percentage: s.currentPercentage,
-      }));
+      .map((s) => {
+        let currentValue = 0;
+        if (this.viewMode() === 'assets') {
+          // For assets view, find the single matching item
+          const item = items.find(i => i.ticker.toUpperCase() === s.ticker.toUpperCase());
+          currentValue = item?.currentValue ?? 0;
+        } else {
+          // For types view, sum up all items of that type
+          currentValue = items
+            .filter(i => this.getSecurityTypeName(this.getSecurityTypeForItem(i.ticker)) === s.ticker)
+            .reduce((sum, i) => sum + i.currentValue, 0);
+        }
+        return {
+          color: s.color,
+          width: (s.currentPercentage / total) * 100,
+          ticker: s.ticker,
+          percentage: s.currentPercentage,
+          currentValue,
+        };
+      });
   }
 
   // Helper to get segments for target bar
@@ -748,18 +770,28 @@ export class StrategyPanelComponent implements OnInit {
     width: number;
     ticker: string;
     percentage: number;
+    targetAmount: number;
   }> {
     const segments = this.chartSegments();
+    const items = this.strategyItems();
+    const totalPortfolioValue = this.totalPortfolioValue();
     const total = segments.reduce((sum, s) => sum + s.targetPercentage, 0);
     if (total === 0) return [];
 
     return segments
       .filter((s) => s.targetPercentage > 0)
-      .map((s) => ({
-        color: s.color,
-        width: (s.targetPercentage / total) * 100,
-        ticker: s.ticker,
-        percentage: s.targetPercentage,
-      }));
+      .map((s) => {
+        // Calculate target amount based on target percentage and total portfolio value
+        // Target amount = target percentage * total portfolio value / 100
+        const targetAmount = (s.targetPercentage / 100) * totalPortfolioValue;
+        
+        return {
+          color: s.color,
+          width: (s.targetPercentage / total) * 100,
+          ticker: s.ticker,
+          percentage: s.targetPercentage,
+          targetAmount,
+        };
+      });
   }
 }
