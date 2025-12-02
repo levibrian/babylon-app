@@ -2,7 +2,7 @@ import { Injectable, inject, Signal, signal } from '@angular/core';
 import { Transaction, NewTransactionData } from '../models/transaction.model';
 import { PortfolioService } from './portfolio.service';
 import { ApiTransaction, ApiTransactionsResponse } from '../models/api-response.model';
-import { mapApiTransactionsToTransactions, mapToCreateTransactionRequest } from '../utils/transaction-mapper.util';
+import { mapApiTransactionsToTransactions, mapToCreateTransactionRequest, mapToBulkTransactionRequest } from '../utils/transaction-mapper.util';
 import { toast } from 'ngx-sonner';
 
 const API_BASE_URL = 'https://localhost:7192';
@@ -150,6 +150,41 @@ export class TransactionService {
     } catch (err) {
       console.error('Error deleting transaction:', err);
       toast.error('Could not delete transaction. Please try again.');
+    }
+  }
+
+  async addBulkTransactions(transactions: NewTransactionData[]): Promise<void> {
+    try {
+      // Map frontend format to bulk transaction request format
+      const requestBody = mapToBulkTransactionRequest(transactions, USER_ID);
+      
+      // Real API call to bulk add transactions
+      const response = await fetch(`${API_BASE_URL}/api/v1/transactions/bulk`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(requestBody),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('API Error:', response.status, errorText);
+        throw new Error(`Failed to save transactions: ${response.status} ${response.statusText}`);
+      }
+      
+      // After a successful save, reload transactions and portfolio data
+      await Promise.all([
+        this.reload(),
+        this.portfolioService.reload()
+      ]);
+
+      // Show success toast
+      const count = transactions.length;
+      toast.success(`${count} transaction${count > 1 ? 's' : ''} saved successfully`);
+
+    } catch (err) {
+      console.error('Error adding bulk transactions:', err);
+      toast.error('Could not save transactions. Please try again.');
+      throw err; // Re-throw to allow caller to handle
     }
   }
 }

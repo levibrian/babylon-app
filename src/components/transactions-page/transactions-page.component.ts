@@ -27,6 +27,7 @@ export class TransactionsPageComponent {
   isLoading: Signal<boolean> = this.transactionService.loading;
   error: Signal<string | null> = this.transactionService.error;
   totalInvested: Signal<number> = this.portfolioService.totalInvested;
+  portfolio: Signal<any[]> = this.portfolioService.portfolio;
   
   isAddingTransaction = signal(false);
   activeView = signal<'transactions' | 'recurring'>('transactions');

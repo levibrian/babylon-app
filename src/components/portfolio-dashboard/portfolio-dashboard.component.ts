@@ -6,7 +6,6 @@ import { Transaction, NewTransactionData } from '../../models/transaction.model'
 import { PortfolioService } from '../../services/portfolio.service';
 import { SecurityType } from '../../models/security.model';
 import { InsightCardComponent } from '../insight-card/insight-card.component';
-import { PassiveIncomeCalendarComponent } from '../passive-income-calendar/passive-income-calendar.component';
 
 interface AllocationSegment {
   label: string;
@@ -32,7 +31,7 @@ interface HealthScore {
 @Component({
   selector: 'app-portfolio-dashboard',
   templateUrl: './portfolio-dashboard.component.html',
-  imports: [CommonModule, CurrencyPipe, InsightCardComponent, PassiveIncomeCalendarComponent],
+  imports: [CommonModule, CurrencyPipe, InsightCardComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PortfolioDashboardComponent {

@@ -101,3 +101,63 @@ export function mapToCreateTransactionRequest(
   return request;
 }
 
+/**
+ * Interface for bulk transaction request (camelCase format).
+ * Used by the bulk endpoint: api/v1/transactions/bulk
+ */
+export interface BulkTransactionRequestItem {
+  ticker: string;
+  transactionType: number; // Enum: Buy=0, Sell=1, Dividend=2, Split=3
+  date: string; // DateOnly format: YYYY-MM-DD
+  sharesQuantity: number;
+  sharePrice: number;
+  fees: number;
+  tax: number;
+  totalAmount: number;
+  userId: string;
+}
+
+/**
+ * Maps frontend NewTransactionData to bulk transaction request format.
+ * Converts to camelCase and formats date as a string (YYYY-MM-DD) for DateOnly.
+ * Returns an array directly (ASP.NET Core binds List<T> from array body).
+ */
+export function mapToBulkTransactionRequest(
+  transactions: NewTransactionData[],
+  userId: string
+): BulkTransactionRequestItem[] {
+  // Convert transaction type to numeric enum value
+  const transactionTypeMap: Record<'buy' | 'sell' | 'dividend' | 'split', number> = {
+    'buy': 0,
+    'sell': 1,
+    'dividend': 2,
+    'split': 3,
+  };
+
+  return transactions.map(transactionData => {
+    // Convert ISO date string to DateOnly format (YYYY-MM-DD)
+    let dateFormatted: string;
+    if (transactionData.date) {
+      const dateObj = new Date(transactionData.date);
+      // Format as YYYY-MM-DD
+      dateFormatted = dateObj.toISOString().split('T')[0];
+    } else {
+      // Default to today if no date provided
+      const today = new Date();
+      dateFormatted = today.toISOString().split('T')[0];
+    }
+
+    return {
+      ticker: transactionData.ticker,
+      transactionType: transactionTypeMap[transactionData.transactionType],
+      date: dateFormatted,
+      sharesQuantity: transactionData.shares,
+      sharePrice: transactionData.sharePrice,
+      fees: transactionData.fees || 0,
+      tax: transactionData.tax || 0,
+      totalAmount: transactionData.totalAmount || 0,
+      userId,
+    };
+  });
+}
+

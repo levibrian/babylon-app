@@ -293,7 +293,8 @@ export class RecurringInvestmentsListComponent implements OnInit, AfterViewInit 
       });
     }
     
-    return filtered;
+    // Sort alphabetically by security name
+    return filtered.sort((a, b) => a.securityName.localeCompare(b.securityName));
   });
 
   // ============================================================================
@@ -792,12 +793,10 @@ export class RecurringInvestmentsListComponent implements OnInit, AfterViewInit 
   }
 
   /**
-   * Creates transactions sequentially via the TransactionService.
+   * Creates transactions via the bulk endpoint in a single request.
    */
   private async createTransactions(transactions: NewTransactionData[]): Promise<void> {
-    for (const transaction of transactions) {
-      await this.transactionService.addTransaction(transaction);
-    }
+    await this.transactionService.addBulkTransactions(transactions);
   }
 
   /**

@@ -100,13 +100,13 @@
       </div>
     } @else {
       <!-- Grid Header -->
-      <div class="hidden lg:flex items-center gap-0 pb-2 border-b border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-widest w-full">
-        <div class="w-[32%] shrink-0 truncate pr-4">Asset</div>
-        <div class="w-[22%] shrink-0">Date</div>
-        <div class="w-[12%] shrink-0 text-right">Shares</div>
-        <div class="w-[16%] shrink-0 text-right">Price</div>
-        <div class="w-[12%] shrink-0 text-right">Fees</div>
-        <div class="w-[16%] shrink-0 text-right">Total</div>
+      <div class="hidden lg:flex items-center gap-2 pb-2 border-b border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-widest w-full">
+        <div class="w-60 shrink-0 truncate">Asset</div>
+        <div class="w-32 shrink-0">Date</div>
+        <div class="w-24 shrink-0 text-right">Shares</div>
+        <div class="w-28 shrink-0 text-right">Price</div>
+        <div class="w-20 shrink-0 text-right">Fees</div>
+        <div class="w-24 shrink-0 text-right">Total</div>
       </div>
 
       <!-- Grid Rows -->
@@ -115,9 +115,9 @@
           @for (rowGroup of rowsFormArray.controls; track rowGroup.get('scheduleId')?.value; let i = $index) {
             @if (getScheduleForRow(i) && isScheduleInFilteredList(getScheduleForRow(i)!.id)) {
               @let schedule = getScheduleForRow(i)!;
-              <div [formGroupName]="i" class="relative group flex flex-col lg:flex-row lg:items-center gap-0 border-b border-gray-100 py-2 hover:bg-gray-50/50 transition-colors w-full">
+              <div [formGroupName]="i" class="relative group flex flex-col lg:flex-row lg:items-center gap-2 border-b border-gray-100 py-2 hover:bg-gray-50/50 transition-colors w-full">
                 <!-- Asset Info (Left) -->
-                <div class="w-[32%] shrink-0 truncate pr-4">
+                <div class="w-60 shrink-0 truncate" [title]="schedule.securityName">
                   <div class="font-bold text-gray-900 truncate text-sm">
                     {{ schedule.securityName }}
                   </div>
@@ -130,16 +130,16 @@
                 </div>
 
                 <!-- Date -->
-                <div class="flex flex-col gap-1 w-[22%] shrink-0">
+                <div class="flex flex-col gap-1 w-32 shrink-0">
                   <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest lg:hidden">Date</label>
                   <input 
                     type="date"
                     formControlName="date"
-                    class="w-full py-1 text-sm font-medium text-gray-900 border-transparent bg-transparent hover:bg-gray-50 focus:bg-gray-50 rounded transition-all duration-200 outline-none">
+                    class="w-full py-1 text-sm font-mono text-gray-900 border-transparent bg-transparent hover:bg-gray-50 focus:bg-gray-50 rounded transition-all duration-200 outline-none">
                 </div>
 
                 <!-- Shares -->
-                <div class="flex flex-col gap-1 w-[12%] shrink-0">
+                <div class="flex flex-col gap-1 w-24 shrink-0">
                   <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest lg:hidden">Shares</label>
                   <input 
                     type="number"
@@ -150,7 +150,7 @@
                 </div>
 
                 <!-- Price -->
-                <div class="flex flex-col gap-1 w-[16%] shrink-0">
+                <div class="flex flex-col gap-1 w-28 shrink-0">
                   <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest lg:hidden">Price</label>
                   <input 
                     type="number"
@@ -161,18 +161,18 @@
                 </div>
 
                 <!-- Fees -->
-                <div class="flex flex-col gap-1 w-[12%] shrink-0">
+                <div class="flex flex-col gap-1 w-20 shrink-0">
                   <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest lg:hidden">Fees</label>
                   <input 
                     type="number"
                     step="0.01"
                     formControlName="fees"
-                    placeholder="0.00"
+                    placeholder="0"
                     class="w-full py-1 text-sm font-mono text-right text-gray-900 border-transparent bg-transparent hover:bg-gray-50 focus:bg-gray-50 rounded transition-all duration-200 outline-none placeholder-gray-400">
                 </div>
 
                 <!-- Total (Read-only) -->
-                <div class="flex flex-col gap-1 w-[16%] shrink-0">
+                <div class="flex flex-col gap-1 w-24 shrink-0">
                   <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest lg:hidden">Total</label>
                   <div class="font-mono text-sm font-bold text-gray-900 text-right py-1">
                     @if (getRowTotal(i) > 0) {

@@ -1,17 +1,12 @@
-<div class="flex flex-col h-full">
-  <!-- Header -->
-  <div class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4 flex-shrink-0">
-    Upcoming Payouts
-  </div>
-
+<div class="flex flex-col flex-1 min-h-0 overflow-hidden" style="height: 100%;">
   <!-- Scrollable List -->
-  <div class="flex-1 overflow-y-auto min-h-0 -mx-3 px-3">
+  <div class="overflow-y-auto" style="flex: 1 1 0%; min-height: 0; height: 0;">
     @if (upcomingEvents().length > 0) {
-      <div class="space-y-3">
+      <div class="space-y-2">
         @for (event of upcomingEvents(); track event.ticker + event.date.getTime()) {
-          <div class="flex items-center gap-3 p-3 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors">
+          <div class="flex items-center gap-3 py-2">
             <!-- Date Badge -->
-            <div class="flex-shrink-0 bg-gray-50 rounded p-2 text-center w-12">
+            <div class="flex-shrink-0 text-center w-12">
               <div class="text-xs font-bold text-gray-900">
                 {{ event.date.getDate() }}
               </div>
