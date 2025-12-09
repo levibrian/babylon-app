@@ -27,6 +27,14 @@
               "optimization": false,
               "extractLicenses": false,
               "sourceMap": true
+            },
+            "qa": {
+              "fileReplacements": [
+                {
+                  "replace": "src/environments/environment.ts",
+                  "with": "src/environments/environment.qa.ts"
+                }
+              ]
             }
           },
           "defaultConfiguration": "production"
@@ -42,6 +50,9 @@
             },
             "development": {
               "buildTarget": "app:build:development"
+            },
+            "qa": {
+              "buildTarget": "app:build:qa"
             }
           },
           "defaultConfiguration": "development"

@@ -1,0 +1,85 @@
+
+<div class="planning-container">
+  <div class="header-actions">
+    <app-add-security-search (securitySelected)="addSecurity($event)"></app-add-security-search>
+    
+    <div class="input-wrapper">
+      <label for="monthly-investment">Monthly Amount to Invest</label>
+      <div class="input-container">
+        <span class="currency-symbol">€</span>
+        <input type="number" id="monthly-investment" [(ngModel)]="monthlyInvestment" (ngModelChange)="onMonthlyInvestmentChange($event)" />
+      </div>
+    </div>
+  </div>
+
+  <div class="grid-container">
+    <table class="planning-table">
+      <thead>
+        <tr>
+          <th>Security Name (Ticker)</th>
+          <th class="text-right">Weekly EUR</th>
+          <th class="text-right">Bi-Weekly EUR</th>
+          <th class="text-right">Monthly EUR</th>
+          <th class="text-right">Target %</th>
+        </tr>
+      </thead>
+      <tbody>
+        <ng-container *ngFor="let group of groupedRows">
+          <tr class="group-header" (click)="toggleGroup(group)">
+            <td colspan="4">
+              <div class="group-header-content">
+                <span class="expand-icon" [class.expanded]="group.isExpanded">▶</span>
+                {{ group.assetType }}
+              </div>
+            </td>
+            <td class="text-right group-subtotal">
+              {{ getSubtotal(group) | number:'1.2-2' }}%
+            </td>
+          </tr>
+          <!-- Rows shown only if expanded -->
+          <ng-container *ngIf="group.isExpanded">
+            <tr *ngFor="let row of group.rows" class="data-row">
+              <td class="ticker-cell">
+                {{ row.securityName || row.ticker }}
+              </td>
+              
+              <td class="text-right clickable-cell" 
+                  [class.disabled]="!row.isWeeklyEnabled" 
+                  (click)="toggleWeekly(row)">
+                {{ row.weeklyEur | number:'1.2-2' }}
+              </td>
+              
+              <td class="text-right clickable-cell" 
+                  [class.disabled]="!row.isBiWeeklyEnabled" 
+                  (click)="toggleBiWeekly(row)">
+                {{ row.biWeeklyEur | number:'1.2-2' }}
+              </td>
+              
+              <td class="text-right clickable-cell" 
+                  [class.disabled]="!row.isMonthlyEnabled" 
+                  (click)="toggleMonthly(row)">
+                {{ row.monthlyEur | number:'1.2-2' }}
+              </td>
+              
+              <td class="text-right input-cell">
+                <div class="input-content">
+                  <input type="number" 
+                         [(ngModel)]="row.targetPercentage" 
+                         (ngModelChange)="updateAllocation(row)"
+                         class="table-input" />
+                  <span class="percent-symbol">%</span>
+                </div>
+              </td>
+            </tr>
+          </ng-container>
+        </ng-container>
+      </tbody>
+      <tfoot>
+        <tr class="grand-total-row">
+          <td colspan="4" class="text-right label">Grand Total</td>
+          <td class="text-right value">{{ grandTotal | number:'1.2-2' }}%</td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+</div>

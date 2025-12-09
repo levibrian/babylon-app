@@ -1,7 +1,8 @@
 import { Injectable, Signal, signal } from '@angular/core';
 import { RecurringSchedule, CreateRecurringScheduleRequest } from '../models/recurring-schedule.model';
 
-const API_BASE_URL = 'https://localhost:7192';
+import { environment } from '../environments/environment';
+
 const USER_ID = 'a1b2c3d4-e5f6-4a5b-8c9d-0e1f2a3b4c5d';
 
 @Injectable({
@@ -24,7 +25,7 @@ export class RecurringScheduleService {
       // Set loading state immediately to show loading indicator
       this._loading.set(true);
 
-      const response = await fetch(`${API_BASE_URL}/api/v1/recurring-schedules/${USER_ID}`, {
+      const response = await fetch(`${environment.apiUrl}/api/v1/recurring-schedules/${USER_ID}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -48,7 +49,7 @@ export class RecurringScheduleService {
 
   async addSchedule(request: CreateRecurringScheduleRequest): Promise<void> {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/v1/recurring-schedules`, {
+      const response = await fetch(`${environment.apiUrl}/api/v1/recurring-schedules`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -77,7 +78,7 @@ export class RecurringScheduleService {
       const currentSchedules = this._schedules();
       this._schedules.set(currentSchedules.filter(s => s.id !== id));
 
-      const response = await fetch(`${API_BASE_URL}/api/v1/recurring-schedules/${id}`, {
+      const response = await fetch(`${environment.apiUrl}/api/v1/recurring-schedules/${id}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',

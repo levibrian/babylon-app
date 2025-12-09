@@ -1,7 +1,8 @@
 import { Injectable, Signal, signal, computed } from '@angular/core';
 import { AllocationStrategyResponse, AllocationStrategyDto, SetAllocationStrategyRequest } from '../models/allocation.model';
 
-const API_BASE_URL = 'https://localhost:7192';
+import { environment } from '../environments/environment';
+
 const USER_ID = 'a1b2c3d4-e5f6-4a5b-8c9d-0e1f2a3b4c5d';
 
 @Injectable({
@@ -40,7 +41,7 @@ export class AllocationService {
       this._loading.set(true);
       this._error.set(null);
 
-      const response = await fetch(`${API_BASE_URL}/api/v1/portfolios/allocation?userId=${userId}`, {
+      const response = await fetch(`${environment.apiUrl}/api/v1/portfolios/allocation?userId=${userId}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -69,7 +70,12 @@ export class AllocationService {
    * For sending ALL portfolio items (including new ones), use setAllocationStrategy() instead.
    * The backend expects ALL items to be sent so it can determine what to delete, update, or add.
    */
-  async updateTarget(userId: string = USER_ID, ticker: string, newPercentage: number): Promise<void> {
+  async updateTarget(
+    userId: string = USER_ID, 
+    ticker: string, 
+    newPercentage: number,
+    options?: { isEnabledForWeekly?: boolean, isEnabledForBiWeekly?: boolean, isEnabledForMonthly?: boolean }
+  ): Promise<void> {
     const currentStrategy = this._strategy();
     
     if (!currentStrategy) {
@@ -91,12 +97,18 @@ export class AllocationService {
       updatedAllocations[existingIndex] = {
         ...updatedAllocations[existingIndex],
         targetPercentage: newPercentage,
+        ...(options?.isEnabledForWeekly !== undefined && { isEnabledForWeekly: options.isEnabledForWeekly }),
+        ...(options?.isEnabledForBiWeekly !== undefined && { isEnabledForBiWeekly: options.isEnabledForBiWeekly }),
+        ...(options?.isEnabledForMonthly !== undefined && { isEnabledForMonthly: options.isEnabledForMonthly }),
       };
     } else {
       // Add new allocation
       updatedAllocations.push({
         ticker: tickerUpper,
         targetPercentage: newPercentage,
+        isEnabledForWeekly: options?.isEnabledForWeekly ?? true, // Default to true if not specified for new
+        isEnabledForBiWeekly: options?.isEnabledForBiWeekly ?? true,
+        isEnabledForMonthly: options?.isEnabledForMonthly ?? true,
       });
     }
 
@@ -119,7 +131,7 @@ export class AllocationService {
         allocations: updatedAllocations,
       };
 
-      const response = await fetch(`${API_BASE_URL}/api/v1/portfolios/allocation?userId=${userId}`, {
+      const response = await fetch(`${environment.apiUrl}/api/v1/portfolios/allocation?userId=${userId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -171,7 +183,7 @@ export class AllocationService {
         allocations: allocations,
       };
 
-      const response = await fetch(`${API_BASE_URL}/api/v1/portfolios/allocation?userId=${userId}`, {
+      const response = await fetch(`${environment.apiUrl}/api/v1/portfolios/allocation?userId=${userId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

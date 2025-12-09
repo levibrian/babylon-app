@@ -15,6 +15,8 @@ import { PortfolioService } from '../../services/portfolio.service';
 import { SecurityType } from '../../models/security.model';
 import { toast } from "ngx-sonner";
 import { SelectOnFocusDirective } from '../../directives/select-on-focus.directive';
+import { Router } from '@angular/router';
+import { PortfolioInsight } from '../../models/portfolio.model';
 
 interface StrategyItem {
   ticker: string;
@@ -53,6 +55,71 @@ export class StrategyPanelComponent implements OnInit {
 
   allocationService = inject(AllocationService);
   portfolioService = inject(PortfolioService);
+  private router = inject(Router);
+
+  // Portfolio Insights from backend API
+  portfolioInsights = computed<PortfolioInsight[]>(() => {
+    const backendInsights = this.portfolioService.insights();
+    
+    // If no insights from backend, return empty array
+    if (!backendInsights || backendInsights.length === 0) {
+      return [];
+    }
+    
+    return backendInsights;
+  });
+
+  /**
+   * Handles insight card action execution.
+   * Navigates to transactions page with pre-filled form data based on insight type.
+   */
+  handleInsightAction(insight: PortfolioInsight): void {
+    if (!insight.ticker || !insight.amount) {
+      console.warn('Insight missing required data for action:', insight);
+      return;
+    }
+
+    const portfolioItem = this.portfolio().find(p => p.ticker === insight.ticker);
+    if (!portfolioItem) {
+      console.warn('Portfolio item not found for ticker:', insight.ticker);
+      return;
+    }
+
+    if (insight.type === 'Rebalancing') {
+      // Determine if it's a buy or sell based on amount sign or rebalancing status
+      const isSell = portfolioItem.rebalancingStatus === 'Overweight' || (insight.amount && insight.amount > 0);
+      const transactionType = isSell ? 'sell' : 'buy';
+      
+      // Navigate to transactions page with query params for pre-filling
+      this.router.navigate(['/transactions'], {
+        queryParams: {
+          add: 'true',
+          ticker: insight.ticker,
+          type: transactionType,
+          amount: Math.abs(insight.amount),
+          shares: portfolioItem.totalShares > 0 ? Math.abs(insight.amount) / portfolioItem.averageSharePrice : undefined
+        }
+      });
+    } else if (insight.type === 'PerformanceMilestone' && insight.actionLabel?.toLowerCase().includes('dividend')) {
+      // For dividend insights
+      this.router.navigate(['/transactions'], {
+        queryParams: {
+          add: 'true',
+          ticker: insight.ticker,
+          type: 'dividend',
+          shares: portfolioItem.totalShares
+        }
+      });
+    } else {
+      // Default: navigate to transactions page
+      this.router.navigate(['/transactions'], {
+        queryParams: {
+          add: 'true',
+          ticker: insight.ticker
+        }
+      });
+    }
+  }
 
   // View mode toggle: 'assets' | 'types'
   viewMode = signal<"assets" | "types">("assets");

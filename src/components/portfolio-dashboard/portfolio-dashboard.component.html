@@ -19,7 +19,7 @@
     </div>
   </div>
 
-  <!-- Section 2: Insights Cards (Full Width) -->
+  <!-- Section 2: Insights (Full Width) -->
   <div class="w-full flex-shrink-0 pb-8 border-b border-gray-50">
     <div class="flex flex-col gap-4">
       <!-- Title - Top Left -->
@@ -40,6 +40,18 @@
           No insights available at this time.
         </div>
       }
+    </div>
+  </div>
+
+  <!-- Section 3: Upcoming Events (Bottom Right) -->
+  <div class="w-full flex-shrink-0 pb-8 border-b border-gray-50 flex justify-end">
+    <div class="w-full lg:w-1/2 flex flex-col gap-2 min-h-0 overflow-hidden" style="height: 100%;">
+      <div class="flex-shrink-0">
+        <div class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Upcoming Payouts</div>
+      </div>
+      <div class="flex-1 min-h-0 flex flex-col overflow-hidden" style="position: relative;">
+        <app-passive-income-calendar [portfolio]="portfolio()" />
+      </div>
     </div>
   </div>
 

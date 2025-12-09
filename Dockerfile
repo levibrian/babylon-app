@@ -13,7 +13,7 @@ RUN npm ci
 COPY . .
 
 # Build the application for production
-RUN npm run build
+RUN npm run build -- --configuration=qa
 
 # Stage 2: Serve with nginx
 FROM nginx:alpine

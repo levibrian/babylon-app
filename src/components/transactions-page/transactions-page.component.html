@@ -1,6 +1,6 @@
 <main class="flex flex-col lg:flex-row overflow-hidden" style="height: 100vh; max-height: 100vh;">
-  <!-- Left Pane (50% width on large screens, full width on mobile) -->
-  <div class="w-full lg:w-1/2 flex flex-col lg:h-full overflow-hidden min-h-0">
+  <!-- Left Pane (55% width on large screens, full width on mobile) -->
+  <div class="w-full lg:w-[55%] flex flex-col lg:h-full overflow-hidden min-h-0">
     <!-- Navigation -->
     <div class="flex items-baseline gap-x-3 sm:gap-x-4 p-4 sm:p-6 pb-2 flex-wrap flex-shrink-0">
       <a routerLink="/wealth" class="text-xl sm:text-2xl font-medium text-gray-400 hover:text-gray-600 transition-colors">
@@ -29,8 +29,8 @@
     </div>
   </div>
 
-  <!-- Right Pane (50% width on large screens, full width on mobile) - Transactions List or Recurring Investments -->
-  <div class="w-full lg:w-1/2 flex flex-col overflow-hidden min-h-0 border-l border-gray-200">
+  <!-- Right Pane (45% width on large screens, full width on mobile) - Transactions List or Recurring Investments -->
+  <div class="w-full lg:w-[45%] flex flex-col overflow-hidden min-h-0 border-l border-gray-200">
     <!-- Content Area -->
     <div class="flex-1 overflow-hidden min-h-0 flex flex-col">
       @if (activeView() === 'transactions') {

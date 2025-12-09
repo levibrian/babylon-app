@@ -4,7 +4,8 @@ import { ApiPortfolioResponse, ApiPortfolioInsight } from '../models/api-respons
 import { Transaction, NewTransactionData } from '../models/transaction.model';
 import { mapApiTransactionsToTransactions } from '../utils/transaction-mapper.util';
 
-const API_BASE_URL = 'https://localhost:7192';
+import { environment } from '../environments/environment';
+
 const USER_ID = 'a1b2c3d4-e5f6-4a5b-8c9d-0e1f2a3b4c5d';
 
 @Injectable({
@@ -42,15 +43,14 @@ export class PortfolioService {
       this._error.set(null);
       this._loading.set(true);
       
-      // Fetch portfolio data and insights in parallel
-      const [portfolioResponse, insightsResponse] = await Promise.all([
-        fetch(`${API_BASE_URL}/api/v1/portfolios/${USER_ID}`, {
+        const [portfolioResponse, insightsResponse] = await Promise.all([
+        fetch(`${environment.apiUrl}/api/v1/portfolios/${USER_ID}`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
           },
         }),
-        fetch(`${API_BASE_URL}/api/v1/portfolios/insights?userId=${USER_ID}&limit=5`, {
+        fetch(`${environment.apiUrl}/api/v1/portfolios/insights?userId=${USER_ID}&limit=5`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',

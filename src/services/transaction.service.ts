@@ -5,7 +5,8 @@ import { ApiTransaction, ApiTransactionsResponse } from '../models/api-response.
 import { mapApiTransactionsToTransactions, mapToCreateTransactionRequest, mapToBulkTransactionRequest } from '../utils/transaction-mapper.util';
 import { toast } from 'ngx-sonner';
 
-const API_BASE_URL = 'https://localhost:7192';
+import { environment } from '../environments/environment';
+
 const USER_ID = 'a1b2c3d4-e5f6-4a5b-8c9d-0e1f2a3b4c5d';
 
 @Injectable({
@@ -37,7 +38,7 @@ export class TransactionService {
       this._loading.set(true);
       
       // Fetch transactions from the dedicated endpoint
-      const response = await fetch(`${API_BASE_URL}/api/v1/transactions/${USER_ID}`, {
+      const response = await fetch(`${environment.apiUrl}/api/v1/transactions/${USER_ID}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -68,7 +69,7 @@ export class TransactionService {
       const requestBody = mapToCreateTransactionRequest(transactionData, USER_ID);
       
       // Real API call to add transaction - userId is in the request body, not the URL
-      const response = await fetch(`${API_BASE_URL}/api/v1/transactions`, {
+      const response = await fetch(`${environment.apiUrl}/api/v1/transactions`, {
          method: 'POST',
          headers: { 'Content-Type': 'application/json' },
          body: JSON.stringify(requestBody),
@@ -102,7 +103,7 @@ export class TransactionService {
       const requestBody = mapToCreateTransactionRequest(transaction, USER_ID);
       
       // Real API call to update transaction
-      const response = await fetch(`${API_BASE_URL}/api/v1/transactions/${USER_ID}/${transaction.id}`, {
+      const response = await fetch(`${environment.apiUrl}/api/v1/transactions/${USER_ID}/${transaction.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(requestBody),
@@ -130,7 +131,7 @@ export class TransactionService {
   async deleteTransaction(transactionId: string, ticker: string): Promise<void> {
     try {
       // Real API call to delete transaction
-      const response = await fetch(`${API_BASE_URL}/api/v1/transactions/${USER_ID}/${transactionId}`, {
+      const response = await fetch(`${environment.apiUrl}/api/v1/transactions/${USER_ID}/${transactionId}`, {
         method: 'DELETE',
       });
 
@@ -159,7 +160,7 @@ export class TransactionService {
       const requestBody = mapToBulkTransactionRequest(transactions, USER_ID);
       
       // Real API call to bulk add transactions
-      const response = await fetch(`${API_BASE_URL}/api/v1/transactions/bulk`, {
+      const response = await fetch(`${environment.apiUrl}/api/v1/transactions/bulk`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(requestBody),

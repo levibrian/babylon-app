@@ -2,6 +2,7 @@ import { Component, ChangeDetectionStrategy, inject, Signal, signal, OnDestroy, 
 import { PortfolioListComponent } from '../portfolio-list/portfolio-list.component';
 import { StrategyPanelComponent } from '../strategy-panel/strategy-panel.component';
 import { PortfolioDashboardComponent } from '../portfolio-dashboard/portfolio-dashboard.component';
+import { PlanningComponent } from '../planning/planning.component';
 import { PortfolioService } from '../../services/portfolio.service';
 import { TransactionService } from '../../services/transaction.service';
 import { PortfolioItem, PortfolioInsight } from '../../models/portfolio.model';
@@ -14,7 +15,7 @@ import { ErrorStateComponent } from '../common/error-state/error-state.component
 @Component({
   selector: 'app-wealth-page',
   templateUrl: './wealth-page.component.html',
-  imports: [PortfolioListComponent, StrategyPanelComponent, PortfolioDashboardComponent, RouterLink, CommonModule, PortfolioSkeletonComponent, ErrorStateComponent],
+  imports: [PortfolioListComponent, StrategyPanelComponent, PortfolioDashboardComponent, PlanningComponent, RouterLink, CommonModule, PortfolioSkeletonComponent, ErrorStateComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class WealthPageComponent implements OnDestroy {
@@ -34,8 +35,8 @@ export class WealthPageComponent implements OnDestroy {
   currentInsightIndex = signal(0);
   private insightTimeout: any;
   
-  // Right pane state: 'positions' | 'strategy'
-  activeView = signal<'positions' | 'strategy'>('positions');
+  // Right pane state: 'positions' | 'strategy' | 'planning'
+  activeView = signal<'positions' | 'strategy' | 'planning'>('positions');
 
   constructor() {
     effect(() => {
@@ -101,7 +102,7 @@ export class WealthPageComponent implements OnDestroy {
     this.activeView.set('positions');
   }
 
-  setActiveView(view: 'positions' | 'strategy'): void {
+  setActiveView(view: 'positions' | 'strategy' | 'planning'): void {
     this.activeView.set(view);
   }
 }

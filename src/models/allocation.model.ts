@@ -6,6 +6,9 @@
 export interface AllocationStrategyDto {
   ticker: string;
   targetPercentage: number;
+  isEnabledForWeekly?: boolean;
+  isEnabledForBiWeekly?: boolean;
+  isEnabledForMonthly?: boolean;
 }
 
 export interface AllocationStrategyResponse {

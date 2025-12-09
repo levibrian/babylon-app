@@ -1,7 +1,8 @@
 import { Injectable, signal, Signal } from '@angular/core';
 import { Security } from '../models/security.model';
 
-const API_BASE_URL = 'https://localhost:7192';
+import { environment } from '../environments/environment';
+
 
 @Injectable({
   providedIn: 'root',
@@ -28,7 +29,7 @@ export class SecurityService {
       this._error.set(null);
       this._loading.set(true);
 
-      const response = await fetch(`${API_BASE_URL}/api/v1/securities`, {
+      const response = await fetch(`${environment.apiUrl}/api/v1/securities`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
