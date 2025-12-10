@@ -295,55 +295,46 @@
         <div class="overflow-y-auto min-h-0 p-6 h-full">
           <div class="max-w-2xl mx-auto">
             <div class="flex flex-col gap-4">
-              <div class="flex flex-col gap-1">
-                <label for="investmentAmountExpanded" class="text-sm font-medium text-gray-700">Investment Amount (€)</label>
-                <input
-                  id="investmentAmountExpanded"
-                  type="number"
-                  [value]="investmentAmount()"
-                  (input)="onInvestmentAmountChange($event)"
-                  step="100"
-                  placeholder="0"
-                  class="w-full px-4 py-3 border border-gray-300 rounded-md text-lg font-mono focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
-                />
-              </div>
-
-              <div class="flex flex-col gap-1">
-                <label for="maxSecuritiesExpanded" class="text-sm font-medium text-gray-700">Max Securities (optional)</label>
-                <input
-                  id="maxSecuritiesExpanded"
-                  type="number"
-                  [value]="maxSecurities() ?? ''"
-                  (input)="onMaxSecuritiesChange($event)"
-                  min="1"
-                  placeholder="No limit"
-                  class="w-full px-4 py-3 border border-gray-300 rounded-md text-lg font-mono focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
-                />
-              </div>
-
-              <!-- Info Text -->
-              @if (investmentAmount() > 0) {
-                <div class="flex items-center gap-2">
-                  <svg class="w-4 h-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z" />
-                  </svg>
-                  <span class="text-sm text-gray-700">
-                    Distribute {{ investmentAmount() | currency:'EUR':'symbol':'1.0-0' }} across 
-                    @if (maxSecurities() && maxSecurities()! > 0) {
-                      top {{ maxSecurities() }} underweight assets
-                    } @else {
-                      underweight assets
-                    }
-                  </span>
+              <!-- Inputs Row -->
+              <div class="flex items-end gap-4">
+                <div class="flex-1 flex flex-col gap-1">
+                  <div class="flex items-center gap-2">
+                    <label for="investmentAmountExpanded" class="text-sm font-medium text-gray-700">Investment Amount (€)</label>
+                    <button
+                      type="button"
+                      class="flex items-center justify-center w-4 h-4 rounded-full bg-gray-200 hover:bg-gray-300 text-gray-600 text-[10px] font-bold transition-colors cursor-help"
+                      (mouseenter)="showInfoTooltip($event)"
+                      (mouseleave)="hideTooltip()"
+                      (mousemove)="showInfoTooltip($event)"
+                      aria-label="Information about Smart Rebalancing"
+                    >
+                      ?
+                    </button>
+                  </div>
+                  <input
+                    id="investmentAmountExpanded"
+                    type="number"
+                    [value]="investmentAmount()"
+                    (input)="onInvestmentAmountChange($event)"
+                    step="100"
+                    placeholder="0"
+                    class="w-full px-4 py-3 border border-gray-300 rounded-md text-lg font-mono focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                  />
                 </div>
-              } @else {
-                <div class="flex items-center gap-2">
-                  <svg class="w-4 h-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z" />
-                  </svg>
-                  <span class="text-sm text-gray-700">Enter an amount to see how to allocate it to reach your targets.</span>
+
+                <div class="flex-1 flex flex-col gap-1">
+                  <label for="maxSecuritiesExpanded" class="text-sm font-medium text-gray-700">Max Securities (optional)</label>
+                  <input
+                    id="maxSecuritiesExpanded"
+                    type="number"
+                    [value]="maxSecurities() ?? ''"
+                    (input)="onMaxSecuritiesChange($event)"
+                    min="1"
+                    placeholder="No limit"
+                    class="w-full px-4 py-3 border border-gray-300 rounded-md text-lg font-mono focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                  />
                 </div>
-              }
+              </div>
 
               <h3 class="text-sm font-semibold text-gray-900 mt-6 mb-3">
                 Recommended Buys ({{ topRecommendations().length }})

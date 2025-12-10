@@ -1036,10 +1036,21 @@ export class StrategyPanelComponent implements OnInit {
 
   // Show info tooltip for Smart Rebalancing help button
   showInfoTooltip(event: MouseEvent): void {
+    const investmentAmount = this.investmentAmount();
+    let tooltipText = "Enter an amount to see how to allocate it to reach your targets.";
+    
+    if (investmentAmount > 0) {
+      const maxSec = this.maxSecurities();
+      const maxSecText = maxSec && maxSec > 0 
+        ? `top ${maxSec} underweight assets`
+        : "underweight assets";
+      tooltipText = `Distribute ${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'EUR', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(investmentAmount)} across ${maxSecText}.`;
+    }
+    
     this.activeTooltip.set({
       x: event.clientX,
       y: event.clientY,
-      text: "Enter an amount to see how to allocate it to reach your targets.",
+      text: tooltipText,
       color: "transparent", // No color dot for info tooltips
     });
   }
