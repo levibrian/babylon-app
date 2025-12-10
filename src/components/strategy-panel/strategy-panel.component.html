@@ -18,15 +18,13 @@
   </div>
   }
 
-  <!-- Visual Dashboard (Top) - Two Column Grid -->
+  <!-- Visual Dashboard (Top) - Single Column -->
   <div class="flex-1 min-h-0 border-b border-gray-100 bg-white p-3 relative transition-all duration-300 ease-in-out overflow-hidden" 
        [style.height]="isSmartRebalancingExpanded() ? '0' : '100%'"
        [style.opacity]="isSmartRebalancingExpanded() ? '0' : '1'"
        [style.pointer-events]="isSmartRebalancingExpanded() ? 'none' : 'auto'">
-    <!-- Main Grid (Full Height) -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
-      <!-- Left Column: Portfolio Chart -->
-      <div class="flex flex-col h-full overflow-y-auto">
+    <!-- Portfolio Health Section (Full Width) -->
+    <div class="flex flex-col h-full overflow-y-auto">
         <div class="flex items-center justify-between mb-3">
           <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest">
             Portfolio Health
@@ -261,116 +259,6 @@
           }
         </div>
       </div>
-
-
-      <!-- Right Column: Smart Rebalancing -->
-      <div class="flex flex-col h-full min-h-0 overflow-hidden">
-        <!-- Fixed Header (Input) -->
-        <div class="shrink-0 mb-2">
-          <div class="flex items-center gap-1.5 mb-3">
-            <h3
-              class="text-xs font-bold text-gray-400 uppercase tracking-widest"
-            >
-              Smart Rebalancing
-            </h3>
-            <button
-              type="button"
-              class="flex items-center justify-center w-4 h-4 rounded-full bg-gray-300 hover:bg-gray-400 text-white text-[10px] font-bold transition-colors cursor-help"
-              (mouseenter)="showInfoTooltip($event)"
-              (mouseleave)="hideTooltip()"
-              (mousemove)="showInfoTooltip($event)"
-              aria-label="Information about Smart Rebalancing"
-            >
-              ?
-            </button>
-          </div>
-
-          <div class="flex flex-col gap-1">
-            <label
-              for="investmentAmount"
-              class="text-xs font-medium text-gray-600"
-              >Investment Amount (€)</label
-            >
-            <input
-              id="investmentAmount"
-              type="number"
-              [value]="investmentAmount()"
-              (input)="onInvestmentAmountChange($event)"
-              step="100"
-              placeholder="0"
-              class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm font-mono focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
-            />
-          </div>
-
-          <div class="flex flex-col gap-1 mt-3">
-            <label
-              for="maxSecurities"
-              class="text-xs font-medium text-gray-600"
-              >Max Securities (optional)</label
-            >
-            <input
-              id="maxSecurities"
-              type="number"
-              [value]="maxSecurities() ?? ''"
-              (input)="onMaxSecuritiesChange($event)"
-              min="1"
-              placeholder="No limit"
-              class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm font-mono focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
-            />
-          </div>
-
-          <!-- Info Text -->
-          @if (investmentAmount() > 0) {
-            <p class="text-xs text-gray-500 mt-2">
-              Distribute {{ investmentAmount() | currency:'EUR':'symbol':'1.0-0' }} across 
-              @if (maxSecurities() && maxSecurities()! > 0) {
-                top {{ maxSecurities() }} underweight assets
-              } @else {
-                underweight assets
-              }
-            </p>
-          }
-
-          <!-- List Title -->
-          <h3 class="text-xs font-semibold text-gray-400 uppercase mt-4 mb-2">
-            Recommended Buys ({{ topRecommendations().length }})
-          </h3>
-        </div>
-
-        <!-- Scrollable List (Fills remaining space) -->
-        <div class="flex-1 overflow-y-auto min-h-0 pr-2">
-          @if (smartRecommendationsLoading()) {
-            <div class="flex items-center justify-center py-4">
-              <div class="text-xs text-gray-500">Calculating recommendations...</div>
-            </div>
-          } @else if (topRecommendations().length > 0) {
-          <div class="space-y-2">
-            @for (rec of topRecommendations(); track rec.ticker) {
-            <div
-              class="flex items-center justify-between p-2 border border-gray-200 rounded-md hover:bg-green-50 transition-colors bg-white"
-            >
-              <div class="flex-1 min-w-0">
-                <div class="text-sm font-bold text-gray-900 truncate">
-                  {{ rec.companyName }}
-                </div>
-                <div class="text-xs text-gray-500">{{ rec.ticker }}</div>
-              </div>
-              <div
-                class="text-sm font-mono font-bold text-green-700 ml-2 whitespace-nowrap"
-              >
-                +{{ rec.buyAmount | currency : "EUR" : "symbol" : "1.2-2" }}
-              </div>
-            </div>
-            }
-          </div>
-          } @else if (investmentAmount() > 0) {
-          <p class="text-xs text-gray-500">
-            No buy recommendations at this investment amount.
-          </p>
-          }
-        </div>
-      </div>
-    </div>
   </div>
 
   <!-- Smart Rebalancing Overlay (slides up from bottom to cover entire viewport when expanded) -->
@@ -420,18 +308,52 @@
                 />
               </div>
 
-              <div class="flex items-center gap-2">
-                <svg class="w-4 h-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z" />
-                </svg>
-                <span class="text-sm text-gray-700">Enter an amount to see how to allocate it to reach your targets.</span>
+              <div class="flex flex-col gap-1">
+                <label for="maxSecuritiesExpanded" class="text-sm font-medium text-gray-700">Max Securities (optional)</label>
+                <input
+                  id="maxSecuritiesExpanded"
+                  type="number"
+                  [value]="maxSecurities() ?? ''"
+                  (input)="onMaxSecuritiesChange($event)"
+                  min="1"
+                  placeholder="No limit"
+                  class="w-full px-4 py-3 border border-gray-300 rounded-md text-lg font-mono focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                />
               </div>
+
+              <!-- Info Text -->
+              @if (investmentAmount() > 0) {
+                <div class="flex items-center gap-2">
+                  <svg class="w-4 h-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z" />
+                  </svg>
+                  <span class="text-sm text-gray-700">
+                    Distribute {{ investmentAmount() | currency:'EUR':'symbol':'1.0-0' }} across 
+                    @if (maxSecurities() && maxSecurities()! > 0) {
+                      top {{ maxSecurities() }} underweight assets
+                    } @else {
+                      underweight assets
+                    }
+                  </span>
+                </div>
+              } @else {
+                <div class="flex items-center gap-2">
+                  <svg class="w-4 h-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z" />
+                  </svg>
+                  <span class="text-sm text-gray-700">Enter an amount to see how to allocate it to reach your targets.</span>
+                </div>
+              }
 
               <h3 class="text-sm font-semibold text-gray-900 mt-6 mb-3">
                 Recommended Buys ({{ topRecommendations().length }})
               </h3>
 
-              @if (topRecommendations().length > 0) {
+              @if (smartRecommendationsLoading()) {
+                <div class="flex items-center justify-center py-8">
+                  <div class="text-sm text-gray-500">Calculating recommendations...</div>
+                </div>
+              } @else if (topRecommendations().length > 0) {
                 <div class="space-y-2">
                   @for (rec of topRecommendations(); track rec.ticker) {
                     <div class="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-green-50 transition-colors bg-white">

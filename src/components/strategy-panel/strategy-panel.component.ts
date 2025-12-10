@@ -15,7 +15,6 @@ import { PortfolioService } from '../../services/portfolio.service';
 import { PortfolioAnalyticsService } from '../../services/portfolio-analytics.service';
 import { SecurityType } from '../../models/security.model';
 import { toast } from "ngx-sonner";
-import { SelectOnFocusDirective } from '../../directives/select-on-focus.directive';
 import { Router } from '@angular/router';
 import { PortfolioInsight } from '../../models/portfolio.model';
 import { ApiSmartRebalancingRecommendation } from '../../models/api-response.model';
@@ -60,7 +59,7 @@ interface ChartSegment {
 @Component({
   selector: "app-strategy-panel",
   templateUrl: "./strategy-panel.component.html",
-  imports: [CommonModule, CurrencyPipe, DecimalPipe, SelectOnFocusDirective],
+  imports: [CommonModule, CurrencyPipe, DecimalPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
     class: "block h-full overflow-hidden",
