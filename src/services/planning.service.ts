@@ -35,7 +35,7 @@ export class PlanningService {
           return of({ monthlyInvestmentAmount: 0 });
         })
       ),
-      strategy: this.http.get<any>(`${this.apiUrl}/portfolios/allocation?userId=${USER_ID}`).pipe(
+      strategy: this.http.get<any>(`${this.apiUrl}/portfolios/${USER_ID}/allocation`).pipe(
         catchError(err => {
           console.error('Error fetching strategy:', err);
           return of({ allocations: [] });
@@ -99,7 +99,7 @@ export class PlanningService {
       const allocation = allocations?.find(a => a.ticker === ticker);
       
       // Determine type: prefer position info, default to Stock
-      let type = SecurityType.Stock;
+      let type: SecurityType = "Stock";
       if (position && position.securityType !== undefined) {
         type = position.securityType;
       }
@@ -131,16 +131,7 @@ export class PlanningService {
       return 'Stocks';
     }
 
-    // Handle Enum values
-    switch (type) {
-      case SecurityType.Stock:
-        return 'Stocks';
-      case SecurityType.ETF:
-        return 'ETFs';
-      case SecurityType.Crypto:
-        return 'Crypto';
-      default:
-        return 'Stocks';
-    }
+    // Type is now always a string, so this should not be needed, but kept for safety
+    return 'Stocks';
   }
 }

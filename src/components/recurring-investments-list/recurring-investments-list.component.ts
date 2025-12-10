@@ -64,36 +64,38 @@ export class RecurringInvestmentsListComponent implements OnInit, AfterViewInit 
   // ============================================================================
 
   /**
-   * Maps security type strings (from API) to SecurityType enum values
+   * Maps security type strings (from API) to normalized SecurityType values
    */
   private static readonly SECURITY_TYPE_MAP: Record<string, SecurityType> = {
-    'Stock': SecurityType.Stock,
-    'ETF': SecurityType.ETF,
-    'MutualFund': SecurityType.MutualFund,
-    'Mutual Fund': SecurityType.MutualFund,
-    'Bond': SecurityType.Bond,
-    'Crypto': SecurityType.Crypto,
-    'REIT': SecurityType.REIT,
-    'Options': SecurityType.Options,
-    'Commodity': SecurityType.Commodity,
+    'Stock': 'Stock',
+    'ETF': 'ETF',
+    'MutualFund': 'MutualFund',
+    'Mutual Fund': 'MutualFund',
+    'Bond': 'Bond',
+    'Crypto': 'Crypto',
+    'REIT': 'REIT',
+    'Options': 'Options',
+    'Commodity': 'Commodity',
   };
 
   /**
-   * Maps SecurityType enum values to display names
+   * Maps SecurityType values to display names
    */
   private static readonly SECURITY_TYPE_NAMES: Record<SecurityType, string> = {
-    [SecurityType.Stock]: 'Stock',
-    [SecurityType.ETF]: 'ETF',
-    [SecurityType.MutualFund]: 'Mutual Fund',
-    [SecurityType.Bond]: 'Bond',
-    [SecurityType.Crypto]: 'Crypto',
-    [SecurityType.REIT]: 'REIT',
-    [SecurityType.Options]: 'Options',
-    [SecurityType.Commodity]: 'Commodity',
+    'Stock': 'Stock',
+    'ETF': 'ETF',
+    'MutualFund': 'Mutual Fund',
+    'Bond': 'Bond',
+    'Crypto': 'Crypto',
+    'REIT': 'REIT',
+    'Options': 'Options',
+    'Commodity': 'Commodity',
   };
 
-  private static readonly MIN_SECURITY_TYPE = 1;
-  private static readonly MAX_SECURITY_TYPE = 8;
+  // Valid SecurityType values for validation
+  private static readonly VALID_SECURITY_TYPES: SecurityType[] = [
+    'Stock', 'ETF', 'MutualFund', 'Bond', 'Crypto', 'REIT', 'Options', 'Commodity'
+  ];
 
   // ============================================================================
   // Computed Signals
@@ -112,25 +114,37 @@ export class RecurringInvestmentsListComponent implements OnInit, AfterViewInit 
   // ============================================================================
 
   /**
-   * Converts securityType (string or number) to SecurityType enum value.
-   * Handles both API string responses and numeric enum values.
+   * Converts securityType (string or number) to SecurityType value.
+   * Handles both API string responses and numeric enum values (for backward compatibility).
    */
   private convertSecurityTypeToEnum(type: string | number | SecurityType | undefined | null): SecurityType | undefined {
     if (type === undefined || type === null) {
       return undefined;
     }
     
-    // If it's already a number, validate and return
-    if (typeof type === 'number') {
-      return (type >= RecurringInvestmentsListComponent.MIN_SECURITY_TYPE && 
-              type <= RecurringInvestmentsListComponent.MAX_SECURITY_TYPE) 
-        ? type as SecurityType 
-        : undefined;
+    // If it's already a valid SecurityType string, return it
+    if (typeof type === 'string' && RecurringInvestmentsListComponent.VALID_SECURITY_TYPES.includes(type as SecurityType)) {
+      return type as SecurityType;
     }
     
-    // If it's a string, convert using the mapping
+    // If it's a string that needs mapping (e.g., "Mutual Fund"), convert using the mapping
     if (typeof type === 'string') {
       return RecurringInvestmentsListComponent.SECURITY_TYPE_MAP[type];
+    }
+    
+    // If it's a number (backward compatibility with old enum values), convert to string
+    if (typeof type === 'number') {
+      const numericToType: Record<number, SecurityType> = {
+        1: 'Stock',
+        2: 'ETF',
+        3: 'MutualFund',
+        4: 'Bond',
+        5: 'Crypto',
+        6: 'REIT',
+        7: 'Options',
+        8: 'Commodity',
+      };
+      return numericToType[type];
     }
     
     return undefined;
@@ -207,7 +221,7 @@ export class RecurringInvestmentsListComponent implements OnInit, AfterViewInit 
   // ============================================================================
 
   /**
-   * Gets the display name for a SecurityType enum value.
+   * Gets the display name for a SecurityType value.
    * Used in templates to display security type names.
    */
   getSecurityTypeName(type: SecurityType | undefined | null): string {
@@ -215,33 +229,49 @@ export class RecurringInvestmentsListComponent implements OnInit, AfterViewInit 
       return 'Stock';
     }
     
-    // Validate it's a valid SecurityType enum value
-    const typeValue = typeof type === 'number' ? type : Number(type);
-    if (isNaN(typeValue) || 
-        typeValue < RecurringInvestmentsListComponent.MIN_SECURITY_TYPE || 
-        typeValue > RecurringInvestmentsListComponent.MAX_SECURITY_TYPE) {
-      return 'Stock';
+    // If it's a string, use the mapping
+    if (typeof type === 'string') {
+      return RecurringInvestmentsListComponent.SECURITY_TYPE_NAMES[type] || 'Stock';
     }
     
-    return RecurringInvestmentsListComponent.SECURITY_TYPE_NAMES[typeValue as SecurityType] || 'Stock';
+    // If it's a number (backward compatibility), convert first
+    if (typeof type === 'number') {
+      const numericToType: Record<number, SecurityType> = {
+        1: 'Stock',
+        2: 'ETF',
+        3: 'MutualFund',
+        4: 'Bond',
+        5: 'Crypto',
+        6: 'REIT',
+        7: 'Options',
+        8: 'Commodity',
+      };
+      const stringType = numericToType[type];
+      return stringType ? RecurringInvestmentsListComponent.SECURITY_TYPE_NAMES[stringType] || 'Stock' : 'Stock';
+    }
+    
+    return 'Stock';
   }
 
   /**
-   * Converts SecurityType enum value to string for HTML select element.
+   * Converts SecurityType value to string for HTML select element.
    */
   securityTypeToString(type: SecurityType | null): string {
-    return type !== null ? String(type) : '';
+    return type !== null ? type : '';
   }
 
   /**
-   * Converts string value from HTML select to SecurityType enum value.
+   * Converts string value from HTML select to SecurityType value.
    */
   stringToSecurityType(value: string): SecurityType | null {
     if (!value || value === '') {
       return null;
     }
-    const num = Number(value);
-    return isNaN(num) ? null : num as SecurityType;
+    // Validate it's a valid SecurityType
+    if (RecurringInvestmentsListComponent.VALID_SECURITY_TYPES.includes(value as SecurityType)) {
+      return value as SecurityType;
+    }
+    return null;
   }
 
   /**
@@ -262,7 +292,7 @@ export class RecurringInvestmentsListComponent implements OnInit, AfterViewInit 
       }
     });
     
-    return Array.from(typeSet).sort((a, b) => a - b);
+    return Array.from(typeSet).sort((a, b) => a.localeCompare(b));
   });
 
   /**

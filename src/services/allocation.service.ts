@@ -41,7 +41,7 @@ export class AllocationService {
       this._loading.set(true);
       this._error.set(null);
 
-      const response = await fetch(`${environment.apiUrl}/api/v1/portfolios/allocation?userId=${userId}`, {
+      const response = await fetch(`${environment.apiUrl}/api/v1/portfolios/${userId}/allocation`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -131,7 +131,7 @@ export class AllocationService {
         allocations: updatedAllocations,
       };
 
-      const response = await fetch(`${environment.apiUrl}/api/v1/portfolios/allocation?userId=${userId}`, {
+      const response = await fetch(`${environment.apiUrl}/api/v1/portfolios/${userId}/allocation`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -183,7 +183,7 @@ export class AllocationService {
         allocations: allocations,
       };
 
-      const response = await fetch(`${environment.apiUrl}/api/v1/portfolios/allocation?userId=${userId}`, {
+      const response = await fetch(`${environment.apiUrl}/api/v1/portfolios/${userId}/allocation`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

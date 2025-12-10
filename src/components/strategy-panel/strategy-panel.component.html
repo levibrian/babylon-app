@@ -126,6 +126,41 @@
             </div>
           </div>
 
+          <!-- Delta Allocation Bar -->
+          <div class="flex flex-col gap-1">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-medium text-gray-600">Delta</span>
+              <span class="text-xs font-mono text-gray-500">
+                {{ deltaChartSegments().reduce((sum, s) => sum + Math.abs(s.delta), 0) | number : "1.1-1" }}%
+              </span>
+            </div>
+            <div class="w-full h-6 bg-gray-100 rounded-md overflow-hidden flex relative">
+              @for (seg of getDeltaBarSegments(); track $index) {
+              <div
+                class="h-full transition-all duration-300 cursor-pointer hover:opacity-90 relative"
+                [style.background-color]="seg.color"
+                [style.width.%]="seg.width"
+                (mousemove)="
+                  showTooltip(
+                    $event,
+                    seg.delta > 0 
+                      ? seg.ticker + ': +' + seg.deltaPercentage.toFixed(2) + '% (Overweight)'
+                      : seg.ticker + ': -' + seg.deltaPercentage.toFixed(2) + '% (Underweight)',
+                    seg.color
+                  )
+                "
+                (mouseleave)="hideTooltip()"
+              >
+                @if (seg.width >= 8) {
+                  <span class="absolute inset-0 flex items-center justify-center text-[10px] font-mono font-medium text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.5)] pointer-events-none">
+                    {{ seg.delta > 0 ? '+' : '' }}{{ seg.deltaPercentage | number : "1.1-1" }}%
+                  </span>
+                }
+              </div>
+              }
+            </div>
+          </div>
+
           <!-- Legend (if segments exist) -->
           @if (chartSegments().length > 0) {
           <div class="mt-2 pt-2 border-t border-gray-200">
@@ -149,48 +184,82 @@
           }
         </div>
 
-        <!-- Health Checklist Section -->
-        @if (isDiversified() || isSafeConcentration() || isMultiAsset()) {
-          <div class="mt-4 pt-4 border-t border-gray-200 flex-shrink-0">
+        <!-- Metric Cards Section -->
+        <div class="mt-4 pt-4 border-t border-gray-200 flex-shrink-0 space-y-3">
+          <!-- Diversification Card -->
+          @if (diversificationCard(); as divCard) {
             <div class="bg-white border border-gray-100 rounded-lg p-3 shadow-sm">
-              <div class="flex items-center gap-2 mb-2">
-                <svg class="w-4 h-4 text-emerald-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <h3 class="text-xs font-bold text-emerald-600 uppercase tracking-widest">System Status: Optimal</h3>
+              <div class="flex items-center justify-between mb-2">
+                <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest">Diversification</h3>
+                <div class="text-lg font-bold" [class]="divCard.score >= 80 ? 'text-emerald-600' : divCard.score >= 60 ? 'text-amber-600' : 'text-red-600'">
+                  {{ divCard.score | number:'1.0-0' }}
+                </div>
               </div>
-              
-              <div class="space-y-1.5">
-                @if (isDiversified()) {
-                  <div class="flex items-center gap-2">
-                    <svg class="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <span class="text-xs text-gray-700">Diversified Portfolio (>5 Assets)</span>
-                  </div>
-                }
-                
-                @if (isSafeConcentration()) {
-                  <div class="flex items-center gap-2">
-                    <svg class="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <span class="text-xs text-gray-700">Concentration Risk: Low (&lt;25%)</span>
-                  </div>
-                }
-                
-                @if (isMultiAsset()) {
-                  <div class="flex items-center gap-2">
-                    <svg class="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <span class="text-xs text-gray-700">Asset Class Exposure: {{ assetClassCount() }} Types</span>
+              <div class="space-y-1 text-xs text-gray-600">
+                <div class="flex justify-between">
+                  <span>HHI:</span>
+                  <span class="font-mono">{{ divCard.hhi | number:'1.4-4' }}</span>
+                </div>
+                <div class="flex justify-between">
+                  <span>Top 5 Concentration:</span>
+                  <span class="font-mono">{{ divCard.top5Concentration | number:'1.1-1' }}%</span>
+                </div>
+                <div class="flex justify-between">
+                  <span>Total Assets:</span>
+                  <span class="font-mono">{{ divCard.totalAssets }}</span>
+                </div>
+              </div>
+            </div>
+          }
+
+          <!-- Risk Profile Card -->
+          @if (riskCard(); as risk) {
+            <div class="bg-white border border-gray-100 rounded-lg p-3 shadow-sm">
+              <div class="flex items-center justify-between mb-2">
+                <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest">Risk Profile</h3>
+                <span class="px-2 py-1 rounded text-xs font-semibold"
+                  [class]="risk.riskLevel === 'Conservative' ? 'bg-blue-100 text-blue-800' : risk.riskLevel === 'Aggressive' ? 'bg-red-100 text-red-800' : 'bg-amber-100 text-amber-800'">
+                  {{ risk.riskLevel }}
+                </span>
+              </div>
+              <div class="space-y-1 text-xs text-gray-600">
+                <div class="flex justify-between">
+                  <span>Beta:</span>
+                  <span class="font-mono">{{ risk.beta | number:'1.2-2' }}</span>
+                </div>
+                <div class="flex justify-between">
+                  <span>Volatility:</span>
+                  <span class="font-mono">{{ (risk.volatility * 100) | number:'1.1-1' }}%</span>
+                </div>
+                <div class="flex justify-between">
+                  <span>Sharpe Ratio:</span>
+                  <span class="font-mono">{{ risk.sharpeRatio | number:'1.2-2' }}</span>
+                </div>
+              </div>
+            </div>
+          }
+
+          <!-- Rebalancing Actions Card -->
+          @if (rebalancingActionsCard(); as actions) {
+            <div class="bg-white border border-gray-100 rounded-lg p-3 shadow-sm">
+              <div class="flex items-center justify-between mb-2">
+                <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest">Rebalancing Actions</h3>
+                <span class="text-xs text-gray-500">{{ actions.topActions.length }} actions</span>
+              </div>
+              <div class="space-y-1.5 max-h-32 overflow-y-auto">
+                @for (action of actions.topActions; track action.ticker) {
+                  <div class="flex items-center justify-between text-xs">
+                    <span class="font-medium text-gray-900 truncate flex-1">{{ action.ticker }}</span>
+                    <span class="ml-2 font-mono whitespace-nowrap"
+                      [class]="action.actionType === 'Buy' ? 'text-green-700' : 'text-red-700'">
+                      {{ action.actionType === 'Buy' ? '+' : '-' }}{{ Math.abs(action.differenceValue) | currency:'EUR':'symbol':'1.0-0' }}
+                    </span>
                   </div>
                 }
               </div>
             </div>
-          </div>
-        }
+          }
+        </div>
       </div>
 
       <!-- Right Column: Smart Rebalancing -->
@@ -232,6 +301,35 @@
             />
           </div>
 
+          <div class="flex flex-col gap-1 mt-3">
+            <label
+              for="maxSecurities"
+              class="text-xs font-medium text-gray-600"
+              >Max Securities (optional)</label
+            >
+            <input
+              id="maxSecurities"
+              type="number"
+              [value]="maxSecurities() ?? ''"
+              (input)="onMaxSecuritiesChange($event)"
+              min="1"
+              placeholder="No limit"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm font-mono focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+            />
+          </div>
+
+          <!-- Info Text -->
+          @if (investmentAmount() > 0) {
+            <p class="text-xs text-gray-500 mt-2">
+              Distribute {{ investmentAmount() | currency:'EUR':'symbol':'1.0-0' }} across 
+              @if (maxSecurities() && maxSecurities()! > 0) {
+                top {{ maxSecurities() }} underweight assets
+              } @else {
+                underweight assets
+              }
+            </p>
+          }
+
           <!-- List Title -->
           <h3 class="text-xs font-semibold text-gray-400 uppercase mt-4 mb-2">
             Recommended Buys ({{ topRecommendations().length }})
@@ -240,7 +338,11 @@
 
         <!-- Scrollable List (Fills remaining space) -->
         <div class="flex-1 overflow-y-auto min-h-0 pr-2">
-          @if (topRecommendations().length > 0) {
+          @if (smartRecommendationsLoading()) {
+            <div class="flex items-center justify-center py-4">
+              <div class="text-xs text-gray-500">Calculating recommendations...</div>
+            </div>
+          } @else if (topRecommendations().length > 0) {
           <div class="space-y-2">
             @for (rec of topRecommendations(); track rec.ticker) {
             <div

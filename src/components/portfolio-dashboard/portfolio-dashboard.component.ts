@@ -153,38 +153,43 @@ export class PortfolioDashboardComponent {
    * Navigates to transactions page with pre-filled form data based on insight type.
    */
   handleInsightAction(insight: PortfolioInsight): void {
-    if (!insight.ticker || !insight.amount) {
+    if (!insight.relatedTicker) {
       console.warn('Insight missing required data for action:', insight);
       return;
     }
 
-    const portfolioItem = this.portfolio().find(p => p.ticker === insight.ticker);
+    const portfolioItem = this.portfolio().find(p => p.ticker === insight.relatedTicker);
     if (!portfolioItem) {
-      console.warn('Portfolio item not found for ticker:', insight.ticker);
+      console.warn('Portfolio item not found for ticker:', insight.relatedTicker);
       return;
     }
 
-    if (insight.type === 'Rebalancing') {
-      // Determine if it's a buy or sell based on amount sign or rebalancing status
-      const isSell = portfolioItem.rebalancingStatus === 'Overweight' || (insight.amount && insight.amount > 0);
+    // Extract amount from metadata or actionPayload if available
+    const amount = insight.metadata?.amount || insight.actionPayload?.amount || 
+                   (insight.visualContext?.currentValue && insight.visualContext.format === 'Currency' 
+                     ? insight.visualContext.currentValue : null);
+
+    if (insight.category === 'Efficiency') {
+      // Rebalancing insights - determine if it's a buy or sell based on rebalancing status
+      const isSell = portfolioItem.rebalancingStatus === 'Overweight';
       const transactionType = isSell ? 'sell' : 'buy';
       
       // Navigate to transactions page with query params for pre-filling
       this.router.navigate(['/transactions'], {
         queryParams: {
           add: 'true',
-          ticker: insight.ticker,
+          ticker: insight.relatedTicker,
           type: transactionType,
-          amount: Math.abs(insight.amount),
-          shares: portfolioItem.totalShares > 0 ? Math.abs(insight.amount) / portfolioItem.averageSharePrice : undefined
+          amount: amount ? Math.abs(amount) : undefined,
+          shares: portfolioItem.totalShares > 0 && amount ? Math.abs(amount) / portfolioItem.averageSharePrice : undefined
         }
       });
-    } else if (insight.type === 'PerformanceMilestone' && insight.actionLabel?.toLowerCase().includes('dividend')) {
+    } else if (insight.category === 'Income' && insight.actionLabel?.toLowerCase().includes('dividend')) {
       // For dividend insights
       this.router.navigate(['/transactions'], {
         queryParams: {
           add: 'true',
-          ticker: insight.ticker,
+          ticker: insight.relatedTicker,
           type: 'dividend',
           shares: portfolioItem.totalShares
         }
@@ -194,7 +199,7 @@ export class PortfolioDashboardComponent {
       this.router.navigate(['/transactions'], {
         queryParams: {
           add: 'true',
-          ticker: insight.ticker
+          ticker: insight.relatedTicker
         }
       });
     }
@@ -202,25 +207,29 @@ export class PortfolioDashboardComponent {
 
 
 
-  // Helper function to get enum name from numeric value or string name
+  // Helper function to get security type name from string or numeric value
   private getSecurityTypeName(typeValue: SecurityType | string | undefined): string {
-    // If it's already a string (enum name), return it directly
+    // If it's already a string, validate and return it
     if (typeof typeValue === 'string') {
-      // Validate it's a valid SecurityType name
-      const validNames = Object.keys(SecurityType).filter(key => isNaN(Number(key)));
-      if (validNames.includes(typeValue)) {
-        return typeValue;
+      const validTypes: SecurityType[] = ["Stock", "ETF", "MutualFund", "Bond", "Crypto", "REIT", "Options", "Commodity"];
+      if (validTypes.includes(typeValue as SecurityType)) {
+        return typeValue === "MutualFund" ? "Mutual Fund" : typeValue;
       }
     }
     
-    // If it's a number (enum value), look it up
+    // If it's a number (backward compatibility with old enum values), look it up
     if (typeof typeValue === 'number') {
-      const enumKeys = Object.keys(SecurityType).filter(key => isNaN(Number(key)));
-      for (const key of enumKeys) {
-        if (SecurityType[key as keyof typeof SecurityType] === typeValue) {
-          return key;
-        }
-      }
+      const typeNames: Record<number, string> = {
+        1: "Stock",
+        2: "ETF",
+        3: "Mutual Fund",
+        4: "Bond",
+        5: "Crypto",
+        6: "REIT",
+        7: "Options",
+        8: "Commodity",
+      };
+      return typeNames[typeValue] || 'Stock';
     }
     
     return 'Stock'; // Default fallback
@@ -284,7 +293,7 @@ export class PortfolioDashboardComponent {
       if (item.securityType !== undefined) {
         uniqueTypes.add(item.securityType);
       } else {
-        uniqueTypes.add(SecurityType.Stock); // Default to Stock if undefined
+        uniqueTypes.add("Stock"); // Default to Stock if undefined
       }
     });
 

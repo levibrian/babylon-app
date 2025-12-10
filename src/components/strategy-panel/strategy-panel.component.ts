@@ -12,11 +12,13 @@ import { CommonModule, CurrencyPipe, DecimalPipe } from '@angular/common';
 import { PortfolioItem } from '../../models/portfolio.model';
 import { AllocationService } from '../../services/allocation.service';
 import { PortfolioService } from '../../services/portfolio.service';
+import { PortfolioAnalyticsService } from '../../services/portfolio-analytics.service';
 import { SecurityType } from '../../models/security.model';
 import { toast } from "ngx-sonner";
 import { SelectOnFocusDirective } from '../../directives/select-on-focus.directive';
 import { Router } from '@angular/router';
 import { PortfolioInsight } from '../../models/portfolio.model';
+import { ApiSmartRebalancingRecommendation } from '../../models/api-response.model';
 
 interface StrategyItem {
   ticker: string;
@@ -31,6 +33,20 @@ interface Recommendation {
   companyName: string;
   buyAmount: number;
   delta: number;
+}
+
+interface SectorAggregation {
+  sector: string;
+  currentPercentage: number;
+  targetPercentage: number;
+  currentValue: number;
+}
+
+interface GeographyAggregation {
+  geography: string;
+  currentPercentage: number;
+  targetPercentage: number;
+  currentValue: number;
 }
 
 interface ChartSegment {
@@ -55,6 +71,7 @@ export class StrategyPanelComponent implements OnInit {
 
   allocationService = inject(AllocationService);
   portfolioService = inject(PortfolioService);
+  analyticsService = inject(PortfolioAnalyticsService);
   private router = inject(Router);
 
   // Portfolio Insights from backend API
@@ -74,38 +91,43 @@ export class StrategyPanelComponent implements OnInit {
    * Navigates to transactions page with pre-filled form data based on insight type.
    */
   handleInsightAction(insight: PortfolioInsight): void {
-    if (!insight.ticker || !insight.amount) {
+    if (!insight.relatedTicker) {
       console.warn('Insight missing required data for action:', insight);
       return;
     }
 
-    const portfolioItem = this.portfolio().find(p => p.ticker === insight.ticker);
+    const portfolioItem = this.portfolio().find(p => p.ticker === insight.relatedTicker);
     if (!portfolioItem) {
-      console.warn('Portfolio item not found for ticker:', insight.ticker);
+      console.warn('Portfolio item not found for ticker:', insight.relatedTicker);
       return;
     }
 
-    if (insight.type === 'Rebalancing') {
-      // Determine if it's a buy or sell based on amount sign or rebalancing status
-      const isSell = portfolioItem.rebalancingStatus === 'Overweight' || (insight.amount && insight.amount > 0);
+    // Extract amount from metadata or actionPayload if available
+    const amount = insight.metadata?.amount || insight.actionPayload?.amount || 
+                   (insight.visualContext?.currentValue && insight.visualContext.format === 'Currency' 
+                     ? insight.visualContext.currentValue : null);
+
+    if (insight.category === 'Efficiency') {
+      // Rebalancing insights - determine if it's a buy or sell based on rebalancing status
+      const isSell = portfolioItem.rebalancingStatus === 'Overweight';
       const transactionType = isSell ? 'sell' : 'buy';
       
       // Navigate to transactions page with query params for pre-filling
       this.router.navigate(['/transactions'], {
         queryParams: {
           add: 'true',
-          ticker: insight.ticker,
+          ticker: insight.relatedTicker,
           type: transactionType,
-          amount: Math.abs(insight.amount),
-          shares: portfolioItem.totalShares > 0 ? Math.abs(insight.amount) / portfolioItem.averageSharePrice : undefined
+          amount: amount ? Math.abs(amount) : undefined,
+          shares: portfolioItem.totalShares > 0 && amount ? Math.abs(amount) / portfolioItem.averageSharePrice : undefined
         }
       });
-    } else if (insight.type === 'PerformanceMilestone' && insight.actionLabel?.toLowerCase().includes('dividend')) {
+    } else if (insight.category === 'Income' && insight.actionLabel?.toLowerCase().includes('dividend')) {
       // For dividend insights
       this.router.navigate(['/transactions'], {
         queryParams: {
           add: 'true',
-          ticker: insight.ticker,
+          ticker: insight.relatedTicker,
           type: 'dividend',
           shares: portfolioItem.totalShares
         }
@@ -115,7 +137,7 @@ export class StrategyPanelComponent implements OnInit {
       this.router.navigate(['/transactions'], {
         queryParams: {
           add: 'true',
-          ticker: insight.ticker
+          ticker: insight.relatedTicker
         }
       });
     }
@@ -129,6 +151,11 @@ export class StrategyPanelComponent implements OnInit {
 
   // Investment simulator
   investmentAmount = signal<number>(0);
+  maxSecurities = signal<number | null>(null);
+  
+  // Smart rebalancing recommendations from API
+  smartRecommendations = signal<ApiSmartRebalancingRecommendation[]>([]);
+  smartRecommendationsLoading = signal<boolean>(false);
 
   // Target editor - local state for inputs (to allow editing before saving)
   private targetInputs = signal<Map<string, number>>(new Map());
@@ -191,27 +218,25 @@ export class StrategyPanelComponent implements OnInit {
 
     // Handle string values (e.g., "ETF", "Stock")
     if (typeof type === "string") {
-      const validNames = Object.keys(SecurityType).filter((key) =>
-        isNaN(Number(key))
-      );
-      if (validNames.includes(type)) {
+      const validTypes: SecurityType[] = ["Stock", "ETF", "MutualFund", "Bond", "Crypto", "REIT", "Options", "Commodity"];
+      if (validTypes.includes(type as SecurityType)) {
         return type === "MutualFund" ? "Mutual Fund" : type;
       }
     }
 
-    // Handle numeric enum values
+    // Handle numeric enum values (backward compatibility)
     if (typeof type === "number") {
-      const typeNames: Record<SecurityType, string> = {
-        [SecurityType.Stock]: "Stock",
-        [SecurityType.ETF]: "ETF",
-        [SecurityType.MutualFund]: "Mutual Fund",
-        [SecurityType.Bond]: "Bond",
-        [SecurityType.Crypto]: "Crypto",
-        [SecurityType.REIT]: "REIT",
-        [SecurityType.Options]: "Options",
-        [SecurityType.Commodity]: "Commodity",
+      const typeNames: Record<number, string> = {
+        1: "Stock",
+        2: "ETF",
+        3: "Mutual Fund",
+        4: "Bond",
+        5: "Crypto",
+        6: "REIT",
+        7: "Options",
+        8: "Commodity",
       };
-      return typeNames[type as SecurityType] || "Stock";
+      return typeNames[type] || "Stock";
     }
 
     return "Stock";
@@ -447,7 +472,7 @@ export class StrategyPanelComponent implements OnInit {
       if (item.securityType !== undefined) {
         uniqueTypes.add(item.securityType);
       } else {
-        uniqueTypes.add(SecurityType.Stock);
+        uniqueTypes.add("Stock");
       }
     });
     return uniqueTypes.size > 1;
@@ -460,7 +485,7 @@ export class StrategyPanelComponent implements OnInit {
       if (item.securityType !== undefined) {
         uniqueTypes.add(item.securityType);
       } else {
-        uniqueTypes.add(SecurityType.Stock);
+        uniqueTypes.add("Stock");
       }
     });
     return uniqueTypes.size;
@@ -481,8 +506,21 @@ export class StrategyPanelComponent implements OnInit {
     );
   });
 
-  // Computed: Top buy recommendations with proportional distribution
+  // Computed: Top buy recommendations - use API recommendations if available, otherwise fallback to client-side calculation
   topRecommendations = computed(() => {
+    const apiRecommendations = this.smartRecommendations();
+    
+    // If we have API recommendations, use them
+    if (apiRecommendations.length > 0) {
+      return apiRecommendations.map((rec) => ({
+        ticker: rec.ticker,
+        companyName: rec.securityName,
+        buyAmount: rec.recommendedBuyAmount,
+        delta: rec.gapScore,
+      }));
+    }
+
+    // Fallback to client-side calculation if no API recommendations
     const items = this.strategyItems();
     const investment = this.investmentAmount();
     const currentTotalValue = items.reduce(
@@ -539,6 +577,56 @@ export class StrategyPanelComponent implements OnInit {
     return recommendations;
   });
 
+  // Computed: Diversification metrics for card display
+  diversificationCard = computed(() => {
+    const metrics = this.analyticsService.diversificationMetrics();
+    if (!metrics) return null;
+
+    return {
+      score: metrics.diversificationScore,
+      hhi: metrics.hhi,
+      top5Concentration: metrics.top5Concentration,
+      totalAssets: metrics.totalAssets,
+      effectiveN: metrics.effectiveN,
+    };
+  });
+
+  // Computed: Risk metrics for card display
+  riskCard = computed(() => {
+    const metrics = this.analyticsService.riskMetrics();
+    if (!metrics) return null;
+
+    // Determine risk level
+    let riskLevel: 'Conservative' | 'Moderate' | 'Aggressive' = 'Moderate';
+    if (metrics.beta < 0.8) {
+      riskLevel = 'Conservative';
+    } else if (metrics.beta > 1.2) {
+      riskLevel = 'Aggressive';
+    }
+
+    return {
+      riskLevel,
+      beta: metrics.beta,
+      volatility: metrics.annualizedVolatility,
+      sharpeRatio: metrics.sharpeRatio,
+      annualizedReturn: metrics.annualizedReturn,
+      period: metrics.period,
+    };
+  });
+
+  // Computed: Top 5 rebalancing actions for card display
+  rebalancingActionsCard = computed(() => {
+    const actions = this.analyticsService.rebalancingActions();
+    if (!actions || !actions.actions) return null;
+
+    return {
+      topActions: actions.actions.slice(0, 5),
+      totalBuyAmount: actions.totalBuyAmount,
+      totalSellAmount: actions.totalSellAmount,
+      netCashFlow: actions.netCashFlow,
+    };
+  });
+
   constructor() {
     // Sync local inputs with service targetMap when it changes
     effect(() => {
@@ -555,13 +643,171 @@ export class StrategyPanelComponent implements OnInit {
 
   ngOnInit(): void {
     this.allocationService.loadStrategy();
+    // Load analytics data
+    this.analyticsService.loadAllAnalytics();
+  }
+
+  // Aggregation helpers
+  aggregateBySector(): SectorAggregation[] {
+    const items = this.strategyItems();
+    const sectorMap = new Map<string, SectorAggregation>();
+
+    items.forEach((item) => {
+      const portfolioItem = this.portfolio().find(
+        (p) => p.ticker.toUpperCase() === item.ticker.toUpperCase()
+      );
+      const sector = portfolioItem?.sector || 'Unknown';
+
+      if (!sectorMap.has(sector)) {
+        sectorMap.set(sector, {
+          sector,
+          currentPercentage: 0,
+          targetPercentage: 0,
+          currentValue: 0,
+        });
+      }
+
+      const sectorData = sectorMap.get(sector)!;
+      sectorData.currentPercentage += item.currentPercentage;
+      sectorData.targetPercentage += item.targetPercentage;
+      sectorData.currentValue += item.currentValue;
+    });
+
+    return Array.from(sectorMap.values()).sort(
+      (a, b) => b.currentPercentage - a.currentPercentage
+    );
+  }
+
+  aggregateByGeography(): GeographyAggregation[] {
+    const items = this.strategyItems();
+    const geographyMap = new Map<string, GeographyAggregation>();
+
+    items.forEach((item) => {
+      const portfolioItem = this.portfolio().find(
+        (p) => p.ticker.toUpperCase() === item.ticker.toUpperCase()
+      );
+      const geography = portfolioItem?.geography || 'Unknown';
+
+      if (!geographyMap.has(geography)) {
+        geographyMap.set(geography, {
+          geography,
+          currentPercentage: 0,
+          targetPercentage: 0,
+          currentValue: 0,
+        });
+      }
+
+      const geographyData = geographyMap.get(geography)!;
+      geographyData.currentPercentage += item.currentPercentage;
+      geographyData.targetPercentage += item.targetPercentage;
+      geographyData.currentValue += item.currentValue;
+    });
+
+    return Array.from(geographyMap.values()).sort(
+      (a, b) => b.currentPercentage - a.currentPercentage
+    );
+  }
+
+  // Computed: Delta segments (difference between current and target)
+  deltaChartSegments = computed(() => {
+    const items = this.strategyItems();
+    const mode = this.viewMode();
+    const segments = this.createChartSegments(items, mode);
+
+    return segments
+      .map((seg) => {
+        const delta = seg.currentPercentage - seg.targetPercentage;
+        return {
+          ...seg,
+          delta,
+          deltaPercentage: Math.abs(delta),
+        };
+      })
+      .filter((seg) => Math.abs(seg.delta) > 0.1) // Only show significant differences
+      .sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta));
+  });
+
+  // Helper to get delta bar segments
+  getDeltaBarSegments(): Array<{
+    color: string;
+    width: number;
+    ticker: string;
+    delta: number;
+    deltaPercentage: number;
+  }> {
+    const segments = this.deltaChartSegments();
+    const totalDelta = segments.reduce(
+      (sum, s) => sum + Math.abs(s.delta),
+      0
+    );
+    if (totalDelta === 0) return [];
+
+    return segments.map((s) => {
+      // Color: red for overweight (positive delta), green for underweight (negative delta), gray for balanced
+      let color = '#9CA3AF'; // Gray for balanced
+      if (s.delta > 0.1) {
+        color = '#EF4444'; // Red for overweight
+      } else if (s.delta < -0.1) {
+        color = '#10B981'; // Green for underweight
+      }
+
+      return {
+        color,
+        width: (Math.abs(s.delta) / totalDelta) * 100,
+        ticker: s.ticker,
+        delta: s.delta,
+        deltaPercentage: Math.abs(s.delta),
+      };
+    });
+  }
+
+  // Update smart recommendations when investment amount or max securities changes
+  async updateSmartRecommendations(): Promise<void> {
+    const amount = this.investmentAmount();
+    const maxSec = this.maxSecurities();
+
+    if (amount <= 0) {
+      this.smartRecommendations.set([]);
+      return;
+    }
+
+    this.smartRecommendationsLoading.set(true);
+    try {
+      const response = await this.analyticsService.getSmartRecommendations({
+        investmentAmount: amount,
+        maxSecurities: maxSec || null,
+        onlyBuyUnderweight: true,
+      });
+
+      if (response) {
+        this.smartRecommendations.set(response.recommendations);
+      } else {
+        this.smartRecommendations.set([]);
+      }
+    } catch (err) {
+      console.error('Error fetching smart recommendations:', err);
+      this.smartRecommendations.set([]);
+    } finally {
+      this.smartRecommendationsLoading.set(false);
+    }
   }
 
   onInvestmentAmountChange(event: Event): void {
     const value = (event.target as HTMLInputElement).value;
     const numValue = parseFloat(value) || 0;
     this.investmentAmount.set(numValue);
+    // Debounce API call
+    setTimeout(() => this.updateSmartRecommendations(), 500);
   }
+
+  onMaxSecuritiesChange(event: Event): void {
+    const value = (event.target as HTMLInputElement).value;
+    const numValue = value ? parseInt(value, 10) : null;
+    this.maxSecurities.set(numValue && numValue > 0 ? numValue : null);
+    // Debounce API call
+    setTimeout(() => this.updateSmartRecommendations(), 500);
+  }
+
 
   onTargetInputChange(ticker: string, event: Event): void {
     const inputElement = event.target as HTMLInputElement;
@@ -830,6 +1076,9 @@ export class StrategyPanelComponent implements OnInit {
         };
       });
   }
+
+  // Helper method for template
+  Math = Math;
 
   // Helper to get segments for target bar
   getTargetBarSegments(): Array<{

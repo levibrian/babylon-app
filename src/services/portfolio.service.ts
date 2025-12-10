@@ -50,7 +50,7 @@ export class PortfolioService {
             'Content-Type': 'application/json',
           },
         }),
-        fetch(`${environment.apiUrl}/api/v1/portfolios/insights?userId=${USER_ID}&limit=5`, {
+        fetch(`${environment.apiUrl}/api/v1/portfolios/${USER_ID}/insights?limit=5`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
@@ -123,7 +123,7 @@ export class PortfolioService {
             targetAllocationPercentage: 0, // Default target
             currentAllocationPercentage: 0,
             allocationDifference: 0,
-            rebalanceAmount: 0,
+            rebalanceAmount: null,
             rebalancingStatus: 'Balanced',
             transactions: [newTransaction],
         };
@@ -305,6 +305,12 @@ export class PortfolioService {
       totalShares: position.totalShares,
       averageSharePrice: position.averageSharePrice,
       securityType: position.securityType,
+      // Security metadata (NEW)
+      sector: position.sector,
+      industry: position.industry,
+      geography: position.geography,
+      marketCap: position.marketCap,
+      // Allocation properties
       targetAllocationPercentage: position.targetAllocationPercentage, // Already a percentage
       // Use backend's allocation calculations
       currentAllocationPercentage: position.currentAllocationPercentage ?? 0,
@@ -321,16 +327,19 @@ export class PortfolioService {
   private mapApiInsightsToPortfolioInsights(insights: ApiPortfolioInsight[] | undefined): PortfolioInsight[] {
     if (!insights || !Array.isArray(insights)) return [];
     return insights.map(i => ({
+      category: i.category,
+      title: i.title,
       message: i.message,
+      relatedTicker: i.relatedTicker,
+      metadata: i.metadata,
       severity: i.severity, // 'Info' | 'Warning' | 'Critical'
-      type: i.type,
-      ticker: i.ticker,
-      amount: i.amount,
       actionLabel: i.actionLabel,
+      actionPayload: i.actionPayload,
       visualContext: i.visualContext ? {
-        now: i.visualContext.now,
-        target: i.visualContext.target,
-        after: i.visualContext.after
+        currentValue: i.visualContext.currentValue,
+        targetValue: i.visualContext.targetValue,
+        projectedValue: i.visualContext.projectedValue,
+        format: i.visualContext.format
       } : null
     }));
   }

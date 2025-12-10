@@ -1,16 +1,15 @@
 /**
- * Security type enum matching backend SecurityType
+ * Security type matching backend SecurityType
  */
-export enum SecurityType {
-  Stock = 1,
-  ETF = 2,
-  MutualFund = 3,
-  Bond = 4,
-  Crypto = 5,
-  REIT = 6,
-  Options = 7,
-  Commodity = 8
-}
+export type SecurityType = 
+  | "Stock" 
+  | "ETF" 
+  | "MutualFund" 
+  | "Bond" 
+  | "Crypto" 
+  | "REIT" 
+  | "Options" 
+  | "Commodity";
 
 /**
  * Security model representing a tradeable asset

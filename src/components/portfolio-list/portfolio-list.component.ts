@@ -92,13 +92,13 @@ export class PortfolioListComponent {
 
   getRebalancingMessage(item: PortfolioItem): string {
     const absDeviation = Math.abs(item.allocationDifference);
-    const absAmount = Math.abs(item.rebalanceAmount);
+    const absAmount = item.rebalanceAmount !== null ? Math.abs(item.rebalanceAmount) : 0;
     
     switch (item.rebalancingStatus) {
       case 'Overweight':
-        return `${absDeviation.toFixed(1)}% Sell ~€${absAmount.toFixed(0)}`;
+        return absAmount > 0 ? `${absDeviation.toFixed(1)}% Sell ~€${absAmount.toFixed(0)}` : `${absDeviation.toFixed(1)}% Overweight`;
       case 'Underweight':
-        return `${absDeviation.toFixed(1)}% Buy ~€${absAmount.toFixed(0)}`;
+        return absAmount > 0 ? `${absDeviation.toFixed(1)}% Buy ~€${absAmount.toFixed(0)}` : `${absDeviation.toFixed(1)}% Underweight`;
       case 'Balanced':
       default:
         return 'Balanced';
@@ -134,6 +134,9 @@ export class PortfolioListComponent {
   }
 
   getRebalanceActionText(item: PortfolioItem): string {
+    if (item.rebalanceAmount === null) {
+      return '';
+    }
     const absAmount = Math.abs(item.rebalanceAmount);
     switch (item.rebalancingStatus) {
       case 'Overweight':
