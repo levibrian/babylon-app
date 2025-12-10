@@ -101,12 +101,12 @@
     } @else {
       <!-- Grid Header -->
       <div class="hidden lg:flex items-center gap-2 pb-2 border-b border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-widest w-full">
-        <div class="w-60 shrink-0 truncate">Asset</div>
-        <div class="w-32 shrink-0">Date</div>
-        <div class="w-24 shrink-0 text-right">Shares</div>
-        <div class="w-28 shrink-0 text-right">Price</div>
-        <div class="w-20 shrink-0 text-right">Fees</div>
-        <div class="w-24 shrink-0 text-right">Total</div>
+        <div class="w-44 shrink-0 truncate">Asset</div>
+        <div class="w-24 shrink-0">Date</div>
+        <div class="w-20 shrink-0 text-right">Shares</div>
+        <div class="w-24 shrink-0 text-right">Price</div>
+        <div class="w-16 shrink-0 text-right">Fees</div>
+        <div class="w-20 shrink-0 text-right">Total</div>
       </div>
 
       <!-- Grid Rows -->
@@ -117,7 +117,7 @@
               @let schedule = getScheduleForRow(i)!;
               <div [formGroupName]="i" class="relative group flex flex-col lg:flex-row lg:items-center gap-2 border-b border-gray-100 py-2 hover:bg-gray-50/50 transition-colors w-full">
                 <!-- Asset Info (Left) -->
-                <div class="w-60 shrink-0 truncate" [title]="schedule.securityName">
+                <div class="w-44 shrink-0 truncate" [title]="schedule.securityName">
                   <div class="font-bold text-gray-900 truncate text-sm">
                     {{ schedule.securityName }}
                   </div>
@@ -130,7 +130,7 @@
                 </div>
 
                 <!-- Date -->
-                <div class="flex flex-col gap-1 w-32 shrink-0">
+                <div class="flex flex-col gap-1 w-24 shrink-0">
                   <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest lg:hidden">Date</label>
                   <input 
                     type="date"
@@ -139,7 +139,7 @@
                 </div>
 
                 <!-- Shares -->
-                <div class="flex flex-col gap-1 w-24 shrink-0">
+                <div class="flex flex-col gap-1 w-20 shrink-0">
                   <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest lg:hidden">Shares</label>
                   <input 
                     type="number"
@@ -150,7 +150,7 @@
                 </div>
 
                 <!-- Price -->
-                <div class="flex flex-col gap-1 w-28 shrink-0">
+                <div class="flex flex-col gap-1 w-24 shrink-0">
                   <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest lg:hidden">Price</label>
                   <input 
                     type="number"
@@ -161,7 +161,7 @@
                 </div>
 
                 <!-- Fees -->
-                <div class="flex flex-col gap-1 w-20 shrink-0">
+                <div class="flex flex-col gap-1 w-16 shrink-0">
                   <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest lg:hidden">Fees</label>
                   <input 
                     type="number"
@@ -172,7 +172,7 @@
                 </div>
 
                 <!-- Total (Read-only) -->
-                <div class="flex flex-col gap-1 w-24 shrink-0">
+                <div class="flex flex-col gap-1 w-20 shrink-0">
                   <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest lg:hidden">Total</label>
                   <div class="font-mono text-sm font-bold text-gray-900 text-right py-1">
                     @if (getRowTotal(i) > 0) {

@@ -20,9 +20,9 @@
 
   <!-- Visual Dashboard (Top) - Two Column Grid -->
   <div class="flex-1 min-h-0 border-b border-gray-100 bg-white p-3 relative transition-all duration-300 ease-in-out overflow-hidden" 
-       [style.height]="isTargetAllocationExpanded() ? '0' : '100%'"
-       [style.opacity]="isTargetAllocationExpanded() ? '0' : '1'"
-       [style.pointer-events]="isTargetAllocationExpanded() ? 'none' : 'auto'">
+       [style.height]="isSmartRebalancingExpanded() ? '0' : '100%'"
+       [style.opacity]="isSmartRebalancingExpanded() ? '0' : '1'"
+       [style.pointer-events]="isSmartRebalancingExpanded() ? 'none' : 'auto'">
     <!-- Main Grid (Full Height) -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
       <!-- Left Column: Portfolio Chart -->
@@ -262,6 +262,7 @@
         </div>
       </div>
 
+
       <!-- Right Column: Smart Rebalancing -->
       <div class="flex flex-col h-full min-h-0 overflow-hidden">
         <!-- Fixed Header (Input) -->
@@ -372,105 +373,87 @@
     </div>
   </div>
 
-  <!-- Target Allocation Overlay (slides up from bottom to cover entire right pane when expanded) -->
+  <!-- Smart Rebalancing Overlay (slides up from bottom to cover entire viewport when expanded) -->
   <div class="absolute left-0 right-0 flex flex-col bg-white overflow-hidden transition-all duration-300 ease-in-out z-20 shadow-lg"
-       [style.height]="isTargetAllocationExpanded() ? '100%' : '48px'"
-       [class.bottom-0]="isTargetAllocationExpanded()"
-       [class.bottom-[-1rem]]="!isTargetAllocationExpanded()"
-       [class.sm:bottom-[-1.5rem]]="!isTargetAllocationExpanded()"
-       [style.pointer-events]="isTargetAllocationExpanded() ? 'auto' : 'auto'">
+       [style.height]="isSmartRebalancingExpanded() ? '100%' : '48px'"
+       [class.bottom-0]="isSmartRebalancingExpanded()"
+       [class.bottom-[-1rem]]="!isSmartRebalancingExpanded()"
+       [class.sm:bottom-[-1.5rem]]="!isSmartRebalancingExpanded()"
+       [style.pointer-events]="isSmartRebalancingExpanded() ? 'auto' : 'auto'">
       <div class="shrink-0 px-6 py-2 bg-white border-b border-gray-100" [style.pointer-events]="'auto'">
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-2">
-            <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest">
-              Target Allocation
-            </h3>
             <button
-              (click)="toggleTargetAllocation()"
+              (click)="toggleSmartRebalancing()"
               class="flex items-center justify-center w-5 h-5 rounded hover:bg-gray-100 transition-colors"
-              [attr.aria-label]="isTargetAllocationExpanded() ? 'Collapse Target Allocation' : 'Expand Target Allocation'">
+              [attr.aria-label]="isSmartRebalancingExpanded() ? 'Collapse Smart Rebalancing' : 'Expand Smart Rebalancing'">
               <svg class="w-4 h-4 text-gray-500 transition-transform duration-300" 
-                   [class.rotate-180]="!isTargetAllocationExpanded()"
+                   [class.rotate-180]="!isSmartRebalancingExpanded()"
                    xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
               </svg>
             </button>
-          </div>
-          <div class="flex items-center gap-3">
-            <div class="text-xs font-medium" [class]="getTotalTargetClass()">
-              Total Target: {{ totalTargetPercentage() | number : "1.2-2" }}%
-            </div>
-            @if (isTargetAllocationExpanded()) {
-              <button
-                (click)="saveAllTargets()"
-                [disabled]="!hasUnsavedChanges()"
-                [class]="hasUnsavedChanges() ? 'bg-gray-900 hover:bg-gray-800 text-white' : 'bg-gray-200 text-gray-400 cursor-not-allowed'"
-                class="px-3 py-1.5 rounded-md text-xs font-medium transition-colors">
-                Save
-              </button>
-            }
+            <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest">
+              Smart Rebalancing
+            </h3>
           </div>
         </div>
       </div>
 
       <div class="flex-1 overflow-hidden min-h-0" 
-           [style.height]="isTargetAllocationExpanded() ? '100%' : '0'"
-           [style.opacity]="isTargetAllocationExpanded() ? '1' : '0'"
-           [style.visibility]="isTargetAllocationExpanded() ? 'visible' : 'hidden'">
-        <div class="overflow-y-auto min-h-0 p-2 h-full">
-        @if (allocationService.loading()) {
-        <div class="flex items-center justify-center py-8">
-          <div class="text-sm text-gray-500">Loading strategy...</div>
-        </div>
-        } @else if (allocationService.error()) {
-        <div class="flex items-center justify-center py-8">
-          <div class="text-sm text-red-600">{{ allocationService.error() }}</div>
-        </div>
-        } @else {
-        <div class="space-y-2">
-          @for (item of strategyItems(); track item.ticker) {
-          <div
-            class="flex items-center gap-4 p-3 border border-gray-200 rounded-md hover:bg-gray-50 transition-colors"
-          >
-            <!-- Asset Name -->
-            <div class="flex-1 min-w-0">
-              <div class="text-sm font-bold text-gray-900 truncate">
-                {{ item.companyName }}
+           [style.height]="isSmartRebalancingExpanded() ? '100%' : '0'"
+           [style.opacity]="isSmartRebalancingExpanded() ? '1' : '0'"
+           [style.visibility]="isSmartRebalancingExpanded() ? 'visible' : 'hidden'">
+        <div class="overflow-y-auto min-h-0 p-6 h-full">
+          <div class="max-w-2xl mx-auto">
+            <div class="flex flex-col gap-4">
+              <div class="flex flex-col gap-1">
+                <label for="investmentAmountExpanded" class="text-sm font-medium text-gray-700">Investment Amount (€)</label>
+                <input
+                  id="investmentAmountExpanded"
+                  type="number"
+                  [value]="investmentAmount()"
+                  (input)="onInvestmentAmountChange($event)"
+                  step="100"
+                  placeholder="0"
+                  class="w-full px-4 py-3 border border-gray-300 rounded-md text-lg font-mono focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                />
               </div>
-              <div class="text-xs text-gray-500">{{ item.ticker }}</div>
-            </div>
 
-            <!-- Current % Badge -->
-            <div class="flex-shrink-0">
-              <span
-                class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-gray-100 text-gray-700"
-              >
-                {{ item.currentPercentage | number : "1.2-2" }}%
-              </span>
-            </div>
+              <div class="flex items-center gap-2">
+                <svg class="w-4 h-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z" />
+                </svg>
+                <span class="text-sm text-gray-700">Enter an amount to see how to allocate it to reach your targets.</span>
+              </div>
 
-            <!-- Target % Input -->
-            <div class="flex-shrink-0 w-24">
-              <input
-                type="text"
-                [value]="getInputDisplayValue(item.ticker)"
-                (input)="onTargetInputChange(item.ticker, $event)"
-                (focus)="onTargetFocus(item.ticker, $event)"
-                (blur)="onTargetBlur(item.ticker, $event)"
-                (keydown)="onTargetEnter($event)"
-                class="w-full px-2 py-1 text-sm font-mono text-right border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
-              />
+              <h3 class="text-sm font-semibold text-gray-900 mt-6 mb-3">
+                Recommended Buys ({{ topRecommendations().length }})
+              </h3>
+
+              @if (topRecommendations().length > 0) {
+                <div class="space-y-2">
+                  @for (rec of topRecommendations(); track rec.ticker) {
+                    <div class="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-green-50 transition-colors bg-white">
+                      <div class="flex-1 min-w-0">
+                        <div class="text-sm font-bold text-gray-900 truncate">
+                          {{ rec.companyName }}
+                        </div>
+                        <div class="text-xs text-gray-500">{{ rec.ticker }}</div>
+                      </div>
+                      <div class="text-lg font-mono font-bold text-green-700 ml-4 whitespace-nowrap">
+                        +{{ rec.buyAmount | currency : "EUR" : "symbol" : "1.2-2" }}
+                      </div>
+                    </div>
+                  }
+                </div>
+              } @else if (investmentAmount() > 0) {
+                <p class="text-sm text-gray-500">No buy recommendations at this investment amount.</p>
+              } @else {
+                <p class="text-sm text-gray-400">Enter an investment amount above to see recommendations.</p>
+              }
             </div>
           </div>
-          } @if (strategyItems().length === 0) {
-          <div class="flex items-center justify-center py-8">
-            <p class="text-sm text-gray-500">
-              No portfolio positions to configure.
-            </p>
-          </div>
-          }
-        </div>
-        }
         </div>
       </div>
     </div>

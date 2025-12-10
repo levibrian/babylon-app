@@ -1,5 +1,5 @@
 
-<div class="planning-container">
+<div class="planning-container" [formGroup]="planningForm">
   <div class="header-actions">
     <app-add-security-search (securitySelected)="addSecurity($event)"></app-add-security-search>
     
@@ -7,7 +7,7 @@
       <label for="monthly-investment">Monthly Amount to Invest</label>
       <div class="input-container">
         <span class="currency-symbol">€</span>
-        <input type="number" id="monthly-investment" [(ngModel)]="monthlyInvestment" (ngModelChange)="onMonthlyInvestmentChange($event)" />
+        <input type="number" id="monthly-investment" formControlName="monthlyInvestment" />
       </div>
     </div>
   </div>
@@ -16,7 +16,7 @@
     <table class="planning-table">
       <thead>
         <tr>
-          <th>Security Name (Ticker)</th>
+          <th>Security Name</th>
           <th class="text-right">Weekly EUR</th>
           <th class="text-right">Bi-Weekly EUR</th>
           <th class="text-right">Monthly EUR</th>
@@ -38,38 +38,39 @@
           </tr>
           <!-- Rows shown only if expanded -->
           <ng-container *ngIf="group.isExpanded">
-            <tr *ngFor="let row of group.rows" class="data-row">
-              <td class="ticker-cell">
-                {{ row.securityName || row.ticker }}
-              </td>
-              
-              <td class="text-right clickable-cell" 
-                  [class.disabled]="!row.isWeeklyEnabled" 
-                  (click)="toggleWeekly(row)">
-                {{ row.weeklyEur | number:'1.2-2' }}
-              </td>
-              
-              <td class="text-right clickable-cell" 
-                  [class.disabled]="!row.isBiWeeklyEnabled" 
-                  (click)="toggleBiWeekly(row)">
-                {{ row.biWeeklyEur | number:'1.2-2' }}
-              </td>
-              
-              <td class="text-right clickable-cell" 
-                  [class.disabled]="!row.isMonthlyEnabled" 
-                  (click)="toggleMonthly(row)">
-                {{ row.monthlyEur | number:'1.2-2' }}
-              </td>
-              
-              <td class="text-right input-cell">
-                <div class="input-content">
-                  <input type="number" 
-                         [(ngModel)]="row.targetPercentage" 
-                         (ngModelChange)="updateAllocation(row)"
-                         class="table-input" />
-                  <span class="percent-symbol">%</span>
-                </div>
-              </td>
+            <tr *ngFor="let row of group.rows; let i = index" class="data-row">
+              <ng-container *ngIf="getRowFormGroup(row) as rowFormGroup" [formGroup]="rowFormGroup">
+                <td class="ticker-cell">
+                  {{ row.securityName || row.ticker }}
+                </td>
+                
+                <td class="text-right clickable-cell" 
+                    [class.disabled]="!rowFormGroup.get('isWeeklyEnabled')?.value" 
+                    (click)="toggleWeekly(rowFormGroup)">
+                  {{ rowFormGroup.get('weeklyEur')?.value | number:'1.2-2' }}
+                </td>
+                
+                <td class="text-right clickable-cell" 
+                    [class.disabled]="!rowFormGroup.get('isBiWeeklyEnabled')?.value" 
+                    (click)="toggleBiWeekly(rowFormGroup)">
+                  {{ rowFormGroup.get('biWeeklyEur')?.value | number:'1.2-2' }}
+                </td>
+                
+                <td class="text-right clickable-cell" 
+                    [class.disabled]="!rowFormGroup.get('isMonthlyEnabled')?.value" 
+                    (click)="toggleMonthly(rowFormGroup)">
+                  {{ rowFormGroup.get('monthlyEur')?.value | number:'1.2-2' }}
+                </td>
+                
+                <td class="text-right input-cell">
+                  <div class="input-content">
+                    <input type="number" 
+                           formControlName="targetPercentage"
+                           class="table-input" />
+                    <span class="percent-symbol">%</span>
+                  </div>
+                </td>
+              </ng-container>
             </tr>
           </ng-container>
         </ng-container>

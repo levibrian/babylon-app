@@ -238,6 +238,13 @@
         border-color: #007acc;
         background-color: #fff;
       }
+
+      &:disabled {
+        background-color: transparent;
+        color: #999;
+        cursor: not-allowed;
+        border-color: transparent;
+      }
     }
 
     .percent-symbol {

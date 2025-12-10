@@ -145,9 +145,9 @@ export class StrategyPanelComponent implements OnInit {
 
   // View mode toggle: 'assets' | 'types'
   viewMode = signal<"assets" | "types">("assets");
-
-  // Target Allocation section expand/collapse
-  isTargetAllocationExpanded = signal<boolean>(false);
+  
+  // Smart Rebalancing section expand/collapse (replaces Target Allocation)
+  isSmartRebalancingExpanded = signal<boolean>(false);
 
   // Investment simulator
   investmentAmount = signal<number>(0);
@@ -571,7 +571,7 @@ export class StrategyPanelComponent implements OnInit {
         buyAmount: d.rawDeficit * scalingFactor,
         delta: d.rawDeficit,
       }))
-      .filter((rec) => rec.buyAmount >= 1.0) // Filter tiny buys (< €1.00)
+      .filter((rec) => rec.buyAmount >= 1.0) // Filter tiny buys (<  €1.00)
       .sort((a, b) => b.buyAmount - a.buyAmount); // Sort by amount descending
 
     return recommendations;
@@ -1002,9 +1002,9 @@ export class StrategyPanelComponent implements OnInit {
     this.viewMode.update((mode) => (mode === "assets" ? "types" : "assets"));
   }
 
-  // Toggle Target Allocation section expand/collapse
-  toggleTargetAllocation(): void {
-    this.isTargetAllocationExpanded.update((current) => !current);
+  // Toggle Smart Rebalancing section expand/collapse
+  toggleSmartRebalancing(): void {
+    this.isSmartRebalancingExpanded.update((current) => !current);
   }
 
   // Custom tooltip state
