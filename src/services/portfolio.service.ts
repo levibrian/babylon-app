@@ -124,7 +124,7 @@ export class PortfolioService {
             currentAllocationPercentage: 0,
             allocationDifference: 0,
             rebalanceAmount: null,
-            rebalancingStatus: 'Balanced',
+            rebalancingStatus: 'Balanced' as const,
             transactions: [newTransaction],
         };
         portfolioCopy.push(position);
@@ -280,7 +280,7 @@ export class PortfolioService {
       const rebalanceAmount = (allocationDifference / 100) * totalInvested;
       
       // Determine rebalancing status based on allocation difference
-      let rebalancingStatus = 'Balanced';
+      let rebalancingStatus: "Balanced" | "Overweight" | "Underweight" = 'Balanced';
       if (allocationDifference > 0.1) {
         rebalancingStatus = 'Overweight';
       } else if (allocationDifference < -0.1) {
@@ -316,7 +316,7 @@ export class PortfolioService {
       currentAllocationPercentage: position.currentAllocationPercentage ?? 0,
       allocationDifference: position.allocationDeviation, // Backend uses allocationDeviation
       rebalanceAmount: position.rebalancingAmount,
-      rebalancingStatus: position.rebalancingStatus, // "Balanced", "Overweight", or "Underweight"
+      rebalancingStatus: position.rebalancingStatus as "Balanced" | "Overweight" | "Underweight",
       transactions: mapApiTransactionsToTransactions(
         position.transactions,
         position.ticker // Fallback ticker from position if transaction doesn't have it

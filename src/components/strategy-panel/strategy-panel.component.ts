@@ -727,6 +727,11 @@ export class StrategyPanelComponent implements OnInit {
       .sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta));
   });
 
+  // Computed: Total delta percentage for display
+  totalDeltaPercentage = computed(() => {
+    return this.deltaChartSegments().reduce((sum, s) => sum + Math.abs(s.delta), 0);
+  });
+
   // Helper to get delta bar segments
   getDeltaBarSegments(): Array<{
     color: string;

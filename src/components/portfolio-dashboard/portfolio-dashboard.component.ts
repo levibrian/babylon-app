@@ -360,7 +360,7 @@ export class PortfolioDashboardComponent {
       if (item.securityType !== undefined) {
         uniqueTypes.add(item.securityType);
       } else {
-        uniqueTypes.add(SecurityType.Stock);
+        uniqueTypes.add("Stock");
       }
     });
     return uniqueTypes.size > 1;
@@ -373,7 +373,7 @@ export class PortfolioDashboardComponent {
       if (item.securityType !== undefined) {
         uniqueTypes.add(item.securityType);
       } else {
-        uniqueTypes.add(SecurityType.Stock);
+        uniqueTypes.add("Stock");
       }
     });
     return uniqueTypes.size;

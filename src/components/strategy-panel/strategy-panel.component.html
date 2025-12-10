@@ -131,7 +131,7 @@
             <div class="flex items-center justify-between">
               <span class="text-xs font-medium text-gray-600">Delta</span>
               <span class="text-xs font-mono text-gray-500">
-                {{ deltaChartSegments().reduce((sum, s) => sum + Math.abs(s.delta), 0) | number : "1.1-1" }}%
+                {{ totalDeltaPercentage() | number : "1.1-1" }}%
               </span>
             </div>
             <div class="w-full h-6 bg-gray-100 rounded-md overflow-hidden flex relative">
