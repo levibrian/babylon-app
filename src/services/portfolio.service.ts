@@ -335,6 +335,8 @@ export class PortfolioService {
       totalShares: position.totalShares,
       averageSharePrice: position.averageSharePrice,
       currentMarketValue: position.currentMarketValue, // Current market value (from current/last close price)
+      unrealizedPnL: position.unrealizedPnL ?? null,
+      unrealizedPnLPercentage: position.unrealizedPnLPercentage ?? null,
       securityType: position.securityType,
       // Security metadata (NEW)
       sector: position.sector,

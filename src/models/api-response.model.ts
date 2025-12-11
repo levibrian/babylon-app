@@ -38,6 +38,10 @@ export interface ApiPortfolioPosition {
   rebalancingStatus: "Balanced" | "Overweight" | "Underweight";
   currentMarketValue: number | null;
   
+  // P&L properties (NEW)
+  unrealizedPnL: number; // Unrealized profit/loss in currency
+  unrealizedPnLPercentage: number; // Unrealized profit/loss as percentage
+  
   transactions: ApiTransaction[];
 }
 

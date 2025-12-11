@@ -27,6 +27,8 @@ export interface PortfolioItem {
   totalCost: number;
   averageSharePrice: number;
   currentMarketValue: number | null; // Current market value of the position (from current/last close price)
+  unrealizedPnL: number | null; // Unrealized profit/loss in currency
+  unrealizedPnLPercentage: number | null; // Unrealized profit/loss as percentage
   transactions: Transaction[];
   securityType?: SecurityType;
 

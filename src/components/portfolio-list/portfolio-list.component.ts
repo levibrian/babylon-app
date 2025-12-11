@@ -185,4 +185,8 @@ export class PortfolioListComponent {
   }
 
   formatDate = formatDateShort;
+
+  abs(value: number): number {
+    return Math.abs(value);
+  }
 }

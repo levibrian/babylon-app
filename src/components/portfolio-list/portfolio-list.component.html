@@ -3,7 +3,7 @@
     @for (item of portfolio(); track item.ticker) {
       <li class="group">
         <!-- Parent Item -->
-        <div [class]="'cursor-pointer grid grid-cols-[3rem_minmax(8rem,1fr)_9rem_3rem_6rem_1.5rem] gap-2 items-center py-3 border-b border-gray-100 hover:bg-gray-50 transition-colors duration-150 text-sm ' + (isExpanded(item.ticker) ? 'bg-gray-50' : '')" 
+        <div [class]="'cursor-pointer grid grid-cols-[3rem_minmax(8rem,1fr)_9rem_3rem_8rem_1.5rem] gap-2 items-center py-3 border-b border-gray-100 hover:bg-gray-50 transition-colors duration-150 text-sm ' + (isExpanded(item.ticker) ? 'bg-gray-50' : '')" 
              (click)="toggleExpand(item.ticker)">
           <!-- Avatar -->
           <div>
@@ -19,10 +19,15 @@
             </div>
           
             <!-- Position Badge -->
-            <div class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-gray-100 text-xs">
+            <div class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-gray-100 text-xs flex-wrap">
               <span class="font-bold text-gray-900">{{ item.totalShares | number:'1.0-4' }}</span>
               <span class="font-normal text-gray-500">units @</span>
               <span class="font-bold text-gray-900">{{ item.averageSharePrice | currency:'EUR':'symbol':'1.2-2' }}</span>
+              @if (item.currentMarketValue !== null) {
+                <span class="font-normal text-gray-400">•</span>
+                <span class="font-normal text-gray-500">Total:</span>
+                <span class="font-bold text-gray-900">{{ item.currentMarketValue | currency:'EUR':'symbol':'1.2-2' }}</span>
+              }
             </div>
           </div>
 
@@ -48,9 +53,31 @@
             }
           </div>
 
-          <!-- Total Value -->
+          <!-- Unrealized P&L -->
           <div class="text-right font-mono">
-            <p class="text-sm font-bold text-gray-900">{{ item.totalCost | currency:'EUR':'symbol':'1.2-2' }}</p>
+            @if (item.unrealizedPnL !== null && item.unrealizedPnLPercentage !== null) {
+              <div class="flex items-center justify-end gap-1">
+                @if (item.unrealizedPnL >= 0) {
+                  <!-- Up triangle for positive -->
+                  <svg class="w-3 h-3 text-green-600 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M10 3L3 17h14L10 3z" />
+                  </svg>
+                } @else {
+                  <!-- Down triangle for negative -->
+                  <svg class="w-3 h-3 text-red-600 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M10 17L3 3h14L10 17z" />
+                  </svg>
+                }
+                <span [class]="'text-sm font-bold ' + (item.unrealizedPnL >= 0 ? 'text-green-600' : 'text-red-600')">
+                  {{ abs(item.unrealizedPnL) | currency:'EUR':'symbol':'1.0-0' }}
+                </span>
+                <span [class]="'text-xs font-normal ' + (item.unrealizedPnL >= 0 ? 'text-green-600' : 'text-red-600')">
+                  ({{ item.unrealizedPnLPercentage >= 0 ? '+' : '' }}{{ item.unrealizedPnLPercentage | number:'1.1-1' }}%)
+                </span>
+              </div>
+            } @else {
+              <p class="text-sm font-bold text-gray-900">{{ item.totalCost | currency:'EUR':'symbol':'1.2-2' }}</p>
+            }
             @if (item.pendingSync) {
               <div class="flex items-center justify-end gap-1 mt-0.5" title="Syncing with server...">
                 <svg class="w-3 h-3 text-blue-500 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
