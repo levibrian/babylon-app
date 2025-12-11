@@ -26,6 +26,7 @@ export interface PortfolioItem {
   totalShares: number;
   totalCost: number;
   averageSharePrice: number;
+  currentMarketValue: number | null; // Current market value of the position (from current/last close price)
   transactions: Transaction[];
   securityType?: SecurityType;
 

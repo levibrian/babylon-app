@@ -27,7 +27,37 @@ export class PortfolioService {
   public readonly dailyGainLoss: Signal<number> = this._dailyGainLoss.asReadonly();
   public readonly dailyGainLossPercentage: Signal<number> = this._dailyGainLossPercentage.asReadonly();
   public readonly insights: Signal<PortfolioInsight[]> = this._insights.asReadonly();
-  public readonly totalPortfolioValue: Signal<number> = computed(() => this.totalInvested() + this.dailyGainLoss());
+  /**
+   * Total portfolio value calculated from current market values of all positions.
+   * Uses currentMarketValue from each position if available, otherwise falls back to cost basis.
+   * This provides the most accurate portfolio value based on current/last close prices.
+   */
+  public readonly totalPortfolioValue: Signal<number> = computed(() => {
+    const items = this._portfolio();
+    const totalMarketValue = items.reduce((sum, item) => {
+      // Use currentMarketValue if available (current or last close price)
+      // Fall back to totalCost if market value is not available
+      return sum + (item.currentMarketValue ?? item.totalCost);
+    }, 0);
+    return totalMarketValue;
+  });
+
+  /**
+   * All-time P&L calculated as total market value minus total invested.
+   * This represents unrealized gains/losses across all positions.
+   */
+  public readonly totalPnL: Signal<number> = computed(() => {
+    return this.totalPortfolioValue() - this.totalInvested();
+  });
+
+  /**
+   * All-time P&L percentage.
+   */
+  public readonly totalPnLPercentage: Signal<number> = computed(() => {
+    const invested = this.totalInvested();
+    if (invested === 0) return 0;
+    return (this.totalPnL() / invested) * 100;
+  });
 
   constructor() {
     this.fetchPortfolio();
@@ -304,6 +334,7 @@ export class PortfolioService {
       totalCost: position.totalInvested,
       totalShares: position.totalShares,
       averageSharePrice: position.averageSharePrice,
+      currentMarketValue: position.currentMarketValue, // Current market value (from current/last close price)
       securityType: position.securityType,
       // Security metadata (NEW)
       sector: position.sector,

@@ -171,7 +171,8 @@ export class StrategyPanelComponent implements OnInit {
         companyName: item.companyName,
         currentPercentage: item.currentAllocationPercentage ?? 0,
         targetPercentage,
-        currentValue: item.totalCost,
+        // Use currentMarketValue if available (current/last close price), otherwise fall back to totalCost
+        currentValue: item.currentMarketValue ?? item.totalCost,
       } as StrategyItem;
     });
 

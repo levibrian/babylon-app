@@ -44,24 +44,24 @@ export class PortfolioDashboardComponent {
 
   // Computed KPIs
   netWorth = computed(() => {
-    // Use totalPortfolioValue from service which includes daily gain/loss
-    // This represents the current market value (cost basis + unrealized gains)
+    // Use totalPortfolioValue from service which calculates from currentMarketValue of each position
+    // This represents the current market value based on current/last close prices
     return this.portfolioService.totalPortfolioValue();
   });
 
   totalInvested = computed(() => {
-    const items = this.portfolio();
-    return items.reduce((sum, item) => sum + item.totalCost, 0);
+    // Total cost basis (what was actually invested)
+    return this.portfolioService.totalInvested();
   });
 
   absolutePnL = computed(() => {
-    return this.netWorth() - this.totalInvested();
+    // All-time P&L: current market value minus total invested
+    return this.portfolioService.totalPnL();
   });
 
   percentPnL = computed(() => {
-    const invested = this.totalInvested();
-    if (invested === 0) return 0;
-    return (this.absolutePnL() / invested) * 100;
+    // All-time P&L percentage
+    return this.portfolioService.totalPnLPercentage();
   });
 
   totalIncome = computed(() => {
