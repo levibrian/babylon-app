@@ -1,0 +1,47 @@
+<div class="bg-white border border-gray-100 rounded-lg p-3 shadow-sm">
+  <div class="flex items-center justify-between mb-2">
+    <div class="flex items-center gap-1.5">
+      <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest">Diversification</h3>
+      <button
+        type="button"
+        class="flex items-center justify-center w-3.5 h-3.5 rounded-full bg-gray-200 hover:bg-gray-300 text-gray-600 text-[9px] font-bold transition-colors cursor-help"
+        (mouseenter)="onScoreInfoHover($event)"
+        aria-label="Information about Diversification">
+        ?
+      </button>
+    </div>
+    <div class="flex items-center gap-2">
+      <div class="text-lg font-bold" [class]="'text-' + data().levelColor + '-600'">
+        {{ data().score | number:'1.0-0' }}
+      </div>
+      <span class="px-1.5 py-0.5 rounded text-[10px] font-semibold"
+        [class]="'bg-' + data().levelColor + '-100 text-' + data().levelColor + '-800'">
+        {{ data().level }}
+      </span>
+    </div>
+  </div>
+  <div class="space-y-1 text-xs text-gray-600">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-1">
+        <span>HHI:</span>
+        <button
+          type="button"
+          class="flex items-center justify-center w-3 h-3 rounded-full bg-gray-200 hover:bg-gray-300 text-gray-600 text-[8px] font-bold transition-colors cursor-help"
+          (mouseenter)="onHHIInfoHover($event)"
+          aria-label="Information about HHI">
+          ?
+        </button>
+      </div>
+      <span class="font-mono">{{ data().hhi | number:'1.4-4' }}</span>
+    </div>
+    <div class="flex justify-between">
+      <span>Top 5 Concentration:</span>
+      <span class="font-mono">{{ data().top5Concentration | number:'1.1-1' }}%</span>
+    </div>
+    <div class="flex justify-between">
+      <span>Total Assets:</span>
+      <span class="font-mono">{{ data().totalAssets }}</span>
+    </div>
+  </div>
+</div>
+

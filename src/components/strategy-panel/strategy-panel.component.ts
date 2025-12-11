@@ -18,48 +18,36 @@ import { toast } from "ngx-sonner";
 import { Router } from '@angular/router';
 import { PortfolioInsight } from '../../models/portfolio.model';
 import { ApiSmartRebalancingRecommendation } from '../../models/api-response.model';
-
-interface StrategyItem {
-  ticker: string;
-  companyName: string;
-  currentPercentage: number;
-  targetPercentage: number;
-  currentValue: number;
-}
-
-interface Recommendation {
-  ticker: string;
-  companyName: string;
-  buyAmount: number;
-  delta: number;
-}
-
-interface SectorAggregation {
-  sector: string;
-  currentPercentage: number;
-  targetPercentage: number;
-  currentValue: number;
-}
-
-interface GeographyAggregation {
-  geography: string;
-  currentPercentage: number;
-  targetPercentage: number;
-  currentValue: number;
-}
-
-interface ChartSegment {
-  ticker: string;
-  companyName: string;
-  currentPercentage: number;
-  targetPercentage: number;
-  color: string;
-}
+import {
+  StrategyItem,
+  Recommendation,
+  SectorAggregation,
+  GeographyAggregation,
+  ChartSegment,
+  DiversificationCardData,
+  RiskCardData,
+  RebalancingActionsCardData,
+  BarSegment,
+  DeltaBarSegment,
+} from '../../models/strategy.model';
+import { DiversificationCardComponent } from '../common/diversification-card/diversification-card.component';
+import { RiskProfileCardComponent } from '../common/risk-profile-card/risk-profile-card.component';
+import { RebalancingActionsCardComponent } from '../common/rebalancing-actions-card/rebalancing-actions-card.component';
+import { AllocationBarComponent } from '../common/allocation-bar/allocation-bar.component';
+import { SmartRebalancingComponent } from '../common/smart-rebalancing/smart-rebalancing.component';
 
 @Component({
   selector: "app-strategy-panel",
   templateUrl: "./strategy-panel.component.html",
-  imports: [CommonModule, CurrencyPipe, DecimalPipe],
+  imports: [
+    CommonModule,
+    DecimalPipe,
+    DiversificationCardComponent,
+    RiskProfileCardComponent,
+    RebalancingActionsCardComponent,
+    AllocationBarComponent,
+    SmartRebalancingComponent,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
     class: "block h-full overflow-hidden",
@@ -144,7 +132,7 @@ export class StrategyPanelComponent implements OnInit {
 
   // View mode toggle: 'assets' | 'types'
   viewMode = signal<"assets" | "types">("assets");
-  
+
   // Smart Rebalancing section expand/collapse (replaces Target Allocation)
   isSmartRebalancingExpanded = signal<boolean>(false);
 
@@ -610,7 +598,7 @@ export class StrategyPanelComponent implements OnInit {
   });
 
   // Computed: Risk metrics for card display
-  riskCard = computed(() => {
+  riskCard = computed<RiskCardData | null>(() => {
     const metrics = this.analyticsService.riskMetrics();
     if (!metrics) return null;
 
@@ -624,7 +612,7 @@ export class StrategyPanelComponent implements OnInit {
 
     // Beta interpretation
     let betaLabel = 'Market Average';
-    let betaColor = 'gray';
+    let betaColor: 'emerald' | 'red' | 'gray' = 'gray';
     if (metrics.beta < 0.8) {
       betaLabel = 'Low Volatility';
       betaColor = 'emerald';
@@ -635,7 +623,7 @@ export class StrategyPanelComponent implements OnInit {
 
     // Sharpe Ratio interpretation
     let sharpeLabel = 'Average';
-    let sharpeColor = 'gray';
+    let sharpeColor: 'emerald' | 'amber' | 'red' | 'gray' = 'gray';
     if (metrics.sharpeRatio >= 2) {
       sharpeLabel = 'Excellent';
       sharpeColor = 'emerald';
@@ -665,7 +653,7 @@ export class StrategyPanelComponent implements OnInit {
   });
 
   // Computed: Top 5 rebalancing actions for card display
-  rebalancingActionsCard = computed(() => {
+  rebalancingActionsCard = computed<RebalancingActionsCardData | null>(() => {
     const actions = this.analyticsService.rebalancingActions();
     if (!actions || !actions.actions) return null;
 
@@ -783,13 +771,7 @@ export class StrategyPanelComponent implements OnInit {
   });
 
   // Helper to get delta bar segments
-  getDeltaBarSegments(): Array<{
-    color: string;
-    width: number;
-    ticker: string;
-    delta: number;
-    deltaPercentage: number;
-  }> {
+  getDeltaBarSegments(): DeltaBarSegment[] {
     const segments = this.deltaChartSegments();
     const totalDelta = segments.reduce(
       (sum, s) => sum + Math.abs(s.delta),
@@ -1156,14 +1138,48 @@ export class StrategyPanelComponent implements OnInit {
     });
   }
 
+  // Show tooltip for Portfolio Health section
+  showPortfolioHealthTooltip(event: MouseEvent): void {
+    this.activeTooltip.set({
+      x: event.clientX,
+      y: event.clientY,
+      text: "Visualizes your current vs target allocation and identifies rebalancing needs through color-coded delta bars.",
+      color: "transparent",
+    });
+  }
+
+  // Show tooltip for Diversification section
+  showDiversificationSectionTooltip(event: MouseEvent): void {
+    this.activeTooltip.set({
+      x: event.clientX,
+      y: event.clientY,
+      text: "Measures how well your portfolio is spread across different assets to reduce concentration risk.",
+      color: "transparent",
+    });
+  }
+
+  // Show tooltip for Risk Profile section
+  showRiskProfileTooltip(event: MouseEvent): void {
+    this.activeTooltip.set({
+      x: event.clientX,
+      y: event.clientY,
+      text: "Analyzes portfolio volatility and risk-adjusted returns to assess your risk exposure relative to the market.",
+      color: "transparent",
+    });
+  }
+
+  // Show tooltip for Rebalancing Actions section
+  showRebalancingActionsTooltip(event: MouseEvent): void {
+    this.activeTooltip.set({
+      x: event.clientX,
+      y: event.clientY,
+      text: "Lists specific buy/sell actions needed to rebalance your portfolio to target allocations.",
+      color: "transparent",
+    });
+  }
+
   // Helper to get segments for current bar (uses currentChartSegments - sorted by current percentage)
-  getCurrentBarSegments(): Array<{
-    color: string;
-    width: number;
-    ticker: string;
-    percentage: number;
-    currentValue: number;
-  }> {
+  getCurrentBarSegments(): BarSegment[] {
     const segments = this.currentChartSegments();
     const items = this.strategyItems();
     const total = segments.reduce((sum, s) => sum + s.currentPercentage, 0);
@@ -1188,7 +1204,7 @@ export class StrategyPanelComponent implements OnInit {
           width: (s.currentPercentage / total) * 100,
           ticker: s.ticker,
           percentage: s.currentPercentage,
-          currentValue,
+          value: currentValue,
         };
       });
   }
@@ -1197,13 +1213,7 @@ export class StrategyPanelComponent implements OnInit {
   Math = Math;
 
   // Helper to get segments for target bar
-  getTargetBarSegments(): Array<{
-    color: string;
-    width: number;
-    ticker: string;
-    percentage: number;
-    targetAmount: number;
-  }> {
+  getTargetBarSegments(): BarSegment[] {
     const segments = this.chartSegments();
     const items = this.strategyItems();
     const totalPortfolioValue = this.totalPortfolioValue();
@@ -1222,7 +1232,7 @@ export class StrategyPanelComponent implements OnInit {
           width: (s.targetPercentage / total) * 100,
           ticker: s.ticker,
           percentage: s.targetPercentage,
-          targetAmount,
+          value: targetAmount,
         };
       });
   }

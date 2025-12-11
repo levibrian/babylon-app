@@ -24,11 +24,22 @@
        [style.opacity]="isSmartRebalancingExpanded() ? '0' : '1'"
        [style.pointer-events]="isSmartRebalancingExpanded() ? 'none' : 'auto'">
     <!-- Portfolio Health Section (Full Width) -->
-    <div class="flex flex-col h-full overflow-y-auto">
+      <div class="flex flex-col h-full overflow-y-auto">
         <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center gap-1.5">
           <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest">
             Portfolio Health
           </h3>
+            <button
+              type="button"
+              class="flex items-center justify-center w-3.5 h-3.5 rounded-full bg-gray-200 hover:bg-gray-300 text-gray-600 text-[9px] font-bold transition-colors cursor-help"
+              (mouseenter)="showPortfolioHealthTooltip($event)"
+              (mouseleave)="hideTooltip()"
+              (mousemove)="showPortfolioHealthTooltip($event)"
+              aria-label="Information about Portfolio Health">
+              ?
+            </button>
+          </div>
           <!-- Toggle Switch -->
           <button
             (click)="toggleViewMode()"
@@ -57,72 +68,24 @@
         <!-- Stacked Bar Chart -->
         <div class="flex flex-col gap-3 flex-shrink-0">
           <!-- Current Allocation Bar -->
-          <div class="flex flex-col gap-1">
-            <div class="flex items-center justify-between">
-              <span class="text-xs font-medium text-gray-600">Current</span>
-              <span class="text-xs font-mono text-gray-500"
-                >{{ totalCurrentPercentage() | number : "1.1-1" }}%</span
-              >
-            </div>
-            <div class="w-full h-6 bg-gray-100 rounded-md overflow-hidden flex relative">
-              @for (seg of getCurrentBarSegments(); track $index) {
-              <div
-                class="h-full transition-all duration-300 cursor-pointer hover:opacity-90 relative"
-                [style.background-color]="seg.color"
-                [style.width.%]="seg.width"
-                (mousemove)="
-                  showTooltip(
-                    $event,
-                    getSegmentTooltip(seg.ticker, seg.percentage, seg.currentValue),
-                    seg.color
-                  )
-                "
-                (mouseleave)="hideTooltip()"
-              >
-                @if (seg.width >= 8) {
-                  <span class="absolute inset-0 flex items-center justify-center text-[10px] font-mono font-medium text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.5)] pointer-events-none">
-                    {{ seg.percentage | number : "1.1-1" }}%
-                  </span>
-                }
-              </div>
-              }
-            </div>
-          </div>
+          <app-allocation-bar
+            [segments]="getCurrentBarSegments()"
+            [totalPercentage]="totalCurrentPercentage()"
+            label="Current"
+            [showBorder]="false"
+            (segmentHovered)="showTooltip($event.event, $event.tooltip, $event.segment.color)"
+            (segmentLeft)="hideTooltip()">
+          </app-allocation-bar>
 
           <!-- Target Allocation Bar -->
-          <div class="flex flex-col gap-1">
-            <div class="flex items-center justify-between">
-              <span class="text-xs font-medium text-gray-600">Target</span>
-              <span class="text-xs font-mono text-gray-500"
-                >{{ totalTargetPercentage() | number : "1.1-1" }}%</span
-              >
-            </div>
-            <div
-              class="w-full h-6 bg-gray-100 rounded-md overflow-hidden border-2 border-gray-300 flex relative"
-            >
-              @for (seg of getTargetBarSegments(); track $index) {
-              <div
-                class="h-full transition-all duration-300 cursor-pointer hover:opacity-90 relative"
-                [style.background-color]="seg.color"
-                [style.width.%]="seg.width"
-                (mousemove)="
-                  showTooltip(
-                    $event,
-                    getSegmentTooltip(seg.ticker, seg.percentage, seg.targetAmount),
-                    seg.color
-                  )
-                "
-                (mouseleave)="hideTooltip()"
-              >
-                @if (seg.width >= 8) {
-                  <span class="absolute inset-0 flex items-center justify-center text-[10px] font-mono font-medium text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.5)] pointer-events-none">
-                    {{ seg.percentage | number : "1.1-1" }}%
-                  </span>
-                }
-              </div>
-              }
-            </div>
-          </div>
+          <app-allocation-bar
+            [segments]="getTargetBarSegments()"
+            [totalPercentage]="totalTargetPercentage()"
+            label="Target"
+            [showBorder]="true"
+            (segmentHovered)="showTooltip($event.event, $event.tooltip, $event.segment.color)"
+            (segmentLeft)="hideTooltip()">
+          </app-allocation-bar>
 
           <!-- Delta Allocation Bar -->
           <div class="flex flex-col gap-1">
@@ -186,258 +149,36 @@
         <div class="mt-4 pt-4 border-t border-gray-200 flex-shrink-0 space-y-3">
           <!-- Diversification Card -->
           @if (diversificationCard(); as divCard) {
-            <div class="bg-white border border-gray-100 rounded-lg p-3 shadow-sm">
-              <div class="flex items-center justify-between mb-2">
-                <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest">Diversification</h3>
-                <div class="flex items-center gap-2">
-                  <div class="text-lg font-bold" [class]="'text-' + divCard.levelColor + '-600'">
-                    {{ divCard.score | number:'1.0-0' }}
-                  </div>
-                  <span class="px-1.5 py-0.5 rounded text-[10px] font-semibold"
-                    [class]="'bg-' + divCard.levelColor + '-100 text-' + divCard.levelColor + '-800'">
-                    {{ divCard.level }}
-                  </span>
-                  <button
-                    type="button"
-                    class="flex items-center justify-center w-3 h-3 rounded-full bg-gray-200 hover:bg-gray-300 text-gray-600 text-[8px] font-bold transition-colors cursor-help"
-                    (mouseenter)="showDiversificationScoreTooltip($event)"
-                    (mouseleave)="hideTooltip()"
-                    (mousemove)="showDiversificationScoreTooltip($event)"
-                    aria-label="Information about Diversification Score">
-                    ?
-                  </button>
-                </div>
-              </div>
-              <div class="space-y-1 text-xs text-gray-600">
-                <div class="flex items-center justify-between">
-                  <div class="flex items-center gap-1">
-                    <span>HHI:</span>
-                    <button
-                      type="button"
-                      class="flex items-center justify-center w-3 h-3 rounded-full bg-gray-200 hover:bg-gray-300 text-gray-600 text-[8px] font-bold transition-colors cursor-help"
-                      (mouseenter)="showHHITooltip($event)"
-                      (mouseleave)="hideTooltip()"
-                      (mousemove)="showHHITooltip($event)"
-                      aria-label="Information about HHI">
-                      ?
-                    </button>
-                  </div>
-                  <span class="font-mono">{{ divCard.hhi | number:'1.4-4' }}</span>
-                </div>
-                <div class="flex justify-between">
-                  <span>Top 5 Concentration:</span>
-                  <span class="font-mono">{{ divCard.top5Concentration | number:'1.1-1' }}%</span>
-                </div>
-                <div class="flex justify-between">
-                  <span>Total Assets:</span>
-                  <span class="font-mono">{{ divCard.totalAssets }}</span>
-                </div>
-              </div>
-            </div>
+            <app-diversification-card
+              [data]="divCard"
+              (hhiTooltipRequested)="showHHITooltip($event)"
+              (scoreTooltipRequested)="showDiversificationSectionTooltip($event)">
+            </app-diversification-card>
           }
 
           <!-- Risk Profile Card -->
           @if (riskCard(); as risk) {
-            <div class="bg-white border border-gray-100 rounded-lg p-3 shadow-sm">
-              <div class="flex items-center justify-between mb-2">
-                <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest">Risk Profile</h3>
-                <span class="px-2 py-1 rounded text-xs font-semibold"
-                  [class]="risk.riskLevel === 'Conservative' ? 'bg-blue-100 text-blue-800' : risk.riskLevel === 'Aggressive' ? 'bg-red-100 text-red-800' : 'bg-amber-100 text-amber-800'">
-                  {{ risk.riskLevel }}
-                </span>
-              </div>
-              <div class="space-y-1 text-xs text-gray-600">
-                <div class="flex items-center justify-between">
-                  <div class="flex items-center gap-1">
-                    <span>Beta:</span>
-                    <button
-                      type="button"
-                      class="flex items-center justify-center w-3 h-3 rounded-full bg-gray-200 hover:bg-gray-300 text-gray-600 text-[8px] font-bold transition-colors cursor-help"
-                      (mouseenter)="showBetaTooltip($event)"
-                      (mouseleave)="hideTooltip()"
-                      (mousemove)="showBetaTooltip($event)"
-                      aria-label="Information about Beta">
-                      ?
-                    </button>
-                  </div>
-                  <div class="flex items-center gap-1.5">
-                    <span class="font-mono">{{ risk.beta | number:'1.2-2' }}</span>
-                    <span class="px-1 py-0.5 rounded text-[10px] font-semibold"
-                      [class]="risk.betaColor === 'emerald' ? 'bg-emerald-100 text-emerald-800' : risk.betaColor === 'red' ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800'">
-                      {{ risk.betaLabel }}
-                    </span>
-                  </div>
-                </div>
-                <div class="flex justify-between">
-                  <span>Volatility:</span>
-                  <span class="font-mono">{{ (risk.volatility * 100) | number:'1.1-1' }}%</span>
-                </div>
-                <div class="flex items-center justify-between">
-                  <div class="flex items-center gap-1">
-                    <span>Sharpe Ratio:</span>
-                    <button
-                      type="button"
-                      class="flex items-center justify-center w-3 h-3 rounded-full bg-gray-200 hover:bg-gray-300 text-gray-600 text-[8px] font-bold transition-colors cursor-help"
-                      (mouseenter)="showSharpeTooltip($event)"
-                      (mouseleave)="hideTooltip()"
-                      (mousemove)="showSharpeTooltip($event)"
-                      aria-label="Information about Sharpe Ratio">
-                      ?
-                    </button>
-                  </div>
-                  <div class="flex items-center gap-1.5">
-                    <span class="font-mono">{{ risk.sharpeRatio | number:'1.2-2' }}</span>
-                    <span class="px-1 py-0.5 rounded text-[10px] font-semibold"
-                      [class]="risk.sharpeColor === 'emerald' ? 'bg-emerald-100 text-emerald-800' : risk.sharpeColor === 'red' ? 'bg-red-100 text-red-800' : risk.sharpeColor === 'amber' ? 'bg-amber-100 text-amber-800' : 'bg-gray-100 text-gray-800'">
-                      {{ risk.sharpeLabel }}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <app-risk-profile-card
+              [data]="risk"
+              (betaTooltipRequested)="showBetaTooltip($event)"
+              (sharpeTooltipRequested)="showSharpeTooltip($event)"
+              (sectionTooltipRequested)="showRiskProfileTooltip($event)">
+            </app-risk-profile-card>
           }
 
           <!-- Rebalancing Actions Card -->
           @if (rebalancingActionsCard(); as actions) {
-            <div class="bg-white border border-gray-100 rounded-lg p-3 shadow-sm">
-              <div class="flex items-center justify-between mb-2">
-                <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest">Rebalancing Actions</h3>
-                <span class="text-xs text-gray-500">{{ actions.topActions.length }} actions</span>
-              </div>
-              <div class="space-y-1.5 max-h-32 overflow-y-auto">
-                @for (action of actions.topActions; track action.ticker) {
-                  <div class="flex items-center justify-between text-xs">
-                    <span class="font-medium text-gray-900 truncate flex-1">{{ action.ticker }}</span>
-                    <span class="ml-2 font-mono whitespace-nowrap"
-                      [class]="action.actionType === 'Buy' ? 'text-green-700' : 'text-red-700'">
-                      {{ action.actionType === 'Buy' ? '+' : '-' }}{{ Math.abs(action.differenceValue) | currency:'EUR':'symbol':'1.0-0' }}
-                    </span>
-                  </div>
-                }
-              </div>
-            </div>
+            <app-rebalancing-actions-card
+              [data]="actions"
+              (sectionTooltipRequested)="showRebalancingActionsTooltip($event)">
+            </app-rebalancing-actions-card>
           }
-        </div>
-      </div>
-  </div>
-
-  <!-- Smart Rebalancing Overlay (slides up from bottom to cover entire viewport when expanded) -->
-  <div class="absolute left-0 right-0 flex flex-col bg-white overflow-hidden transition-all duration-300 ease-in-out z-20 shadow-lg"
-       [style.height]="isSmartRebalancingExpanded() ? '100%' : '48px'"
-       [class.bottom-0]="isSmartRebalancingExpanded()"
-       [class.bottom-[-1rem]]="!isSmartRebalancingExpanded()"
-       [class.sm:bottom-[-1.5rem]]="!isSmartRebalancingExpanded()"
-       [style.pointer-events]="isSmartRebalancingExpanded() ? 'auto' : 'auto'">
-      <div class="shrink-0 px-6 py-2 bg-white border-b border-gray-100" [style.pointer-events]="'auto'">
-        <div class="flex items-center justify-between">
-          <div class="flex items-center gap-2">
-            <button
-              (click)="toggleSmartRebalancing()"
-              class="flex items-center justify-center w-5 h-5 rounded hover:bg-gray-100 transition-colors"
-              [attr.aria-label]="isSmartRebalancingExpanded() ? 'Collapse Smart Rebalancing' : 'Expand Smart Rebalancing'">
-              <svg class="w-4 h-4 text-gray-500 transition-transform duration-300" 
-                   [class.rotate-180]="!isSmartRebalancingExpanded()"
-                   xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
-              </svg>
-            </button>
-            <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest">
-              Smart Rebalancing
-            </h3>
-            <button
-              type="button"
-              class="flex items-center justify-center w-4 h-4 rounded-full bg-gray-200 hover:bg-gray-300 text-gray-600 text-[10px] font-bold transition-colors cursor-help"
-              (mouseenter)="showSmartRebalancingInfoTooltip($event)"
-              (mouseleave)="hideTooltip()"
-              (mousemove)="showSmartRebalancingInfoTooltip($event)"
-              aria-label="Information about Smart Rebalancing">
-              ?
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <div class="flex-1 overflow-hidden min-h-0" 
-           [style.height]="isSmartRebalancingExpanded() ? '100%' : '0'"
-           [style.opacity]="isSmartRebalancingExpanded() ? '1' : '0'"
-           [style.visibility]="isSmartRebalancingExpanded() ? 'visible' : 'hidden'">
-        <div class="overflow-y-auto min-h-0 p-4 h-full">
-          <div class="max-w-2xl mx-auto">
-            <div class="flex flex-col gap-3">
-              <!-- Inputs Row -->
-              <div class="flex items-end gap-3">
-                <div class="flex-1 flex flex-col gap-1">
-                  <div class="flex items-center gap-1.5">
-                    <label for="investmentAmountExpanded" class="text-xs font-medium text-gray-600">Investment Amount (€)</label>
-                    <button
-                      type="button"
-                      class="flex items-center justify-center w-3.5 h-3.5 rounded-full bg-gray-200 hover:bg-gray-300 text-gray-600 text-[9px] font-bold transition-colors cursor-help"
-                      (mouseenter)="showInfoTooltip($event)"
-                      (mouseleave)="hideTooltip()"
-                      (mousemove)="showInfoTooltip($event)"
-                      aria-label="Information about Smart Rebalancing"
-                    >
-                      ?
-                    </button>
-                  </div>
-                  <input
-                    id="investmentAmountExpanded"
-                    type="number"
-                    [value]="investmentAmount()"
-                    (input)="onInvestmentAmountChange($event)"
-                    step="100"
-                    placeholder="0"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm font-mono focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
-                  />
-                </div>
-
-                <div class="flex-1 flex flex-col gap-1">
-                  <label for="maxSecuritiesExpanded" class="text-xs font-medium text-gray-600">Max Securities (optional)</label>
-                  <input
-                    id="maxSecuritiesExpanded"
-                    type="number"
-                    [value]="maxSecurities() ?? ''"
-                    (input)="onMaxSecuritiesChange($event)"
-                    min="1"
-                    placeholder="No limit"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm font-mono focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
-                  />
-                </div>
-              </div>
-
-              <h3 class="text-xs font-semibold text-gray-700 mt-4 mb-2">
-                Recommended Buys ({{ topRecommendations().length }})
-              </h3>
-
-              @if (smartRecommendationsLoading()) {
-                <div class="flex items-center justify-center py-6">
-                  <div class="text-xs text-gray-500">Calculating recommendations...</div>
-                </div>
-              } @else if (topRecommendations().length > 0) {
-                <div class="space-y-1.5">
-                  @for (rec of topRecommendations(); track rec.ticker) {
-                    <div class="flex items-center justify-between p-2 border border-gray-200 rounded-md hover:bg-green-50 transition-colors bg-white">
-                      <div class="flex-1 min-w-0">
-                        <div class="text-xs font-bold text-gray-900 truncate">
-                          {{ rec.companyName }}
-                        </div>
-                        <div class="text-[10px] text-gray-500">{{ rec.ticker }}</div>
-                      </div>
-                      <div class="text-sm font-mono font-bold text-green-700 ml-3 whitespace-nowrap">
-                        +{{ rec.buyAmount | currency : "EUR" : "symbol" : "1.2-2" }}
-                      </div>
-                    </div>
-                  }
-                </div>
-              } @else if (investmentAmount() > 0) {
-                <p class="text-xs text-gray-500">No buy recommendations at this investment amount.</p>
-              } @else {
-                <p class="text-xs text-gray-400">Enter an investment amount above to see recommendations.</p>
-              }
-            </div>
-          </div>
-        </div>
       </div>
     </div>
+  </div>
 
-</div>
+  <!-- Smart Rebalancing Overlay -->
+  <app-smart-rebalancing
+    [userId]="'a1b2c3d4-e5f6-4a5b-8c9d-0e1f2a3b4c5d'"
+    (expandedChange)="isSmartRebalancingExpanded.set($event)">
+  </app-smart-rebalancing>

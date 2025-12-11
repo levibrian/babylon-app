@@ -1,0 +1,63 @@
+<div class="bg-white border border-gray-100 rounded-lg p-3 shadow-sm">
+  <div class="flex items-center justify-between mb-2">
+    <div class="flex items-center gap-1.5">
+      <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest">Risk Profile</h3>
+      <button
+        type="button"
+        class="flex items-center justify-center w-3.5 h-3.5 rounded-full bg-gray-200 hover:bg-gray-300 text-gray-600 text-[9px] font-bold transition-colors cursor-help"
+        (mouseenter)="onSectionInfoHover($event)"
+        aria-label="Information about Risk Profile">
+        ?
+      </button>
+    </div>
+    <span class="px-2 py-1 rounded text-xs font-semibold"
+      [class]="data().riskLevel === 'Conservative' ? 'bg-blue-100 text-blue-800' : data().riskLevel === 'Aggressive' ? 'bg-red-100 text-red-800' : 'bg-amber-100 text-amber-800'">
+      {{ data().riskLevel }}
+    </span>
+  </div>
+  <div class="space-y-1 text-xs text-gray-600">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-1">
+        <span>Beta:</span>
+        <button
+          type="button"
+          class="flex items-center justify-center w-3 h-3 rounded-full bg-gray-200 hover:bg-gray-300 text-gray-600 text-[8px] font-bold transition-colors cursor-help"
+          (mouseenter)="onBetaInfoHover($event)"
+          aria-label="Information about Beta">
+          ?
+        </button>
+      </div>
+      <div class="flex items-center gap-1.5">
+        <span class="font-mono">{{ data().beta | number:'1.2-2' }}</span>
+        <span class="px-1 py-0.5 rounded text-[10px] font-semibold"
+          [class]="data().betaColor === 'emerald' ? 'bg-emerald-100 text-emerald-800' : data().betaColor === 'red' ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800'">
+          {{ data().betaLabel }}
+        </span>
+      </div>
+    </div>
+    <div class="flex justify-between">
+      <span>Volatility:</span>
+      <span class="font-mono">{{ (data().volatility * 100) | number:'1.1-1' }}%</span>
+    </div>
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-1">
+        <span>Sharpe Ratio:</span>
+        <button
+          type="button"
+          class="flex items-center justify-center w-3 h-3 rounded-full bg-gray-200 hover:bg-gray-300 text-gray-600 text-[8px] font-bold transition-colors cursor-help"
+          (mouseenter)="onSharpeInfoHover($event)"
+          aria-label="Information about Sharpe Ratio">
+          ?
+        </button>
+      </div>
+      <div class="flex items-center gap-1.5">
+        <span class="font-mono">{{ data().sharpeRatio | number:'1.2-2' }}</span>
+        <span class="px-1 py-0.5 rounded text-[10px] font-semibold"
+          [class]="data().sharpeColor === 'emerald' ? 'bg-emerald-100 text-emerald-800' : data().sharpeColor === 'red' ? 'bg-red-100 text-red-800' : data().sharpeColor === 'amber' ? 'bg-amber-100 text-amber-800' : 'bg-gray-100 text-gray-800'">
+          {{ data().sharpeLabel }}
+        </span>
+      </div>
+    </div>
+  </div>
+</div>
+

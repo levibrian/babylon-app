@@ -1,0 +1,29 @@
+<div class="flex flex-col gap-1">
+  <div class="flex items-center justify-between">
+    <span class="text-xs font-medium text-gray-600">{{ label() }}</span>
+    <span class="text-xs font-mono text-gray-500">
+      {{ totalPercentage() | number : "1.1-1" }}%
+    </span>
+  </div>
+  <div 
+    class="w-full h-6 bg-gray-100 rounded-md overflow-hidden flex relative"
+    [class.border-2]="showBorder()"
+    [class.border-gray-300]="showBorder()">
+    @for (seg of segments(); track seg.ticker) {
+      <div
+        class="h-full transition-all duration-300 cursor-pointer hover:opacity-90 relative"
+        [style.background-color]="seg.color"
+        [style.width.%]="seg.width"
+        (mousemove)="onSegmentHover($event, seg)"
+        (mouseleave)="onSegmentLeave()"
+      >
+        @if (seg.width >= 8) {
+          <span class="absolute inset-0 flex items-center justify-center text-[10px] font-mono font-medium text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.5)] pointer-events-none">
+            {{ seg.percentage | number : "1.1-1" }}%
+          </span>
+        }
+      </div>
+    }
+  </div>
+</div>
+
