@@ -3,7 +3,7 @@
     @for (item of portfolio(); track item.ticker) {
       <li class="group">
         <!-- Parent Item -->
-        <div [class]="'cursor-pointer grid grid-cols-[3rem_1fr_11rem_7rem_6rem_1.5rem] gap-4 items-center py-3 border-b border-gray-100 hover:bg-gray-50 transition-colors duration-150 text-sm ' + (isExpanded(item.ticker) ? 'bg-gray-50' : '')" 
+        <div [class]="'cursor-pointer grid grid-cols-[3rem_minmax(8rem,1fr)_9rem_3rem_6rem_1.5rem] gap-2 items-center py-3 border-b border-gray-100 hover:bg-gray-50 transition-colors duration-150 text-sm ' + (isExpanded(item.ticker) ? 'bg-gray-50' : '')" 
              (click)="toggleExpand(item.ticker)">
           <!-- Avatar -->
           <div>
@@ -27,14 +27,14 @@
           </div>
 
           <!-- Allocation Badge (Fixed Width) -->
-          <div class="flex justify-start">
-            <div class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-gray-100 text-xs font-mono">
-              <span class="text-xs font-medium text-gray-600">Act:</span>
+          <div class="flex justify-start w-full min-w-0 overflow-hidden">
+            <div class="inline-flex items-center gap-0.5 px-1 py-0.5 rounded-md bg-gray-100 text-[10px] font-mono whitespace-nowrap max-w-full">
+              <span class="text-[10px] font-medium text-gray-600">Act:</span>
               <span [class]="'font-medium ' + getCurrentAllocationColorClass(item)">
                 {{ item.currentAllocationPercentage | number:'1.1-1' }}%
               </span>
-              <span class="text-gray-400">→</span>
-              <span class="text-xs font-medium text-gray-600">Tgt:</span>
+              <span class="text-gray-400 text-[10px]">→</span>
+              <span class="text-[10px] font-medium text-gray-600">Tgt:</span>
               <span class="font-medium text-gray-900">{{ item.targetAllocationPercentage | number:'1.1-1' }}%</span>
             </div>
           </div>
@@ -42,7 +42,7 @@
           <!-- Action Button (Buy/Sell) -->
           <div class="flex justify-start">
             @if (item.rebalancingStatus !== 'Balanced') {
-              <div [class]="'inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold border font-mono ' + getRebalancingStatusClass(item)">
+              <div [class]="'inline-flex items-center px-1 py-0.5 rounded-md text-xs font-semibold border font-mono whitespace-nowrap ' + getRebalancingStatusClass(item)">
                 {{ getRebalancingStatusWithAction(item) }}
               </div>
             }
