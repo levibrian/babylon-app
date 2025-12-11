@@ -35,7 +35,6 @@
               class="flex items-center justify-center w-3.5 h-3.5 rounded-full bg-gray-200 hover:bg-gray-300 text-gray-600 text-[9px] font-bold transition-colors cursor-help"
               (mouseenter)="showPortfolioHealthTooltip($event)"
               (mouseleave)="hideTooltip()"
-              (mousemove)="showPortfolioHealthTooltip($event)"
               aria-label="Information about Portfolio Health">
               ?
             </button>
@@ -101,7 +100,7 @@
                 class="h-full transition-all duration-300 cursor-pointer hover:opacity-90 relative"
                 [style.background-color]="seg.color"
                 [style.width.%]="seg.width"
-                (mousemove)="
+                (mouseenter)="
                   showTooltip(
                     $event,
                     seg.delta > 0 
@@ -152,7 +151,9 @@
             <app-diversification-card
               [data]="divCard"
               (hhiTooltipRequested)="showHHITooltip($event)"
-              (scoreTooltipRequested)="showDiversificationSectionTooltip($event)">
+              (hhiTooltipLeft)="hideTooltip()"
+              (scoreTooltipRequested)="showDiversificationSectionTooltip($event)"
+              (scoreTooltipLeft)="hideTooltip()">
             </app-diversification-card>
           }
 
@@ -161,8 +162,11 @@
             <app-risk-profile-card
               [data]="risk"
               (betaTooltipRequested)="showBetaTooltip($event)"
+              (betaTooltipLeft)="hideTooltip()"
               (sharpeTooltipRequested)="showSharpeTooltip($event)"
-              (sectionTooltipRequested)="showRiskProfileTooltip($event)">
+              (sharpeTooltipLeft)="hideTooltip()"
+              (sectionTooltipRequested)="showRiskProfileTooltip($event)"
+              (sectionTooltipLeft)="hideTooltip()">
             </app-risk-profile-card>
           }
 
@@ -170,7 +174,8 @@
           @if (rebalancingActionsCard(); as actions) {
             <app-rebalancing-actions-card
               [data]="actions"
-              (sectionTooltipRequested)="showRebalancingActionsTooltip($event)">
+              (sectionTooltipRequested)="showRebalancingActionsTooltip($event)"
+              (sectionTooltipLeft)="hideTooltip()">
             </app-rebalancing-actions-card>
           }
       </div>

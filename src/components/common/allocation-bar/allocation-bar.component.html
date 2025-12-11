@@ -14,7 +14,7 @@
         class="h-full transition-all duration-300 cursor-pointer hover:opacity-90 relative"
         [style.background-color]="seg.color"
         [style.width.%]="seg.width"
-        (mousemove)="onSegmentHover($event, seg)"
+        (mouseenter)="onSegmentHover($event, seg)"
         (mouseleave)="onSegmentLeave()"
       >
         @if (seg.width >= 8) {

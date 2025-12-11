@@ -30,7 +30,6 @@
           class="flex items-center justify-center w-4 h-4 rounded-full bg-gray-200 hover:bg-gray-300 text-gray-600 text-[10px] font-bold transition-colors cursor-help relative"
           (mouseenter)="showInfoTooltip($event)"
           (mouseleave)="hideInfoTooltip()"
-          (mousemove)="showInfoTooltip($event)"
           aria-label="Information about Smart Rebalancing">
           ?
           @if (showTooltip()) {
@@ -71,7 +70,6 @@
                   class="flex items-center justify-center w-3.5 h-3.5 rounded-full bg-gray-200 hover:bg-gray-300 text-gray-600 text-[9px] font-bold transition-colors cursor-help"
                   (mouseenter)="showAmountInfoTooltip($event)"
                   (mouseleave)="hideInfoTooltip()"
-                  (mousemove)="showAmountInfoTooltip($event)"
                   aria-label="Information about Investment Amount">
                   ?
                 </button>

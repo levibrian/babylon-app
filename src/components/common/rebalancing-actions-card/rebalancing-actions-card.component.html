@@ -6,6 +6,7 @@
         type="button"
         class="flex items-center justify-center w-3.5 h-3.5 rounded-full bg-gray-200 hover:bg-gray-300 text-gray-600 text-[9px] font-bold transition-colors cursor-help"
         (mouseenter)="onSectionInfoHover($event)"
+        (mouseleave)="onSectionInfoLeave()"
         aria-label="Information about Rebalancing Actions">
         ?
       </button>
@@ -15,7 +16,7 @@
   <div class="space-y-1.5 max-h-32 overflow-y-auto">
     @for (action of data().topActions; track action.ticker) {
       <div class="flex items-center justify-between text-xs">
-        <span class="font-medium text-gray-900 truncate flex-1">{{ action.ticker }}</span>
+        <span class="font-medium text-gray-900 truncate flex-1">{{ action.securityName || action.ticker }}</span>
         <span class="ml-2 font-mono whitespace-nowrap"
           [class]="action.actionType === 'Buy' ? 'text-green-700' : 'text-red-700'">
           {{ action.actionType === 'Buy' ? '+' : '-' }}{{ Math.abs(action.differenceValue) | currency:'EUR':'symbol':'1.0-0' }}

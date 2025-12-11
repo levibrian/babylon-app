@@ -19,9 +19,16 @@ export class RebalancingActionsCardComponent {
   
   /** Event emitted when section info icon is hovered */
   sectionTooltipRequested = output<MouseEvent>();
+  
+  /** Event emitted when section info icon is left */
+  sectionTooltipLeft = output<void>();
 
   onSectionInfoHover(event: MouseEvent): void {
     this.sectionTooltipRequested.emit(event);
+  }
+
+  onSectionInfoLeave(): void {
+    this.sectionTooltipLeft.emit();
   }
 
   // Helper for template

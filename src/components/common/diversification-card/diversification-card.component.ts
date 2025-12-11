@@ -20,15 +20,29 @@ export class DiversificationCardComponent {
   /** Event emitted when HHI info icon is hovered */
   hhiTooltipRequested = output<MouseEvent>();
   
+  /** Event emitted when HHI info icon is left */
+  hhiTooltipLeft = output<void>();
+  
   /** Event emitted when diversification score info icon is hovered */
   scoreTooltipRequested = output<MouseEvent>();
+  
+  /** Event emitted when diversification score info icon is left */
+  scoreTooltipLeft = output<void>();
 
   onHHIInfoHover(event: MouseEvent): void {
     this.hhiTooltipRequested.emit(event);
   }
 
+  onHHIInfoLeave(): void {
+    this.hhiTooltipLeft.emit();
+  }
+
   onScoreInfoHover(event: MouseEvent): void {
     this.scoreTooltipRequested.emit(event);
+  }
+
+  onScoreInfoLeave(): void {
+    this.scoreTooltipLeft.emit();
   }
 }
 
