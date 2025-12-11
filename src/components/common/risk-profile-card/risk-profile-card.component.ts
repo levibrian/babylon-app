@@ -34,6 +34,12 @@ export class RiskProfileCardComponent {
   
   /** Event emitted when Risk Profile section info icon is left */
   sectionTooltipLeft = output<void>();
+  
+  /** Event emitted when Volatility info icon is hovered */
+  volatilityTooltipRequested = output<MouseEvent>();
+  
+  /** Event emitted when Volatility info icon is left */
+  volatilityTooltipLeft = output<void>();
 
   onBetaInfoHover(event: MouseEvent): void {
     this.betaTooltipRequested.emit(event);
@@ -49,6 +55,14 @@ export class RiskProfileCardComponent {
 
   onSharpeInfoLeave(): void {
     this.sharpeTooltipLeft.emit();
+  }
+
+  onVolatilityInfoHover(event: MouseEvent): void {
+    this.volatilityTooltipRequested.emit(event);
+  }
+
+  onVolatilityInfoLeave(): void {
+    this.volatilityTooltipLeft.emit();
   }
 
   onSectionInfoHover(event: MouseEvent): void {

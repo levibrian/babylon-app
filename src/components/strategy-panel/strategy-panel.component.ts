@@ -1110,20 +1110,41 @@ export class StrategyPanelComponent implements OnInit {
 
   // Show tooltip for Beta
   showBetaTooltip(event: MouseEvent): void {
+    const riskCard = this.riskCard();
+    const betaValue = riskCard?.beta ?? 0;
+    const benchmarkTicker = riskCard?.period ? 'S&P 500' : 'market';
+    
     this.activeTooltip.set({
       x: event.clientX,
       y: event.clientY,
-      text: "Measures volatility relative to the market. < 1 is more stable, > 1 is riskier.",
+      text: `Beta (β) measures how much your portfolio moves relative to the ${benchmarkTicker}. Formula: Covariance(Portfolio, Market) / Variance(Market). A beta of ${betaValue.toFixed(2)} means your portfolio is ${betaValue < 1 ? 'less volatile' : betaValue > 1 ? 'more volatile' : 'equally volatile'} than the market. Use this to understand if your portfolio aligns with your risk tolerance.`,
       color: "transparent",
     });
   }
 
   // Show tooltip for Sharpe Ratio
   showSharpeTooltip(event: MouseEvent): void {
+    const riskCard = this.riskCard();
+    const sharpeValue = riskCard?.sharpeRatio ?? 0;
+    
     this.activeTooltip.set({
       x: event.clientX,
       y: event.clientY,
-      text: "Risk-adjusted return metric. Higher is better. > 1 = good, > 2 = excellent.",
+      text: `Sharpe Ratio measures risk-adjusted returns. Formula: (Portfolio Return - Risk-Free Rate) / Volatility. Your ratio of ${sharpeValue.toFixed(2)} means you're earning ${sharpeValue.toFixed(2)} units of return per unit of risk. Higher is better: >1 = good, >2 = excellent. This helps you compare investments: a portfolio with higher Sharpe Ratio gives better returns for the same risk level.`,
+      color: "transparent",
+    });
+  }
+
+  // Show tooltip for Volatility
+  showVolatilityTooltip(event: MouseEvent): void {
+    const riskCard = this.riskCard();
+    const volatilityValue = riskCard?.volatility ?? 0;
+    const volatilityPercent = (volatilityValue * 100).toFixed(1);
+    
+    this.activeTooltip.set({
+      x: event.clientX,
+      y: event.clientY,
+      text: `Volatility measures how much your portfolio's returns fluctuate over time. Calculated as the standard deviation of annualized returns. Your volatility of ${volatilityPercent}% means your portfolio value can swing by this amount in a typical year. Lower volatility = more stable returns, but potentially lower gains. Use this to understand if your portfolio's ups and downs match your comfort level.`,
       color: "transparent",
     });
   }
@@ -1163,7 +1184,7 @@ export class StrategyPanelComponent implements OnInit {
     this.activeTooltip.set({
       x: event.clientX,
       y: event.clientY,
-      text: "Analyzes portfolio volatility and risk-adjusted returns to assess your risk exposure relative to the market.",
+      text: "Risk Profile shows how your portfolio performs relative to the market. Beta measures market correlation, Volatility shows price swings, and Sharpe Ratio evaluates risk-adjusted returns. Together, these metrics help you understand if your portfolio's risk level matches your investment goals and tolerance.",
       color: "transparent",
     });
   }

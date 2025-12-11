@@ -2,7 +2,7 @@
   <!-- Custom Tooltip -->
   @if (activeTooltip(); as tip) {
   <div
-    class="fixed z-50 pointer-events-none bg-gray-900 text-white text-xs font-medium py-1.5 px-3 rounded shadow-lg flex items-center gap-2 transform -translate-x-1/2 -translate-y-full mt-[-8px] max-w-xs"
+    class="fixed z-50 pointer-events-none bg-gray-900 text-white text-xs font-medium py-2 px-4 rounded shadow-lg flex items-start gap-2 transform -translate-x-1/2 -translate-y-full mt-[-8px] max-w-md"
     [style.left.px]="tip.x"
     [style.top.px]="tip.y"
   >
@@ -165,6 +165,8 @@
               (betaTooltipLeft)="hideTooltip()"
               (sharpeTooltipRequested)="showSharpeTooltip($event)"
               (sharpeTooltipLeft)="hideTooltip()"
+              (volatilityTooltipRequested)="showVolatilityTooltip($event)"
+              (volatilityTooltipLeft)="hideTooltip()"
               (sectionTooltipRequested)="showRiskProfileTooltip($event)"
               (sectionTooltipLeft)="hideTooltip()">
             </app-risk-profile-card>
