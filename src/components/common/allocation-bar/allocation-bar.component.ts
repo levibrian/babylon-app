@@ -1,5 +1,5 @@
-import { Component, ChangeDetectionStrategy, input, output, inject } from '@angular/core';
-import { CommonModule, DecimalPipe, CurrencyPipe } from '@angular/common';
+import { Component, ChangeDetectionStrategy, input, output } from '@angular/core';
+import { CommonModule, DecimalPipe } from '@angular/common';
 import { BarSegment } from '../../../models/strategy.model';
 
 /**
@@ -14,9 +14,6 @@ import { BarSegment } from '../../../models/strategy.model';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AllocationBarComponent {
-  private currencyPipe = inject(CurrencyPipe);
-  private decimalPipe = inject(DecimalPipe);
-  
   /** Bar segments to display */
   segments = input.required<BarSegment[]>();
   
@@ -36,8 +33,14 @@ export class AllocationBarComponent {
   segmentLeft = output<void>();
 
   onSegmentHover(event: MouseEvent, segment: BarSegment): void {
-    const formattedValue = this.currencyPipe.transform(segment.value, 'EUR', 'symbol', '1.2-2') || '€0.00';
-    const formattedPercentage = this.decimalPipe.transform(segment.percentage, '1.2-2') || '0.00';
+    // Format using Intl.NumberFormat instead of injecting pipes
+    const formattedValue = new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'EUR',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(segment.value);
+    const formattedPercentage = segment.percentage.toFixed(2);
     const tooltip = `${segment.ticker}: ${formattedPercentage}% (${formattedValue})`;
     this.segmentHovered.emit({ event, segment, tooltip });
   }
