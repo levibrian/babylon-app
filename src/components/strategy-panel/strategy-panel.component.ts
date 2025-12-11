@@ -581,12 +581,31 @@ export class StrategyPanelComponent implements OnInit {
     const metrics = this.analyticsService.diversificationMetrics();
     if (!metrics) return null;
 
+    // Determine diversification level
+    let level: 'Excellent' | 'Good' | 'Moderate' | 'Poor' = 'Moderate';
+    let levelColor = 'amber';
+    if (metrics.diversificationScore >= 80) {
+      level = 'Excellent';
+      levelColor = 'emerald';
+    } else if (metrics.diversificationScore >= 60) {
+      level = 'Good';
+      levelColor = 'emerald';
+    } else if (metrics.diversificationScore >= 40) {
+      level = 'Moderate';
+      levelColor = 'amber';
+    } else {
+      level = 'Poor';
+      levelColor = 'red';
+    }
+
     return {
       score: metrics.diversificationScore,
       hhi: metrics.hhi,
       top5Concentration: metrics.top5Concentration,
       totalAssets: metrics.totalAssets,
       effectiveN: metrics.effectiveN,
+      level,
+      levelColor,
     };
   });
 
@@ -603,11 +622,43 @@ export class StrategyPanelComponent implements OnInit {
       riskLevel = 'Aggressive';
     }
 
+    // Beta interpretation
+    let betaLabel = 'Market Average';
+    let betaColor = 'gray';
+    if (metrics.beta < 0.8) {
+      betaLabel = 'Low Volatility';
+      betaColor = 'emerald';
+    } else if (metrics.beta > 1.2) {
+      betaLabel = 'High Volatility';
+      betaColor = 'red';
+    }
+
+    // Sharpe Ratio interpretation
+    let sharpeLabel = 'Average';
+    let sharpeColor = 'gray';
+    if (metrics.sharpeRatio >= 2) {
+      sharpeLabel = 'Excellent';
+      sharpeColor = 'emerald';
+    } else if (metrics.sharpeRatio >= 1) {
+      sharpeLabel = 'Good';
+      sharpeColor = 'emerald';
+    } else if (metrics.sharpeRatio >= 0.5) {
+      sharpeLabel = 'Average';
+      sharpeColor = 'amber';
+    } else {
+      sharpeLabel = 'Poor';
+      sharpeColor = 'red';
+    }
+
     return {
       riskLevel,
       beta: metrics.beta,
+      betaLabel,
+      betaColor,
       volatility: metrics.annualizedVolatility,
       sharpeRatio: metrics.sharpeRatio,
+      sharpeLabel,
+      sharpeColor,
       annualizedReturn: metrics.annualizedReturn,
       period: metrics.period,
     };
@@ -1034,7 +1085,7 @@ export class StrategyPanelComponent implements OnInit {
     this.activeTooltip.set(null);
   }
 
-  // Show info tooltip for Smart Rebalancing help button
+  // Show info tooltip for Smart Rebalancing help button (in inputs section)
   showInfoTooltip(event: MouseEvent): void {
     const investmentAmount = this.investmentAmount();
     let tooltipText = "Enter an amount to see how to allocate it to reach your targets.";
@@ -1052,6 +1103,56 @@ export class StrategyPanelComponent implements OnInit {
       y: event.clientY,
       text: tooltipText,
       color: "transparent", // No color dot for info tooltips
+    });
+  }
+
+  // Show info tooltip for Smart Rebalancing header button
+  showSmartRebalancingInfoTooltip(event: MouseEvent): void {
+    this.activeTooltip.set({
+      x: event.clientX,
+      y: event.clientY,
+      text: "Calculates optimal buy recommendations to bring your portfolio closer to target allocations.",
+      color: "transparent", // No color dot for info tooltips
+    });
+  }
+
+  // Show tooltip for HHI
+  showHHITooltip(event: MouseEvent): void {
+    this.activeTooltip.set({
+      x: event.clientX,
+      y: event.clientY,
+      text: "Herfindahl-Hirschman Index (0-1). Lower is better. < 0.15 = well diversified, > 0.25 = high concentration.",
+      color: "transparent",
+    });
+  }
+
+  // Show tooltip for Beta
+  showBetaTooltip(event: MouseEvent): void {
+    this.activeTooltip.set({
+      x: event.clientX,
+      y: event.clientY,
+      text: "Measures volatility relative to the market. < 1 is more stable, > 1 is riskier.",
+      color: "transparent",
+    });
+  }
+
+  // Show tooltip for Sharpe Ratio
+  showSharpeTooltip(event: MouseEvent): void {
+    this.activeTooltip.set({
+      x: event.clientX,
+      y: event.clientY,
+      text: "Risk-adjusted return metric. Higher is better. > 1 = good, > 2 = excellent.",
+      color: "transparent",
+    });
+  }
+
+  // Show tooltip for Diversification Score
+  showDiversificationScoreTooltip(event: MouseEvent): void {
+    this.activeTooltip.set({
+      x: event.clientX,
+      y: event.clientY,
+      text: "Portfolio diversification score (0-100). Higher scores indicate better diversification across assets.",
+      color: "transparent",
     });
   }
 
