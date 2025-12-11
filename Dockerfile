@@ -7,7 +7,13 @@ WORKDIR /app
 COPY package.json package-lock.json* ./
 
 # Install dependencies
-RUN npm ci
+# Use --legacy-peer-deps to handle peer dependency conflicts
+# Fallback to npm install if package-lock.json is missing or outdated
+RUN if [ -f package-lock.json ]; then \
+      npm ci --legacy-peer-deps --no-audit --no-fund; \
+    else \
+      npm install --legacy-peer-deps --no-audit --no-fund; \
+    fi
 
 # Copy source code
 COPY . .
