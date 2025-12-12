@@ -8,7 +8,7 @@ import {
   OnInit,
   effect,
 } from '@angular/core';
-import { CommonModule, CurrencyPipe, DecimalPipe } from '@angular/common';
+import { CommonModule, CurrencyPipe } from '@angular/common';
 import { PortfolioItem } from '../../models/portfolio.model';
 import { AllocationService } from '../../services/allocation.service';
 import { PortfolioService } from '../../services/portfolio.service';
@@ -41,7 +41,6 @@ import { SmartRebalancingComponent } from '../common/smart-rebalancing/smart-reb
   templateUrl: "./strategy-panel.component.html",
   imports: [
     CommonModule,
-    DecimalPipe,
     DiversificationCardComponent,
     RiskProfileCardComponent,
     RebalancingActionsCardComponent,
@@ -143,6 +142,9 @@ export class StrategyPanelComponent implements OnInit {
   // Smart rebalancing recommendations from API
   smartRecommendations = signal<ApiSmartRebalancingRecommendation[]>([]);
   smartRecommendationsLoading = signal<boolean>(false);
+  
+  // Track initial load state - starts as true, becomes false once analytics load
+  private initialAnalyticsLoad = signal<boolean>(true);
 
   // Target editor - local state for inputs (to allow editing before saving)
   private targetInputs = signal<Map<string, number>>(new Map());
@@ -565,6 +567,50 @@ export class StrategyPanelComponent implements OnInit {
     return recommendations;
   });
 
+  // Effect to track when all analytics are loaded
+  constructor() {
+    // Sync local inputs with service targetMap when it changes
+    effect(() => {
+      const targetMap = this.allocationService.targetMap();
+      if (targetMap.size > 0) {
+        const newInputs = new Map<string, number>();
+        targetMap.forEach((value, key) => {
+          newInputs.set(key, value);
+        });
+        this.targetInputs.set(newInputs);
+      }
+    });
+
+    // Track when all analytics metrics are loaded
+    effect(() => {
+      const hasDiversification = !!this.analyticsService.diversificationMetrics();
+      const hasRisk = !!this.analyticsService.riskMetrics();
+      const hasRebalancing = !!this.analyticsService.rebalancingActions();
+      const allMetricsLoaded = hasDiversification && hasRisk && hasRebalancing;
+      
+      if (allMetricsLoaded && this.initialAnalyticsLoad()) {
+        this.initialAnalyticsLoad.set(false);
+      }
+    });
+  }
+
+  // Computed: Check if analytics data is loading or not yet loaded
+  // Show skeletons if: portfolio has items AND (loading OR initial load OR not all metrics loaded yet)
+  isAnalyticsLoading = computed(() => {
+    const hasPortfolio = this.portfolio().length > 0;
+    if (!hasPortfolio) return false; // Don't show skeletons if no portfolio
+    
+    const isLoading = this.analyticsService.loading();
+    const isInitialLoad = this.initialAnalyticsLoad();
+    const hasDiversification = !!this.analyticsService.diversificationMetrics();
+    const hasRisk = !!this.analyticsService.riskMetrics();
+    const hasRebalancing = !!this.analyticsService.rebalancingActions();
+    const allMetricsLoaded = hasDiversification && hasRisk && hasRebalancing;
+    
+    // Show loading if actively loading OR initial load OR if any metric is missing
+    return isLoading || isInitialLoad || !allMetricsLoaded;
+  });
+
   // Computed: Diversification metrics for card display
   diversificationCard = computed(() => {
     const metrics = this.analyticsService.diversificationMetrics();
@@ -666,19 +712,6 @@ export class StrategyPanelComponent implements OnInit {
     };
   });
 
-  constructor() {
-    // Sync local inputs with service targetMap when it changes
-    effect(() => {
-      const targetMap = this.allocationService.targetMap();
-      if (targetMap.size > 0) {
-        const newInputs = new Map<string, number>();
-        targetMap.forEach((value, key) => {
-          newInputs.set(key, value);
-        });
-        this.targetInputs.set(newInputs);
-      }
-    });
-  }
 
   ngOnInit(): void {
     this.allocationService.loadStrategy();

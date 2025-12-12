@@ -19,7 +19,7 @@
   }
 
   <!-- Visual Dashboard (Top) - Single Column -->
-  <div class="flex-1 min-h-0 border-b border-gray-100 bg-white p-3 relative transition-all duration-300 ease-in-out overflow-hidden" 
+  <div class="flex-1 min-h-0 bg-white p-3 relative transition-all duration-300 ease-in-out overflow-hidden" 
        [style.height]="isSmartRebalancingExpanded() ? '0' : '100%'"
        [style.opacity]="isSmartRebalancingExpanded() ? '0' : '1'"
        [style.pointer-events]="isSmartRebalancingExpanded() ? 'none' : 'auto'">
@@ -66,64 +66,47 @@
 
         <!-- Stacked Bar Chart -->
         <div class="flex flex-col gap-3 flex-shrink-0">
-          <!-- Current Allocation Bar -->
-          <app-allocation-bar
-            [segments]="getCurrentBarSegments()"
-            [totalPercentage]="totalCurrentPercentage()"
-            label="Current"
-            [showBorder]="false"
-            (segmentHovered)="showTooltip($event.event, $event.tooltip, $event.segment.color)"
-            (segmentLeft)="hideTooltip()">
-          </app-allocation-bar>
-
-          <!-- Target Allocation Bar -->
-          <app-allocation-bar
-            [segments]="getTargetBarSegments()"
-            [totalPercentage]="totalTargetPercentage()"
-            label="Target"
-            [showBorder]="true"
-            (segmentHovered)="showTooltip($event.event, $event.tooltip, $event.segment.color)"
-            (segmentLeft)="hideTooltip()">
-          </app-allocation-bar>
-
-          <!-- Delta Allocation Bar -->
-          <div class="flex flex-col gap-1">
-            <div class="flex items-center justify-between">
-              <span class="text-xs font-medium text-gray-600">Delta</span>
-              <span class="text-xs font-mono text-gray-500">
-                {{ totalDeltaPercentage() | number : "1.1-1" }}%
-              </span>
-            </div>
-            <div class="w-full h-6 bg-gray-100 rounded-md overflow-hidden flex relative">
-              @for (seg of getDeltaBarSegments(); track $index) {
-              <div
-                class="h-full transition-all duration-300 cursor-pointer hover:opacity-90 relative"
-                [style.background-color]="seg.color"
-                [style.width.%]="seg.width"
-                (mouseenter)="
-                  showTooltip(
-                    $event,
-                    seg.delta > 0 
-                      ? seg.ticker + ': +' + seg.deltaPercentage.toFixed(2) + '% (Overweight)'
-                      : seg.ticker + ': -' + seg.deltaPercentage.toFixed(2) + '% (Underweight)',
-                    seg.color
-                  )
-                "
-                (mouseleave)="hideTooltip()"
-              >
-                @if (seg.width >= 8) {
-                  <span class="absolute inset-0 flex items-center justify-center text-[10px] font-mono font-medium text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.5)] pointer-events-none">
-                    {{ seg.delta > 0 ? '+' : '' }}{{ seg.deltaPercentage | number : "1.1-1" }}%
-                  </span>
-                }
+          @if (isAnalyticsLoading()) {
+            <!-- Loading Skeletons for Bars -->
+            <div class="flex flex-col gap-1">
+              <div class="flex items-center justify-between">
+                <div class="h-3 bg-gray-200 rounded w-16 animate-pulse"></div>
+                <div class="h-3 bg-gray-200 rounded w-12 animate-pulse"></div>
               </div>
-              }
+              <div class="w-full h-6 bg-gray-100 rounded-md animate-pulse"></div>
             </div>
-          </div>
+            <div class="flex flex-col gap-1">
+              <div class="flex items-center justify-between">
+                <div class="h-3 bg-gray-200 rounded w-16 animate-pulse"></div>
+                <div class="h-3 bg-gray-200 rounded w-12 animate-pulse"></div>
+              </div>
+              <div class="w-full h-6 bg-gray-100 rounded-md border-2 border-gray-300 animate-pulse"></div>
+            </div>
+          } @else {
+            <!-- Current Allocation Bar -->
+            <app-allocation-bar
+              [segments]="getCurrentBarSegments()"
+              [totalPercentage]="totalCurrentPercentage()"
+              label="Current"
+              [showBorder]="false"
+              (segmentHovered)="showTooltip($event.event, $event.tooltip, $event.segment.color)"
+              (segmentLeft)="hideTooltip()">
+            </app-allocation-bar>
+
+            <!-- Target Allocation Bar -->
+            <app-allocation-bar
+              [segments]="getTargetBarSegments()"
+              [totalPercentage]="totalTargetPercentage()"
+              label="Target"
+              [showBorder]="true"
+              (segmentHovered)="showTooltip($event.event, $event.tooltip, $event.segment.color)"
+              (segmentLeft)="hideTooltip()">
+            </app-allocation-bar>
+          }
 
           <!-- Legend (if segments exist) -->
           @if (chartSegments().length > 0) {
-          <div class="mt-2 pt-2 border-t border-gray-200">
+          <div class="mt-2 pt-2">
             <div class="text-xs font-medium text-gray-600 mb-2">
               {{ viewMode() === "assets" ? "Top Holdings:" : "Asset Types:" }}
             </div>
@@ -145,40 +128,121 @@
         </div>
 
         <!-- Metric Cards Section -->
-        <div class="mt-4 pt-4 border-t border-gray-200 flex-shrink-0 space-y-3">
+        <div class="mt-4 pt-4 flex-shrink-0 space-y-3">
           <!-- Diversification Card -->
-          @if (diversificationCard(); as divCard) {
-            <app-diversification-card
-              [data]="divCard"
-              (hhiTooltipRequested)="showHHITooltip($event)"
-              (hhiTooltipLeft)="hideTooltip()"
-              (scoreTooltipRequested)="showDiversificationSectionTooltip($event)"
-              (scoreTooltipLeft)="hideTooltip()">
-            </app-diversification-card>
+          @if (analyticsService.diversificationMetrics(); as metrics) {
+            @if (diversificationCard(); as divCard) {
+              <app-diversification-card
+                [data]="divCard"
+                (hhiTooltipRequested)="showHHITooltip($event)"
+                (hhiTooltipLeft)="hideTooltip()"
+                (scoreTooltipRequested)="showDiversificationSectionTooltip($event)"
+                (scoreTooltipLeft)="hideTooltip()">
+              </app-diversification-card>
+            }
+          } @else {
+            <!-- Diversification Card Skeleton -->
+            <div class="animate-pulse">
+              <div class="flex items-center justify-between mb-2">
+                <div class="h-3 bg-gray-200 rounded w-24"></div>
+                <div class="flex items-center gap-2">
+                  <div class="h-5 bg-gray-200 rounded w-8"></div>
+                  <div class="h-5 bg-gray-200 rounded w-16"></div>
+                </div>
+              </div>
+              <div class="space-y-1">
+                <div class="flex justify-between">
+                  <div class="h-3 bg-gray-200 rounded w-12"></div>
+                  <div class="h-3 bg-gray-200 rounded w-16"></div>
+                </div>
+                <div class="flex justify-between">
+                  <div class="h-3 bg-gray-200 rounded w-24"></div>
+                  <div class="h-3 bg-gray-200 rounded w-12"></div>
+                </div>
+                <div class="flex justify-between">
+                  <div class="h-3 bg-gray-200 rounded w-20"></div>
+                  <div class="h-3 bg-gray-200 rounded w-8"></div>
+                </div>
+              </div>
+            </div>
           }
 
           <!-- Risk Profile Card -->
-          @if (riskCard(); as risk) {
-            <app-risk-profile-card
-              [data]="risk"
-              (betaTooltipRequested)="showBetaTooltip($event)"
-              (betaTooltipLeft)="hideTooltip()"
-              (sharpeTooltipRequested)="showSharpeTooltip($event)"
-              (sharpeTooltipLeft)="hideTooltip()"
-              (volatilityTooltipRequested)="showVolatilityTooltip($event)"
-              (volatilityTooltipLeft)="hideTooltip()"
-              (sectionTooltipRequested)="showRiskProfileTooltip($event)"
-              (sectionTooltipLeft)="hideTooltip()">
-            </app-risk-profile-card>
+          @if (analyticsService.riskMetrics(); as metrics) {
+            @if (riskCard(); as risk) {
+              <app-risk-profile-card
+                [data]="risk"
+                (betaTooltipRequested)="showBetaTooltip($event)"
+                (betaTooltipLeft)="hideTooltip()"
+                (sharpeTooltipRequested)="showSharpeTooltip($event)"
+                (sharpeTooltipLeft)="hideTooltip()"
+                (volatilityTooltipRequested)="showVolatilityTooltip($event)"
+                (volatilityTooltipLeft)="hideTooltip()"
+                (sectionTooltipRequested)="showRiskProfileTooltip($event)"
+                (sectionTooltipLeft)="hideTooltip()">
+              </app-risk-profile-card>
+            }
+          } @else {
+            <!-- Risk Profile Card Skeleton -->
+            <div class="animate-pulse">
+              <div class="flex items-center justify-between mb-2">
+                <div class="h-3 bg-gray-200 rounded w-20"></div>
+                <div class="h-5 bg-gray-200 rounded w-24"></div>
+              </div>
+              <div class="space-y-1">
+                <div class="flex justify-between">
+                  <div class="h-3 bg-gray-200 rounded w-12"></div>
+                  <div class="flex items-center gap-1.5">
+                    <div class="h-3 bg-gray-200 rounded w-12"></div>
+                    <div class="h-4 bg-gray-200 rounded w-20"></div>
+                  </div>
+                </div>
+                <div class="flex justify-between">
+                  <div class="h-3 bg-gray-200 rounded w-16"></div>
+                  <div class="h-3 bg-gray-200 rounded w-12"></div>
+                </div>
+                <div class="flex justify-between">
+                  <div class="h-3 bg-gray-200 rounded w-20"></div>
+                  <div class="flex items-center gap-1.5">
+                    <div class="h-3 bg-gray-200 rounded w-12"></div>
+                    <div class="h-4 bg-gray-200 rounded w-16"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
           }
 
           <!-- Rebalancing Actions Card -->
-          @if (rebalancingActionsCard(); as actions) {
-            <app-rebalancing-actions-card
-              [data]="actions"
-              (sectionTooltipRequested)="showRebalancingActionsTooltip($event)"
-              (sectionTooltipLeft)="hideTooltip()">
-            </app-rebalancing-actions-card>
+          @if (analyticsService.rebalancingActions(); as actions) {
+            @if (rebalancingActionsCard(); as cardData) {
+              <app-rebalancing-actions-card
+                [data]="cardData"
+                (sectionTooltipRequested)="showRebalancingActionsTooltip($event)"
+                (sectionTooltipLeft)="hideTooltip()">
+              </app-rebalancing-actions-card>
+            }
+          } @else {
+            <!-- Rebalancing Actions Card Skeleton -->
+            <div class="animate-pulse">
+              <div class="flex items-center justify-between mb-2">
+                <div class="h-3 bg-gray-200 rounded w-28"></div>
+                <div class="h-3 bg-gray-200 rounded w-16"></div>
+              </div>
+              <div class="space-y-1.5">
+                <div class="flex justify-between">
+                  <div class="h-3 bg-gray-200 rounded w-24"></div>
+                  <div class="h-3 bg-gray-200 rounded w-16"></div>
+                </div>
+                <div class="flex justify-between">
+                  <div class="h-3 bg-gray-200 rounded w-20"></div>
+                  <div class="h-3 bg-gray-200 rounded w-14"></div>
+                </div>
+                <div class="flex justify-between">
+                  <div class="h-3 bg-gray-200 rounded w-28"></div>
+                  <div class="h-3 bg-gray-200 rounded w-18"></div>
+                </div>
+              </div>
+            </div>
           }
       </div>
     </div>
