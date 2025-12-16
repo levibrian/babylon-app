@@ -53,6 +53,11 @@ export class RecurringInvestmentsListComponent implements OnInit, AfterViewInit 
   // Add mode toggle for progressive disclosure
   isAddMode = signal(false);
 
+  // Submitting state for reactive UX
+  isSubmitting = signal(false);
+  submittingRows = signal<Set<number>>(new Set());
+  successRows = signal<Set<number>>(new Set());
+
   // FormArray to manage grid inputs - each FormGroup represents a schedule row
   gridForm: FormGroup;
   get rowsFormArray(): FormArray {
@@ -753,6 +758,7 @@ export class RecurringInvestmentsListComponent implements OnInit, AfterViewInit 
 
   /**
    * Executes transactions for all valid rows in the grid.
+   * Uses reactive state management for better UX.
    */
   async executeTransactions(): Promise<void> {
     const validRowIndices = this.validRows();
@@ -770,12 +776,35 @@ export class RecurringInvestmentsListComponent implements OnInit, AfterViewInit 
       return;
     }
 
+    // Set submitting state and mark rows as submitting
+    this.isSubmitting.set(true);
+    this.submittingRows.set(new Set(validRowIndices));
+    this.successRows.set(new Set());
+
     try {
-      await this.createTransactions(transactions);
+      await this.createTransactionsSilent(transactions);
+      
+      // Mark rows as successful and reset their inputs
+      this.successRows.set(new Set(validRowIndices));
+      this.submittingRows.set(new Set());
+      
+      // Reset form inputs for successful rows
       this.resetFormInputs();
+      
       toast.success(`Successfully logged ${transactions.length} transaction${transactions.length > 1 ? 's' : ''}`);
+      
+      // Clear success state after animation
+      setTimeout(() => {
+        this.successRows.set(new Set());
+        this.cdr.markForCheck();
+      }, 1500);
+      
     } catch (err) {
+      this.submittingRows.set(new Set());
       toast.error('Could not log all transactions. Please try again.');
+    } finally {
+      this.isSubmitting.set(false);
+      this.cdr.markForCheck();
     }
   }
 
@@ -830,6 +859,14 @@ export class RecurringInvestmentsListComponent implements OnInit, AfterViewInit 
   }
 
   /**
+   * Creates transactions and performs a silent refresh (no loading spinners).
+   * This provides a smoother UX by avoiding the full page "refresh" feel.
+   */
+  private async createTransactionsSilent(transactions: NewTransactionData[]): Promise<void> {
+    await this.transactionService.addBulkTransactionsSilent(transactions);
+  }
+
+  /**
    * Resets form inputs to default values while keeping the rows.
    */
   private resetFormInputs(): void {
@@ -843,6 +880,24 @@ export class RecurringInvestmentsListComponent implements OnInit, AfterViewInit 
         fees: 0,
       });
     }
+  }
+
+  // ============================================================================
+  // Row State Helper Methods (for template)
+  // ============================================================================
+
+  /**
+   * Checks if a specific row is currently being submitted.
+   */
+  isRowSubmitting(index: number): boolean {
+    return this.submittingRows().has(index);
+  }
+
+  /**
+   * Checks if a specific row was successfully submitted.
+   */
+  isRowSuccess(index: number): boolean {
+    return this.successRows().has(index);
   }
 }
 

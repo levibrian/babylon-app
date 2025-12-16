@@ -115,7 +115,11 @@
           @for (rowGroup of rowsFormArray.controls; track rowGroup.get('scheduleId')?.value; let i = $index) {
             @if (getScheduleForRow(i) && isScheduleInFilteredList(getScheduleForRow(i)!.id)) {
               @let schedule = getScheduleForRow(i)!;
-              <div [formGroupName]="i" class="relative group flex flex-col lg:flex-row lg:items-center gap-2 border-b border-gray-100 py-2 hover:bg-gray-50/50 transition-colors w-full">
+              <div [formGroupName]="i" 
+                   class="relative group flex flex-col lg:flex-row lg:items-center gap-2 border-b border-gray-100 py-2 hover:bg-gray-50/50 transition-all duration-300 w-full"
+                   [class.opacity-60]="isRowSubmitting(i)"
+                   [class.bg-emerald-50/50]="isRowSuccess(i)"
+                   [class.border-emerald-200]="isRowSuccess(i)">
                 <!-- Asset Info (Left) -->
                 <div class="w-44 shrink-0 truncate" [title]="schedule.securityName">
                   <div class="font-bold text-gray-900 truncate text-sm">
@@ -135,7 +139,8 @@
                   <input 
                     type="date"
                     formControlName="date"
-                    class="w-full py-1 text-sm font-mono text-gray-900 border-transparent bg-transparent hover:bg-gray-50 focus:bg-gray-50 rounded transition-all duration-200 outline-none">
+                    [disabled]="isSubmitting()"
+                    class="w-full py-1 text-sm font-mono text-gray-900 border-transparent bg-transparent hover:bg-gray-50 focus:bg-gray-50 rounded transition-all duration-200 outline-none disabled:opacity-50 disabled:cursor-not-allowed">
                 </div>
 
                 <!-- Shares -->
@@ -146,7 +151,8 @@
                     step="0.0001"
                     formControlName="shares"
                     placeholder="0.00"
-                    class="w-full py-1 text-sm font-mono text-right text-gray-900 border-transparent bg-transparent hover:bg-gray-50 focus:bg-gray-50 rounded transition-all duration-200 outline-none placeholder-gray-400">
+                    [disabled]="isSubmitting()"
+                    class="w-full py-1 text-sm font-mono text-right text-gray-900 border-transparent bg-transparent hover:bg-gray-50 focus:bg-gray-50 rounded transition-all duration-200 outline-none placeholder-gray-400 disabled:opacity-50 disabled:cursor-not-allowed">
                 </div>
 
                 <!-- Price -->
@@ -157,7 +163,8 @@
                     step="0.01"
                     formControlName="sharePrice"
                     placeholder="Price"
-                    class="w-full py-1 text-sm font-mono text-right text-gray-900 border-transparent bg-transparent hover:bg-gray-50 focus:bg-gray-50 rounded transition-all duration-200 outline-none placeholder-gray-400">
+                    [disabled]="isSubmitting()"
+                    class="w-full py-1 text-sm font-mono text-right text-gray-900 border-transparent bg-transparent hover:bg-gray-50 focus:bg-gray-50 rounded transition-all duration-200 outline-none placeholder-gray-400 disabled:opacity-50 disabled:cursor-not-allowed">
                 </div>
 
                 <!-- Fees -->
@@ -168,40 +175,54 @@
                     step="0.01"
                     formControlName="fees"
                     placeholder="0"
-                    class="w-full py-1 text-sm font-mono text-right text-gray-900 border-transparent bg-transparent hover:bg-gray-50 focus:bg-gray-50 rounded transition-all duration-200 outline-none placeholder-gray-400">
+                    [disabled]="isSubmitting()"
+                    class="w-full py-1 text-sm font-mono text-right text-gray-900 border-transparent bg-transparent hover:bg-gray-50 focus:bg-gray-50 rounded transition-all duration-200 outline-none placeholder-gray-400 disabled:opacity-50 disabled:cursor-not-allowed">
                 </div>
 
-                <!-- Total (Read-only) -->
+                <!-- Total (Read-only) with Status -->
                 <div class="flex flex-col gap-1 w-20 shrink-0">
                   <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest lg:hidden">Total</label>
-                  <div class="font-mono text-sm font-bold text-gray-900 text-right py-1">
-                    @if (getRowTotal(i) > 0) {
-                      {{ getRowTotal(i) | currency:'EUR':'symbol':'1.2-2' }}
+                  <div class="font-mono text-sm font-bold text-right py-1 flex items-center justify-end gap-2">
+                    @if (isRowSubmitting(i)) {
+                      <!-- Row Submitting Spinner -->
+                      <svg class="animate-spin h-4 w-4 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                    } @else if (isRowSuccess(i)) {
+                      <!-- Success Checkmark -->
+                      <svg class="h-5 w-5 text-emerald-500 animate-[scale-in_0.2s_ease-out]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                        <path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm13.36-1.814a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" clip-rule="evenodd" />
+                      </svg>
+                    } @else if (getRowTotal(i) > 0) {
+                      <span class="text-gray-900">{{ getRowTotal(i) | currency:'EUR':'symbol':'1.2-2' }}</span>
                     } @else {
                       <span class="text-gray-300">—</span>
                     }
                   </div>
                 </div>
 
-                <!-- Floating Delete Button (Pill) -->
-                <button 
-                  type="button"
-                  (click)="deleteSchedule(schedule.id)"
-                  class="absolute right-2 top-1/2 -translate-y-1/2 bg-white shadow-md border border-gray-100 rounded-full p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-all z-10 lg:block hidden">
-                  <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
-                  </svg>
-                </button>
+                <!-- Floating Delete Button (Pill) - hidden while submitting -->
+                @if (!isSubmitting()) {
+                  <button 
+                    type="button"
+                    (click)="deleteSchedule(schedule.id)"
+                    class="absolute right-2 top-1/2 -translate-y-1/2 bg-white shadow-md border border-gray-100 rounded-full p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-all z-10 lg:block hidden">
+                    <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                    </svg>
+                  </button>
 
-                <!-- Delete Button (Mobile) -->
-                <button 
-                  type="button"
-                  (click)="deleteSchedule(schedule.id)"
-                  class="lg:hidden p-1 text-gray-400 hover:text-red-600 transition-colors">
-                  <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
-                  </svg>
-                </button>
+                  <!-- Delete Button (Mobile) -->
+                  <button 
+                    type="button"
+                    (click)="deleteSchedule(schedule.id)"
+                    class="lg:hidden p-1 text-gray-400 hover:text-red-600 transition-colors">
+                    <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                    </svg>
+                  </button>
+                }
               </div>
             }
           }
@@ -237,9 +258,18 @@
         <button 
           type="button"
           (click)="executeTransactions(); $event.stopPropagation()"
-          [disabled]="validTransactionCount() === 0"
-          class="px-6 py-2 text-sm font-medium text-white bg-gray-900 rounded-md hover:bg-gray-800 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed">
-          Log {{ validTransactionCount() }} Transaction{{ validTransactionCount() !== 1 ? 's' : '' }}
+          [disabled]="validTransactionCount() === 0 || isSubmitting()"
+          class="px-6 py-2 text-sm font-medium text-white bg-gray-900 rounded-md hover:bg-gray-800 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center gap-2 min-w-[160px] justify-center">
+          @if (isSubmitting()) {
+            <!-- Spinner -->
+            <svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <span>Logging...</span>
+          } @else {
+            Log {{ validTransactionCount() }} Transaction{{ validTransactionCount() !== 1 ? 's' : '' }}
+          }
         </button>
       </div>
     </div>

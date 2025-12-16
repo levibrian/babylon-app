@@ -32,6 +32,15 @@ export class TransactionService {
     await this.fetchTransactions();
   }
 
+  /**
+   * Silent reload - refreshes data without triggering loading state.
+   * Use this after operations where we want to update data in the background
+   * without showing loading spinners (e.g., after submitting new transactions).
+   */
+  async reloadSilent(): Promise<void> {
+    await this.fetchTransactionsSilent();
+  }
+
   private async fetchTransactions(): Promise<void> {
     try {
       this._error.set(null);
@@ -59,6 +68,33 @@ export class TransactionService {
       console.error('Error fetching transactions:', err);
     } finally {
       this._loading.set(false);
+    }
+  }
+
+  /**
+   * Silent fetch - refreshes transaction data without updating loading state.
+   * Used for background refreshes after operations to avoid UI flicker.
+   */
+  private async fetchTransactionsSilent(): Promise<void> {
+    try {
+      const response = await fetch(`${environment.apiUrl}/api/v1/transactions/${USER_ID}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch transactions: ${response.status} ${response.statusText}`);
+      }
+
+      const data: ApiTransaction[] = await response.json();
+      const mappedTransactions = mapApiTransactionsToTransactions(data);
+      this._transactions.set(mappedTransactions);
+
+    } catch (err) {
+      console.error('Error fetching transactions (silent):', err);
+      // Don't set error state for silent fetches - keep existing data
     }
   }
 
@@ -186,6 +222,41 @@ export class TransactionService {
       console.error('Error adding bulk transactions:', err);
       toast.error('Could not save transactions. Please try again.');
       throw err; // Re-throw to allow caller to handle
+    }
+  }
+
+  /**
+   * Adds bulk transactions with silent refresh - no loading spinners during data refresh.
+   * This provides a smoother UX for recurring investments where we show per-row feedback instead.
+   */
+  async addBulkTransactionsSilent(transactions: NewTransactionData[]): Promise<void> {
+    try {
+      // Map frontend format to bulk transaction request format
+      const requestBody = mapToBulkTransactionRequest(transactions, USER_ID);
+      
+      // Real API call to bulk add transactions
+      const response = await fetch(`${environment.apiUrl}/api/v1/transactions/bulk`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(requestBody),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('API Error:', response.status, errorText);
+        throw new Error(`Failed to save transactions: ${response.status} ${response.statusText}`);
+      }
+      
+      // After a successful save, silently reload transactions and portfolio data
+      // This avoids the "page refresh" feel by not showing loading spinners
+      await Promise.all([
+        this.reloadSilent(),
+        this.portfolioService.reloadSilent()
+      ]);
+
+    } catch (err) {
+      console.error('Error adding bulk transactions:', err);
+      throw err; // Re-throw to allow caller to handle (caller shows toast)
     }
   }
 }

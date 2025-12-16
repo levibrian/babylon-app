@@ -68,6 +68,15 @@ export class PortfolioService {
     await this.fetchPortfolio();
   }
 
+  /**
+   * Silent reload - refreshes data without triggering loading state.
+   * Use this after operations where we want to update data in the background
+   * without showing loading spinners (e.g., after submitting new transactions).
+   */
+  async reloadSilent(): Promise<void> {
+    await this.fetchPortfolioSilent();
+  }
+
   private async fetchPortfolio(): Promise<void> {
     try {
       this._error.set(null);
@@ -117,6 +126,53 @@ export class PortfolioService {
       console.error('Error fetching portfolio:', err);
     } finally {
       this._loading.set(false);
+    }
+  }
+
+  /**
+   * Silent fetch - refreshes portfolio data without updating loading state.
+   * Used for background refreshes after operations to avoid UI flicker.
+   */
+  private async fetchPortfolioSilent(): Promise<void> {
+    try {
+      const [portfolioResponse, insightsResponse] = await Promise.all([
+        fetch(`${environment.apiUrl}/api/v1/portfolios/${USER_ID}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }),
+        fetch(`${environment.apiUrl}/api/v1/portfolios/${USER_ID}/insights?limit=5`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        })
+      ]);
+
+      if (!portfolioResponse.ok) {
+        throw new Error(`Failed to fetch portfolio: ${portfolioResponse.status} ${portfolioResponse.statusText}`);
+      }
+
+      const data: ApiPortfolioResponse = await portfolioResponse.json();
+      const portfolioItems = this.mapApiDataToPortfolio(data);
+      this._recalculateAndSetPortfolio(portfolioItems);
+
+      this._dailyGainLoss.set(data.dailyGainLoss ?? 0);
+      this._dailyGainLossPercentage.set(data.dailyGainLossPercentage ?? 0);
+
+      // Fetch insights from dedicated endpoint
+      if (insightsResponse.ok) {
+        const insightsResponseData = await insightsResponse.json();
+        const insightsArray: ApiPortfolioInsight[] = Array.isArray(insightsResponseData) 
+          ? insightsResponseData 
+          : (insightsResponseData.insights || insightsResponseData.data || []);
+        this._insights.set(this.mapApiInsightsToPortfolioInsights(insightsArray));
+      }
+
+    } catch (err) {
+      console.error('Error fetching portfolio (silent):', err);
+      // Don't set error state for silent fetches - keep existing data
     }
   }
 
