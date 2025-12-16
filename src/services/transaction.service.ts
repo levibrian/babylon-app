@@ -117,10 +117,11 @@ export class TransactionService {
          throw new Error(`Failed to save transaction: ${response.status} ${response.statusText}`);
        }
        
-      // After a successful save, reload transactions and portfolio data
+      // After a successful save, silently reload transactions and portfolio data
+      // This avoids the "page refresh" feel by not showing loading spinners
       await Promise.all([
-        this.reload(),
-        this.portfolioService.reload()
+        this.reloadSilent(),
+        this.portfolioService.reloadSilent()
       ]);
 
       // Show success toast
@@ -149,10 +150,11 @@ export class TransactionService {
         throw new Error('Failed to update transaction');
       }
       
-      // After a successful update, reload transactions and portfolio data
+      // After a successful update, silently reload transactions and portfolio data
+      // This avoids the "page refresh" feel by not showing loading spinners
       await Promise.all([
-        this.reload(),
-        this.portfolioService.reload()
+        this.reloadSilent(),
+        this.portfolioService.reloadSilent()
       ]);
 
       // Show success toast
@@ -175,10 +177,11 @@ export class TransactionService {
         throw new Error('Failed to delete transaction');
       }
       
-      // After a successful delete, reload transactions and portfolio data
+      // After a successful delete, silently reload transactions and portfolio data
+      // This avoids the "page refresh" feel by not showing loading spinners
       await Promise.all([
-        this.reload(),
-        this.portfolioService.reload()
+        this.reloadSilent(),
+        this.portfolioService.reloadSilent()
       ]);
 
       // Show success toast
@@ -208,10 +211,11 @@ export class TransactionService {
         throw new Error(`Failed to save transactions: ${response.status} ${response.statusText}`);
       }
       
-      // After a successful save, reload transactions and portfolio data
+      // After a successful save, silently reload transactions and portfolio data
+      // This avoids the "page refresh" feel by not showing loading spinners
       await Promise.all([
-        this.reload(),
-        this.portfolioService.reload()
+        this.reloadSilent(),
+        this.portfolioService.reloadSilent()
       ]);
 
       // Show success toast
