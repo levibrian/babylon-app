@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, input, computed, Signal, inject } from '@angular/core';
+import { Component, ChangeDetectionStrategy, input, computed, Signal, inject, signal, effect, OnDestroy } from '@angular/core';
 import { CommonModule, CurrencyPipe } from '@angular/common';
 import { Router } from '@angular/router';
 import { PortfolioItem, PortfolioInsight } from '../../models/portfolio.model';
@@ -35,11 +35,81 @@ interface HealthScore {
   imports: [CommonModule, CurrencyPipe, PassiveIncomeCalendarComponent, InsightCardComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class PortfolioDashboardComponent {
+export class PortfolioDashboardComponent implements OnDestroy {
   portfolio = input.required<PortfolioItem[]>();
   transactions = input.required<Transaction[]>();
   private portfolioService = inject(PortfolioService);
   private router = inject(Router);
+
+  // Carousel state
+  currentInsightIndex = signal(0);
+  private carouselTimeout: any;
+  private readonly CAROUSEL_INTERVAL = 6000; // 6 seconds per insight
+
+  constructor() {
+    // Reset carousel and restart timer when insights change
+    effect(() => {
+      const insights = this.portfolioInsights();
+      this.currentInsightIndex.set(0);
+      this.restartCarousel();
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.stopCarousel();
+  }
+
+  // Current insight to display
+  currentInsight = computed(() => {
+    const insights = this.portfolioInsights();
+    const index = this.currentInsightIndex();
+    return insights.length > 0 ? insights[index] : null;
+  });
+
+  // Navigate to specific insight
+  goToInsight(index: number): void {
+    this.currentInsightIndex.set(index);
+    this.restartCarousel();
+  }
+
+  // Navigate to next insight
+  nextInsight(): void {
+    const insights = this.portfolioInsights();
+    if (insights.length === 0) return;
+    this.currentInsightIndex.update(i => (i + 1) % insights.length);
+    this.restartCarousel();
+  }
+
+  // Navigate to previous insight
+  prevInsight(): void {
+    const insights = this.portfolioInsights();
+    if (insights.length === 0) return;
+    this.currentInsightIndex.update(i => (i - 1 + insights.length) % insights.length);
+    this.restartCarousel();
+  }
+
+  private restartCarousel(): void {
+    this.stopCarousel();
+    const insights = this.portfolioInsights();
+    if (insights.length > 1) {
+      this.scheduleNextInsight();
+    }
+  }
+
+  private scheduleNextInsight(): void {
+    this.carouselTimeout = setTimeout(() => {
+      const insights = this.portfolioInsights();
+      this.currentInsightIndex.update(i => (i + 1) % (insights.length || 1));
+      this.scheduleNextInsight();
+    }, this.CAROUSEL_INTERVAL);
+  }
+
+  private stopCarousel(): void {
+    if (this.carouselTimeout) {
+      clearTimeout(this.carouselTimeout);
+      this.carouselTimeout = undefined;
+    }
+  }
 
 
   // Computed KPIs
