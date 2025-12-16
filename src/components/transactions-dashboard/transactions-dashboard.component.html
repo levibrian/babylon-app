@@ -57,22 +57,23 @@
                 (mousemove)="showCombinedTooltip($event, monthData)"
                 (mouseleave)="hideTooltip()">
                 <!-- Grouped bars: Income (left) and Deposits (right) side by side -->
+                <!-- Each bar type is scaled independently to its own maximum for better visibility -->
                 <div class="flex items-end justify-center gap-0.5 w-full flex-1" style="min-height: 0;">
-                  <!-- Income Bar (Purple) - scaled to combined max -->
+                  <!-- Income Bar (Purple) - scaled to income max independently -->
                   @if (monthData.income > 0) {
                     <div 
                       class="flex-1 rounded-t transition-all duration-200 group-hover:opacity-90 bg-purple-600"
-                      [style.height.%]="getBarHeight(monthData.income, maxCombinedCashFlow())"
+                      [style.height.%]="getBarHeight(monthData.income, maxMonthlyIncome())"
                       style="min-height: 3px; max-width: 50%;">
                     </div>
                   } @else {
                     <div class="flex-1" style="height: 0; max-width: 50%;"></div>
                   }
-                  <!-- Deposits Bar (Green) - scaled to combined max -->
+                  <!-- Deposits Bar (Green) - scaled to deposits max independently -->
                   @if (monthData.deposits > 0) {
                     <div 
                       class="flex-1 rounded-t transition-all duration-200 group-hover:opacity-90 bg-emerald-600"
-                      [style.height.%]="getBarHeight(monthData.deposits, maxCombinedCashFlow())"
+                      [style.height.%]="getBarHeight(monthData.deposits, maxMonthlyDeposits())"
                       style="min-height: 3px; max-width: 50%;">
                     </div>
                   } @else {
@@ -84,15 +85,21 @@
             }
           </div>
         </div>
-        <!-- Legend -->
-        <div class="flex items-center justify-center gap-4 mt-1.5 flex-shrink-0">
+        <!-- Legend with peak values to indicate scale -->
+        <div class="flex items-center justify-center gap-6 mt-1.5 flex-shrink-0">
           <div class="flex items-center gap-1.5">
             <div class="w-3 h-3 bg-purple-600 rounded-sm"></div>
             <span class="text-[10px] text-gray-600">Income</span>
+            @if (maxMonthlyIncome() > 0) {
+              <span class="text-[9px] text-gray-400 font-mono">(peak {{ maxMonthlyIncome() | currency:'EUR':'symbol':'1.0-0' }})</span>
+            }
           </div>
           <div class="flex items-center gap-1.5">
             <div class="w-3 h-3 bg-emerald-600 rounded-sm"></div>
             <span class="text-[10px] text-gray-600">Deposits</span>
+            @if (maxMonthlyDeposits() > 0) {
+              <span class="text-[9px] text-gray-400 font-mono">(peak {{ maxMonthlyDeposits() | currency:'EUR':'symbol':'1.0-0' }})</span>
+            }
           </div>
         </div>
       </div>
