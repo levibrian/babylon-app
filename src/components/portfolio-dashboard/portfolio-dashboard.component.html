@@ -1,6 +1,6 @@
-<div class="h-full flex flex-col gap-12 p-6 overflow-y-auto">
+<div class="h-full flex flex-col gap-6 p-6 overflow-y-auto">
   <!-- Section 1: Wealth Header - Net Worth and All-Time P&L -->
-  <div class="flex flex-col lg:flex-row lg:items-center gap-6 flex-shrink-0 pb-8 border-b border-gray-50">
+  <div class="flex flex-col lg:flex-row lg:items-center gap-6 flex-shrink-0 pb-4 border-b border-gray-50">
     <!-- Left: Net Worth (Dominant) -->
     <div class="flex-shrink-0">
       <div class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Net Worth</div>
@@ -20,37 +20,10 @@
   </div>
 
   <!-- Section 2: Insights Carousel -->
-  <div class="w-full flex-shrink-0 pb-8 border-b border-gray-50">
+  <div class="w-full flex-shrink-0 pb-4 border-b border-gray-50">
     <div class="flex flex-col gap-4">
-      <!-- Header: Title + Navigation -->
-      <div class="flex items-center justify-between">
-        <div class="text-xs font-bold text-gray-400 uppercase tracking-widest">Insights</div>
-        
-        <!-- Navigation Arrows (only show if multiple insights) -->
-        @if (portfolioInsights().length > 1) {
-          <div class="flex items-center gap-2">
-            <button 
-              (click)="prevInsight()"
-              class="p-1.5 rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
-              aria-label="Previous insight">
-              <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
-              </svg>
-            </button>
-            <span class="text-xs font-mono text-gray-400">
-              {{ currentInsightIndex() + 1 }} / {{ portfolioInsights().length }}
-            </span>
-            <button 
-              (click)="nextInsight()"
-              class="p-1.5 rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
-              aria-label="Next insight">
-              <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-              </svg>
-            </button>
-          </div>
-        }
-      </div>
+      <!-- Header: Title -->
+      <div class="text-xs font-bold text-gray-400 uppercase tracking-widest">Insights</div>
       
       <!-- Insight Carousel -->
       @if (portfolioInsights().length > 0) {
@@ -91,7 +64,7 @@
   </div>
 
   <!-- Section 3: Upcoming Events (Bottom Right) -->
-  <div class="w-full flex-shrink-0 pb-8 border-b border-gray-50 flex justify-end">
+  <div class="w-full flex-shrink-0 pb-4 border-b border-gray-50 flex justify-end">
     <div class="w-full lg:w-1/2 flex flex-col gap-2 min-h-0 overflow-hidden" style="height: 100%;">
       <div class="flex-shrink-0">
         <div class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Upcoming Payouts</div>
