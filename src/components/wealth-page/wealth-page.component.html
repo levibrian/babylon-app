@@ -60,17 +60,6 @@
           Strategy
         </button>
       }
-
-      <!-- Planning -->
-      @if (activeView() === 'planning') {
-        <h2 class="text-sm font-bold tracking-tight text-gray-900">Planning</h2>
-      } @else {
-        <button
-          (click)="setActiveView('planning')"
-          class="text-sm font-medium text-gray-400 hover:text-gray-600 transition-colors">
-          Planning
-        </button>
-      }
     </div>
 
     <!-- Content Area -->
@@ -94,8 +83,6 @@
         }
       } @else if (activeView() === 'strategy') {
         <app-strategy-panel [portfolio]="portfolio()"></app-strategy-panel>
-      } @else if (activeView() === 'planning') {
-        <app-planning></app-planning>
       }
     </div>
   </div>

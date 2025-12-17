@@ -1,0 +1,134 @@
+<main class="flex flex-col overflow-hidden" style="height: 100vh; max-height: 100vh;">
+  <!-- Top Navigation -->
+  <div class="flex items-baseline gap-x-3 sm:gap-x-4 p-4 sm:p-6 pb-2 flex-wrap flex-shrink-0 border-b border-gray-100">
+    <a routerLink="/wealth" class="text-xl sm:text-2xl font-medium text-gray-400 hover:text-gray-600 transition-colors">
+      Wealth
+    </a>
+    <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-gray-900">
+      Transactions
+    </h1>
+  </div>
+
+  <!-- Total Amount Invested Widget -->
+  <div class="flex-shrink-0 px-4 sm:px-6 py-6 border-b border-gray-100">
+    <div class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Total Amount Invested</div>
+    @if (isLoading()) {
+      <div class="h-10 bg-gray-200 rounded w-48 animate-pulse"></div>
+    } @else {
+      <div class="text-4xl font-mono font-bold tracking-tight text-gray-900">
+        {{ totalInvested() | currency:'EUR':'symbol':'1.2-2' }}
+      </div>
+    }
+  </div>
+
+  <!-- Mobile Tab Navigation (visible on small screens) -->
+  <div class="sm:hidden flex-shrink-0 border-b border-gray-100 px-4 py-2 bg-white">
+    <div class="flex gap-2">
+      <button 
+        (click)="setActiveView('transactions')"
+        class="flex-1 py-2 px-3 rounded-lg text-xs font-medium transition-all"
+        [class]="activeView() === 'transactions' 
+          ? 'bg-gray-900 text-white' 
+          : 'bg-gray-100 text-gray-600'">
+        Historical
+      </button>
+      <button 
+        (click)="setActiveView('recurring')"
+        class="flex-1 py-2 px-3 rounded-lg text-xs font-medium transition-all"
+        [class]="activeView() === 'recurring' 
+          ? 'bg-gray-900 text-white' 
+          : 'bg-gray-100 text-gray-600'">
+        Recurring
+      </button>
+      <button 
+        (click)="setActiveView('planning')"
+        class="flex-1 py-2 px-3 rounded-lg text-xs font-medium transition-all"
+        [class]="activeView() === 'planning' 
+          ? 'bg-gray-900 text-white' 
+          : 'bg-gray-100 text-gray-600'">
+        Planning
+      </button>
+    </div>
+  </div>
+
+  <!-- Main Content Area: Centered Sidebar + Content -->
+  <div class="flex-1 flex justify-center overflow-hidden min-h-0">
+    <div class="flex w-full max-w-5xl">
+      <!-- Vertical Sidebar Navigation -->
+      <nav class="flex-shrink-0 w-52 py-6 pr-6 hidden sm:block">
+        <ul class="space-y-1">
+          <li>
+            <button 
+              (click)="setActiveView('transactions')"
+              class="w-full text-left px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200"
+              [class]="activeView() === 'transactions' 
+                ? 'bg-gray-900 text-white' 
+                : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'">
+              Historical Transactions
+            </button>
+          </li>
+          <li>
+            <button 
+              (click)="setActiveView('recurring')"
+              class="w-full text-left px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200"
+              [class]="activeView() === 'recurring' 
+                ? 'bg-gray-900 text-white' 
+                : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'">
+              Recurring Investments
+            </button>
+          </li>
+          <li>
+            <button 
+              (click)="setActiveView('planning')"
+              class="w-full text-left px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200"
+              [class]="activeView() === 'planning' 
+                ? 'bg-gray-900 text-white' 
+                : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'">
+              Planning
+            </button>
+          </li>
+        </ul>
+      </nav>
+
+      <!-- Content Area -->
+      <div class="flex-1 overflow-hidden min-h-0 flex flex-col border-l border-gray-100 sm:border-l">
+        <div class="flex-1 overflow-hidden min-h-0">
+        @if (activeView() === 'transactions') {
+          <!-- Historical Transactions View -->
+          @if (isLoading() && !isAddingTransaction()) {
+            <app-transaction-skeleton></app-transaction-skeleton>
+          } @else if (error() && transactions().length === 0) {
+            <app-error-state
+              [title]="'Unable to load transactions'"
+              [message]="error() || 'We couldn\'t connect to Alfred. Please check your connection.'"
+              (retry)="transactionService.reload()">
+            </app-error-state>
+          } @else {
+            <app-transaction-list 
+              [transactions]="transactions()" 
+              [isAdding]="isAddingTransaction()"
+              [isLoading]="isLoading()"
+              [error]="error()"
+              (save)="saveTransaction($event)"
+              (cancel)="cancelNewTransaction()"
+              (update)="updateTransaction($event)"
+              (delete)="deleteTransaction($event)"
+              (toggleAdd)="toggleAddTransaction()"
+              (navigateToRecurring)="navigateToRecurring()">
+            </app-transaction-list>
+          }
+        } @else if (activeView() === 'recurring') {
+          <!-- Recurring Investments View -->
+          <app-recurring-investments-list
+            (navigateToTransactions)="navigateToTransactions()">
+          </app-recurring-investments-list>
+        } @else if (activeView() === 'planning') {
+          <!-- Planning View -->
+          <app-planning></app-planning>
+        }
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+

@@ -1,0 +1,105 @@
+import { Component, ChangeDetectionStrategy, inject, Signal, signal, effect } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { CommonModule, CurrencyPipe } from '@angular/common';
+import { TransactionListComponent } from '../transaction-list/transaction-list.component';
+import { RecurringInvestmentsListComponent } from '../recurring-investments-list/recurring-investments-list.component';
+import { PlanningComponent } from '../planning/planning.component';
+import { TransactionService } from '../../services/transaction.service';
+import { PortfolioService } from '../../services/portfolio.service';
+import { Transaction, NewTransactionData } from '../../models/transaction.model';
+import { RouterLink, ActivatedRoute, Router } from '@angular/router';
+import { TransactionSkeletonComponent } from '../ghosting-elements/transaction-skeleton/transaction-skeleton.component';
+import { ErrorStateComponent } from '../common/error-state/error-state.component';
+
+@Component({
+  selector: 'app-transactions-page-v2',
+  templateUrl: './transactions-page-v2.component.html',
+  imports: [
+    CommonModule,
+    CurrencyPipe,
+    RouterLink,
+    TransactionListComponent,
+    RecurringInvestmentsListComponent,
+    PlanningComponent,
+    TransactionSkeletonComponent,
+    ErrorStateComponent
+  ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class TransactionsPageV2Component {
+  transactionService = inject(TransactionService);
+  private portfolioService = inject(PortfolioService);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+
+  transactions: Signal<Transaction[]> = this.transactionService.transactions;
+  isLoading: Signal<boolean> = this.transactionService.loading;
+  error: Signal<string | null> = this.transactionService.error;
+  totalInvested: Signal<number> = this.portfolioService.totalInvested;
+  portfolio: Signal<any[]> = this.portfolioService.portfolio;
+  
+  isAddingTransaction = signal(false);
+  activeView = signal<'transactions' | 'recurring' | 'planning'>('transactions');
+  private queryParams = toSignal(this.route.queryParams);
+
+  constructor() {
+    effect(() => {
+      if (this.queryParams()?.['add'] === 'true') {
+        this.isAddingTransaction.set(true);
+      }
+    });
+  }
+
+  setActiveView(view: 'transactions' | 'recurring' | 'planning'): void {
+    this.activeView.set(view);
+  }
+
+  toggleAddTransaction(): void {
+    this.isAddingTransaction.update(value => !value);
+    if (this.isAddingTransaction()) {
+      this.router.navigate([], {
+        relativeTo: this.route,
+        queryParams: { add: 'true' },
+        queryParamsHandling: 'merge',
+      });
+    } else {
+      this.clearAddQueryParam();
+    }
+  }
+
+  cancelNewTransaction(): void {
+    this.isAddingTransaction.set(false);
+    this.clearAddQueryParam();
+  }
+
+  async saveTransaction(transactionData: NewTransactionData): Promise<void> {
+    await this.transactionService.addTransaction(transactionData);
+    this.isAddingTransaction.set(false);
+    this.clearAddQueryParam();
+  }
+
+  async updateTransaction(transaction: Transaction): Promise<void> {
+    await this.transactionService.updateTransaction(transaction);
+  }
+
+  async deleteTransaction(transaction: Transaction): Promise<void> {
+    await this.transactionService.deleteTransaction(transaction.id, transaction.ticker);
+  }
+
+  private clearAddQueryParam(): void {
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { add: null },
+      queryParamsHandling: 'merge',
+    });
+  }
+
+  navigateToRecurring(): void {
+    this.activeView.set('recurring');
+  }
+
+  navigateToTransactions(): void {
+    this.activeView.set('transactions');
+  }
+}
+
