@@ -191,6 +191,21 @@ export class PlanningComponent implements OnInit, OnDestroy {
     });
   }
 
+  deleteSecurity(ticker: string, event: Event) {
+    event.stopPropagation();
+    if (!confirm(`Are you sure you want to remove ${ticker} from your plan?`)) {
+      return;
+    }
+
+    this.planningService.deleteSecurity(ticker).subscribe({
+      next: () => {
+        this.loadData();
+        // Show toast or notification if available
+      },
+      error: err => console.error('Error deleting security', err)
+    });
+  }
+
   toggleWeekly(rowGroup: FormGroup) {
     const control = rowGroup.get('isWeeklyEnabled')!;
     control.setValue(!control.value);

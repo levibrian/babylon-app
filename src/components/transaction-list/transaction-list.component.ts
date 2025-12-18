@@ -19,6 +19,7 @@ export class TransactionListComponent {
   isAdding = input.required<boolean>();
   isLoading = input<boolean>(false);
   error = input<string | null>(null);
+  totalInvested = input<number>(0);
 
   save = output<NewTransactionData>();
   cancel = output<void>();

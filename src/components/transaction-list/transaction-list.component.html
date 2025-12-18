@@ -1,6 +1,12 @@
 <div class="flex flex-col h-full overflow-hidden min-h-0 px-3 pb-4 sm:pb-6 pt-4 sm:pt-6">
-  <!-- Add Button Header -->
-  <div class="flex items-center justify-end mb-3 flex-shrink-0">
+  <!-- Header: Total Invested & Add Button -->
+  <div class="flex items-center justify-between mb-3 flex-shrink-0">
+    <!-- Total Invested (Top Left) -->
+    <div class="text-xs font-medium text-gray-500 uppercase tracking-wide">
+      Total invested: <span class="text-gray-900 font-bold">{{ totalInvested() | currency:'EUR':'symbol':'1.2-2' }}</span>
+    </div>
+
+    <!-- Add Button (Top Right) -->
     @if (!isLoading() && !error()) {
       <button 
         (click)="toggleAdd.emit()" 

@@ -6,269 +6,312 @@
 .planning-container {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
-  padding: 1rem;
-  color: #333; // Dark text for light background
-  // background-color: #fff; // Assumed white background from parent
-  border-radius: 8px;
   height: 100%;
+  background-color: #fff;
+  border-radius: 12px;
   overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05); // Very subtle shadow
 }
 
-.header-actions {
+// --- Top Bar ---
+.top-bar {
+  padding: 1.5rem;
+  border-bottom: 1px solid #f0f0f0;
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  gap: 1rem;
-  padding-bottom: 1rem;
-  
-  // Make search component responsive
-  app-add-security-search {
+  gap: 2rem;
+  background-color: #fff;
+  justify-content: space-between;
+
+  .search-section {
     flex: 1;
     max-width: 400px;
   }
 
-  .expand-icon {
-    display: inline-flex; // better centering
-    align-items: center;
-    justify-content: center;
-    width: 1rem;
-    height: 1rem;
-    font-size: 0.7rem; // Smaller icon
-    transition: transform 0.2s ease;
-    color: #777;
-
-    &.expanded {
-      transform: rotate(90deg);
-    }
-  }
-
-  .input-wrapper {
+  .investment-setting {
     display: flex;
     align-items: center;
-    gap: 1rem;
+    gap: 0.75rem;
 
     label {
+      font-size: 0.85rem;
       font-weight: 500;
-      font-size: 0.9rem;
-      color: #555;
-      white-space: nowrap;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
     }
 
-    .input-container {
+    .amount-input {
       position: relative;
       display: flex;
       align-items: center;
 
-      .currency-symbol {
+      .currency {
         position: absolute;
-        left: 8px;
-        color: #777;
+        left: 10px;
+        color: #888;
         font-size: 0.9rem;
       }
 
       input {
-        background-color: #fff;
-        border: 1px solid #ccc;
+        width: 120px;
+        padding: 10px 12px 10px 24px;
+        border: 1px solid #e0e0e0;
+        border-radius: 6px;
+        font-size: 1.1rem;
+        font-weight: 600;
         color: #333;
-        padding: 6px 8px 6px 20px;
-        border-radius: 4px;
-        font-size: 0.9rem;
-        width: 100px;
+        transition: all 0.2s;
         text-align: right;
 
         &:focus {
           outline: none;
-          border-color: #007acc;
+          border-color: #3b82f6; 
+          box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
         }
       }
     }
   }
 }
 
-.grid-container {
-  overflow-y: auto;
+// --- Content Area ---
+.content-area {
   flex: 1;
-  padding-bottom: 1rem;
+  overflow-y: auto;
+  padding: 0; 
 }
 
-.planning-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.85rem;
+.start-instruction {
+  padding: 3rem;
+  text-align: center;
+  color: #999;
+}
 
-  th, td {
-    padding: 6px 8px;
-    text-align: left;
-    border-bottom: 1px solid #e0e0e0; // Light border
+// --- Asset List ---
+.asset-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.asset-group {
+  border-bottom: 1px solid #f5f5f5;
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.group-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1.5rem;
+  background-color: #fafafa;
+  cursor: pointer;
+  
+  &:hover {
+    background-color: #f5f5f5;
   }
 
-  th {
-    font-weight: 600;
-    color: #777; // Medium grey
-    text-transform: uppercase;
-    font-size: 0.75rem;
-
-    &.text-right {
-      white-space: nowrap;
-      width: 1%;
-      min-width: 110px; // Ensure numeric columns don't collapse when data is hidden
-    }
-
-    &:last-child {
-      min-width: 120px; // Slightly wider for Target %
-      width: auto;
-    }
-  }
-
-  .group-header {
-    background-color: #f5f5f5; 
-    cursor: pointer;
-    user-select: none;
-    transition: background-color 0.2s;
-
-    &:hover {
-      background-color: #e0e0e0; // Slightly darker hover
-    }
-    
-    td {
-      font-weight: 800; // Extra bold
-      color: #000;      // Black
-      padding-top: 12px;
-      padding-bottom: 12px;
-      font-size: 0.95rem;
-    }
-
-    .group-subtotal {
-      font-weight: 800;
-      color: #000; 
-    }
-
-    // ... (group-header-content and expand-icon remain the same)
-    .group-header-content {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    .expand-icon {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 1.2rem;
-      height: 1.2rem;
-      font-size: 0.8rem;
-      transition: transform 0.2s ease;
-      color: #777;
-
-      &.expanded {
-        transform: rotate(90deg);
-      }
-    }
-  }
-
-  .data-row {
-    opacity: 1;
-    transition: opacity 0.2s ease-in-out;
-    
-    &:hover {
-      background-color: #f9f9f9; 
-    }
-    
-    .ticker-cell {
-      padding-left: 2rem !important; // Indentation for hierarchy
-    }
-  }
-
-  .clickable-cell {
-    cursor: pointer;
-    user-select: none;
-    transition: opacity 0.2s, color 0.2s;
-    color: #333;
-
-    &:hover {
-      background-color: #eee;
-    }
-
-    &.disabled {
-      color: #aaa; 
-      text-decoration: line-through;
-      opacity: 0.6;
-    }
-  }
-
-  .text-right {
-    text-align: right;
-  }
-
-  .ticker-cell {
-    font-weight: 500;
-    color: #333;
-  }
-
-  .input-cell {
-    // Keep standard table cell behavior
-    vertical-align: middle;
-  }
-
-  .input-content {
+  .group-title {
     display: flex;
     align-items: center;
-    justify-content: flex-end; // Right align content
-    gap: 4px;
-    height: 100%; // Ensure it fills the cell if needed for alignment
-    
-    .table-input {
-      background-color: transparent;
-      border: 1px solid transparent;
-      color: #333;
-      width: 60px; 
-      text-align: right;
-      padding: 2px 4px;
-      border-radius: 2px;
-      font-size: 0.85rem;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #555;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
 
-      &:hover, &:focus {
-        background-color: #f0f0f0;
-        border-color: #ccc;
-      }
-
-      &:focus {
-        outline: none;
-        border-color: #007acc;
-        background-color: #fff;
-      }
-
-      &:disabled {
-        background-color: transparent;
-        color: #999;
-        cursor: not-allowed;
-        border-color: transparent;
-      }
-    }
-
-    .percent-symbol {
-      color: #777;
-      font-size: 0.8rem;
+    .expand-icon {
+      font-size: 0.7rem;
+      transition: transform 0.2s;
+      &.expanded { transform: rotate(90deg); }
     }
   }
 
+  .group-subtotal {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #333;
+  }
+}
 
-  .grand-total-row {
-    font-weight: bold;
-    background-color: #e8e8e8;
-    border-top: 2px solid #ccc;
+
+
+.list-item {
+  display: grid;
+  // Grid Layout: Asset | Allocation | Est Amount | Frequency | Action
+  grid-template-columns: minmax(180px, 1fr) 120px 100px 140px 50px;
+  align-items: center;
+  padding: 0.75rem 1.5rem;
+  border-bottom: 1px solid #fbfbfb;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: #fcfcfc;
+    .delete-btn { opacity: 1; }
+  }
+
+  // --- Column Styles ---
+
+  .col-asset {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+
+    .ticker {
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: #222;
+    }
+    .company {
+      font-size: 0.8rem;
+      color: #888;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 90%;
+    }
+  }
+
+  .col-allocation {
+    display: flex;
+    justify-content: flex-end;
+
+    .input-wrapper {
+      display: flex;
+      align-items: center;
+      background: #f7f7f7;
+      border-radius: 6px;
+      padding: 4px 8px;
+      border: 1px solid transparent;
+      
+      &:focus-within {
+        background: #fff;
+        border-color: #ddd;
+      }
+
+      input {
+        width: 40px;
+        background: transparent;
+        border: none;
+        text-align: right;
+        font-weight: 600;
+        font-size: 0.95rem;
+        color: #333;
+        
+        &:focus { outline: none; }
+      }
+
+      .unit {
+        font-size: 0.8rem;
+        color: #777;
+        margin-left: 2px;
+      }
+    }
+  }
+
+  .col-estimation {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    font-size: 0.9rem;
     
-    .label {
-      padding-right: 1rem;
-      text-transform: uppercase;
-      font-size: 0.9rem;
+    .value {
       color: #333;
+      font-weight: 500;
+    }
+    .label {
+      font-size: 0.7rem;
+      color: #aaa;
+    }
+  }
+
+  .col-frequency {
+    display: flex;
+    justify-content: flex-end;
+    gap: 4px;
+
+    button {
+      width: 24px;
+      height: 24px;
+      border-radius: 4px;
+      border: 1px solid #eee;
+      background: #fff;
+      color: #999;
+      font-size: 0.7rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+
+      &:hover {
+        border-color: #ddd;
+        color: #666;
+      }
+
+      &.active {
+        background: #ebf5ff; // Very light blue
+        border-color: #bfdbfe;
+        color: #2563eb; // Blue
+      }
+    }
+  }
+
+  .col-action {
+    display: flex;
+    justify-content: flex-end;
+    
+    .delete-btn {
+      // opacity: 0; // REMOVED: Keep visible
+      background: none;
+      border: none;
+      color: #9ca3af; // Gray-400
+      cursor: pointer;
+      padding: 6px;
+      border-radius: 4px;
+      transition: all 0.2s;
+
+      &:hover {
+        background-color: #fee2e2; // Light Red
+        color: #ef4444; // Red
+      }
+    }
+  }
+}
+
+
+// --- Footer ---
+.footer-stats {
+  padding: 1rem 1.5rem;
+  background-color: #f8f8f8;
+  border-top: 1px solid #f0f0f0;
+  display: flex;
+  justify-content: flex-end;
+
+  .stat-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    font-size: 0.9rem;
+    
+    span:first-child {
+      color: #666;
+      text-transform: uppercase;
+      font-size: 0.8rem;
+      font-weight: 600;
     }
 
     .value {
-      font-size: 1rem;
-      color: #2e7d32; // Green for total (darker for light theme)
+      font-weight: 700;
+      font-size: 1.1rem;
+      color: #22c55e; // Green
+
+      &.over-budget { color: #f59e0b; }
+      &.under-budget { color: #22c55e; }
     }
   }
 }

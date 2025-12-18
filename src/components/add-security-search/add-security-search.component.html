@@ -3,6 +3,7 @@
     <input 
       type="text" 
       [formControl]="searchControl" 
+      (focus)="onFocus()"
       placeholder="Add Security (e.g. AAPL)" 
       class="search-input"
     />
@@ -13,13 +14,13 @@
     </div>
   </div>
 
-  <div class="results-dropdown" *ngIf="(results$ | async) as results">
+  <div class="results-dropdown" *ngIf="isDropdownVisible() && (results$ | async) as results">
     <div *ngIf="results.length > 0; else noResults" class="results-list">
       <div 
         *ngFor="let result of results" 
         class="result-item" 
-        (click)="selectSecurity(result.symbol)">
-        <span class="ticker">{{ result.shortName }} ({{ result.symbol }})</span>
+        (click)="selectSecurity(result.ticker)">
+        <span class="ticker">{{ result.name }} ({{ result.ticker }})</span>
         <span class="add-label">Add</span>
       </div>
     </div>

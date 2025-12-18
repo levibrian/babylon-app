@@ -1,86 +1,107 @@
 
 <div class="planning-container" [formGroup]="planningForm">
-  <div class="header-actions">
-    <app-add-security-search (securitySelected)="addSecurity($event)"></app-add-security-search>
+  <!-- Top Bar: Add Security & Global Settings -->
+  <div class="top-bar">
+    <div class="search-section">
+      <app-add-security-search (securitySelected)="addSecurity($event)"></app-add-security-search>
+    </div>
     
-    <div class="input-wrapper">
-      <label for="monthly-investment">Monthly Amount to Invest</label>
-      <div class="input-container">
-        <span class="currency-symbol">€</span>
-        <input type="number" id="monthly-investment" formControlName="monthlyInvestment" />
+    <div class="investment-setting">
+      <label>Monthly Budget</label>
+      <div class="amount-input">
+        <span class="currency">€</span>
+        <input type="number" formControlName="monthlyInvestment" />
       </div>
     </div>
   </div>
 
-  <div class="grid-container">
-    <table class="planning-table">
-      <thead>
-        <tr>
-          <th>Security Name</th>
-          <th class="text-right">Weekly EUR</th>
-          <th class="text-right">Bi-Weekly EUR</th>
-          <th class="text-right">Monthly EUR</th>
-          <th class="text-right">Target %</th>
-        </tr>
-      </thead>
-      <tbody>
-        <ng-container *ngFor="let group of groupedRows">
-          <tr class="group-header" (click)="toggleGroup(group)">
-            <td colspan="4">
-              <div class="group-header-content">
-                <span class="expand-icon" [class.expanded]="group.isExpanded">▶</span>
-                {{ group.assetType }}
+  <!-- Main Content -->
+  <div class="content-area">
+    <div class="start-instruction" *ngIf="!groupedRows.length">
+      <p>Start by adding securities to your plan above.</p>
+    </div>
+
+    <div class="asset-list" *ngIf="groupedRows.length">
+      
+      <!-- Groups -->
+      <div class="asset-group" *ngFor="let group of groupedRows">
+        <div class="group-header" (click)="toggleGroup(group)">
+          <div class="group-title">
+            <span class="expand-icon" [class.expanded]="group.isExpanded">▸</span>
+            <span>{{ group.assetType }}</span>
+          </div>
+          <div class="group-subtotal">
+            {{ getSubtotal(group) | number:'1.0-2' }}%
+          </div>
+        </div>
+
+        <div class="group-items" *ngIf="group.isExpanded">
+          <ng-container *ngFor="let row of group.rows">
+            <div class="list-item" *ngIf="getRowFormGroup(row) as rowGroup" [formGroup]="rowGroup">
+              
+              <!-- Asset Info -->
+              <div class="col-asset">
+                <div class="ticker">{{ row.ticker }}</div>
+                <div class="company">{{ row.securityName }}</div>
               </div>
-            </td>
-            <td class="text-right group-subtotal">
-              {{ getSubtotal(group) | number:'1.2-2' }}%
-            </td>
-          </tr>
-          <!-- Rows shown only if expanded -->
-          <ng-container *ngIf="group.isExpanded">
-            <tr *ngFor="let row of group.rows; let i = index" class="data-row">
-              <ng-container *ngIf="getRowFormGroup(row) as rowFormGroup" [formGroup]="rowFormGroup">
-                <td class="ticker-cell">
-                  {{ row.securityName || row.ticker }}
-                </td>
-                
-                <td class="text-right clickable-cell" 
-                    [class.disabled]="!rowFormGroup.get('isWeeklyEnabled')?.value" 
-                    (click)="toggleWeekly(rowFormGroup)">
-                  {{ rowFormGroup.get('weeklyEur')?.value | number:'1.2-2' }}
-                </td>
-                
-                <td class="text-right clickable-cell" 
-                    [class.disabled]="!rowFormGroup.get('isBiWeeklyEnabled')?.value" 
-                    (click)="toggleBiWeekly(rowFormGroup)">
-                  {{ rowFormGroup.get('biWeeklyEur')?.value | number:'1.2-2' }}
-                </td>
-                
-                <td class="text-right clickable-cell" 
-                    [class.disabled]="!rowFormGroup.get('isMonthlyEnabled')?.value" 
-                    (click)="toggleMonthly(rowFormGroup)">
-                  {{ rowFormGroup.get('monthlyEur')?.value | number:'1.2-2' }}
-                </td>
-                
-                <td class="text-right input-cell">
-                  <div class="input-content">
-                    <input type="number" 
-                           formControlName="targetPercentage"
-                           class="table-input" />
-                    <span class="percent-symbol">%</span>
-                  </div>
-                </td>
-              </ng-container>
-            </tr>
+
+              <!-- Target Allocation -->
+              <div class="col-allocation">
+                <div class="input-wrapper">
+                  <input type="number" formControlName="targetPercentage" />
+                  <span class="unit">%</span>
+                </div>
+              </div>
+
+              <!-- Estimated Amount -->
+              <div class="col-estimation">
+                <span class="label">Est.</span>
+                <span class="value">
+                  {{ (monthlyInvestmentControl.value * (rowGroup.get('targetPercentage')?.value || 0) / 100) | number:'1.0-0' }} €
+                </span>
+              </div>
+
+              <!-- Frequency Toggles -->
+              <div class="col-frequency">
+                <button type="button" 
+                        [class.active]="rowGroup.get('isWeeklyEnabled')?.value" 
+                        (click)="toggleWeekly(rowGroup)"
+                        title="Weekly">W</button>
+                <button type="button" 
+                        [class.active]="rowGroup.get('isBiWeeklyEnabled')?.value" 
+                        (click)="toggleBiWeekly(rowGroup)"
+                        title="Bi-Weekly">B</button>
+                <button type="button" 
+                        [class.active]="rowGroup.get('isMonthlyEnabled')?.value" 
+                        (click)="toggleMonthly(rowGroup)"
+                        title="Monthly">M</button>
+              </div>
+
+              <!-- Delete Action -->
+              <div class="col-action">
+                <button type="button" class="delete-btn" (click)="deleteSecurity(row.ticker, $event)" title="Remove">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                  </svg>
+                </button>
+              </div>
+
+            </div>
           </ng-container>
-        </ng-container>
-      </tbody>
-      <tfoot>
-        <tr class="grand-total-row">
-          <td colspan="4" class="text-right label">Grand Total</td>
-          <td class="text-right value">{{ grandTotal | number:'1.2-2' }}%</td>
-        </tr>
-      </tfoot>
-    </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Footer Stats -->
+  <div class="footer-stats" *ngIf="groupedRows.length">
+    <div class="stat-item">
+      <span>Total Allocated</span>
+      <span [class.over-budget]="grandTotal > 100" [class.under-budget]="grandTotal < 100" class="value">
+        {{ grandTotal | number:'1.0-2' }}%
+      </span>
+    </div>
   </div>
 </div>

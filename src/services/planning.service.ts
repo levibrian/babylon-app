@@ -83,6 +83,21 @@ export class PlanningService {
     return from(this.allocationService.updateTarget(USER_ID, ticker, 0));
   }
 
+  deleteSecurity(ticker: string): Observable<void> {
+    // Use AllocationService to remove the security from the strategy
+    // We need to get the current strategy, filter out the ticker, and save
+    const currentStrategy = this.allocationService.strategy();
+    if (!currentStrategy || !currentStrategy.allocations) {
+      return of(undefined);
+    }
+
+    const updatedAllocations = currentStrategy.allocations.filter(
+      a => a.ticker.toUpperCase() !== ticker.toUpperCase()
+    );
+
+    return from(this.allocationService.setAllocationStrategy(USER_ID, updatedAllocations));
+  }
+
   private mergeAndMapToRows(portfolioPositions: any[], allocations: AllocationStrategyDto[]): PlanningRow[] {
     const uniqueTickers = new Set<string>();
     
