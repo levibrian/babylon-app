@@ -1,6 +1,6 @@
 <div class="h-full flex flex-col gap-6 p-6 overflow-y-auto">
-  <!-- Section 1: Wealth Header - Net Worth and All-Time P&L -->
-  <div class="flex flex-col lg:flex-row lg:items-center gap-6 flex-shrink-0 pb-4 border-b border-gray-50">
+  <!-- Section 1: Wealth Header - Net Worth, P&L, and Insights Carousel -->
+  <div class="flex flex-col lg:flex-row lg:items-start gap-6 flex-shrink-0 pb-4 border-b border-gray-50">
     <!-- Left: Net Worth (Dominant) -->
     <div class="flex-shrink-0">
       <div class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Net Worth</div>
@@ -17,32 +17,24 @@
         <span class="text-sm">({{ percentPnL() | number:'1.2-2' }}%)</span>
       </div>
     </div>
-  </div>
 
-  <!-- Section 2: Insights Carousel -->
-  <div class="w-full flex-shrink-0 pb-4 border-b border-gray-50">
-    <div class="flex flex-col gap-4">
-      <!-- Header: Title -->
-      <div class="text-xs font-bold text-gray-400 uppercase tracking-widest">Insights</div>
-      
-      <!-- Insight Carousel -->
+    <!-- Right: Insights Carousel (pushed to end) -->
+    <div class="flex-1 lg:flex lg:justify-end">
       @if (portfolioInsights().length > 0) {
-        <div class="relative">
+        <div class="w-full lg:max-w-sm">
           <!-- Single Insight Card with fade animation -->
-          <div class="transition-opacity duration-300 ease-in-out flex justify-center">
+          <div class="transition-opacity duration-300 ease-in-out">
             @if (currentInsight(); as insight) {
-              <div class="max-w-md w-full">
-                <app-insight-card 
-                  [insight]="insight"
-                  (executeAction)="handleInsightAction($event)">
-                </app-insight-card>
-              </div>
+              <app-insight-card 
+                [insight]="insight"
+                (executeAction)="handleInsightAction($event)">
+              </app-insight-card>
             }
           </div>
           
           <!-- Dot Navigation -->
           @if (portfolioInsights().length > 1) {
-            <div class="flex items-center justify-center gap-2 mt-4">
+            <div class="flex items-center justify-center gap-2 mt-3">
               @for (insight of portfolioInsights(); track insight.message; let i = $index) {
                 <button 
                   (click)="goToInsight(i)"
@@ -54,10 +46,6 @@
               }
             </div>
           }
-        </div>
-      } @else {
-        <div class="text-sm text-gray-400 text-center py-8">
-          No insights available at this time.
         </div>
       }
     </div>

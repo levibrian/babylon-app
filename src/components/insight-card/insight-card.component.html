@@ -1,8 +1,8 @@
-<div class="bg-white border border-gray-100 rounded-lg p-4 shadow-sm hover:shadow-md transition-all">
-  <!-- Header: Icon + Title -->
-  <div class="flex items-center gap-3 mb-3">
+<div class="border border-gray-100 rounded-lg p-4 shadow-sm hover:shadow-md transition-all" [class]="getCardBackgroundClass()">
+  <!-- Icon + Message -->
+  <div class="flex gap-3">
     <svg 
-      class="w-5 h-5 flex-shrink-0"
+      class="w-5 h-5 flex-shrink-0 mt-0.5"
       [class]="getIconClass()"
       xmlns="http://www.w3.org/2000/svg" 
       fill="none" 
@@ -14,15 +14,12 @@
         stroke-linejoin="round" 
         [attr.d]="getIconPath()" />
     </svg>
-    <h3 class="font-bold text-gray-900 text-sm">{{ getTitle() }}</h3>
+    <p class="text-sm text-gray-600">{{ insight().message }}</p>
   </div>
-
-  <!-- Body: Message -->
-  <p class="text-sm text-gray-600 mb-4">{{ insight().message }}</p>
 
   <!-- Visual Context: Bar Chart (if available) -->
   @if (insight().visualContext; as context) {
-    <div class="space-y-2 mb-4">
+    <div class="mt-4 space-y-2">
       <!-- Current Value Row -->
       <div>
         <div class="flex items-center justify-between mb-1">

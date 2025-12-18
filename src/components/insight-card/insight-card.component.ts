@@ -13,14 +13,63 @@ export class InsightCardComponent {
   executeAction = output<PortfolioInsight>();
 
   getIconClass(): string {
+    const category = this.insight().category;
     const severity = this.insight().severity;
-    if (severity === 'Critical') {
+
+    // Match icon color to card background category
+    if (category === 'Efficiency') {
+      return 'text-emerald-600';
+    }
+    if (category === 'Risk' || severity === 'Critical') {
       return 'text-rose-600';
-    } else if (severity === 'Warning') {
+    }
+    if (severity === 'Warning') {
       return 'text-amber-600';
-    } else {
+    }
+    if (category === 'Opportunity' || category === 'Trend') {
       return 'text-blue-600';
     }
+    if (category === 'Income') {
+      return 'text-purple-600';
+    }
+    return 'text-gray-600';
+  }
+
+  /**
+   * Returns an extremely subtle background color class based on insight category/severity.
+   * Colors are very light to maintain minimalist aesthetic.
+   */
+  getCardBackgroundClass(): string {
+    const category = this.insight().category;
+    const severity = this.insight().severity;
+
+    // Efficiency (rebalancing) - very subtle green
+    if (category === 'Efficiency') {
+      return 'bg-emerald-50/40';
+    }
+    
+    // Risk or Critical severity - very subtle red/rose
+    if (category === 'Risk' || severity === 'Critical') {
+      return 'bg-rose-50/40';
+    }
+    
+    // Warning severity (drawdown, etc.) - very subtle yellow/amber
+    if (severity === 'Warning') {
+      return 'bg-amber-50/40';
+    }
+    
+    // Opportunity/Trend - very subtle blue
+    if (category === 'Opportunity' || category === 'Trend') {
+      return 'bg-blue-50/40';
+    }
+    
+    // Income - very subtle purple
+    if (category === 'Income') {
+      return 'bg-purple-50/40';
+    }
+    
+    // Default - white
+    return 'bg-white';
   }
 
   getIconPath(): string {
