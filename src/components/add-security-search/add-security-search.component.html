@@ -20,7 +20,10 @@
         *ngFor="let result of results()" 
         class="result-item" 
         (click)="selectSecurity(result.ticker)">
-        <span class="ticker">{{ result.name }} ({{ result.ticker }})</span>
+        <div class="security-info">
+          <span class="ticker">{{ result.ticker }}</span>
+          <span class="company-name">{{ result.name }}</span>
+        </div>
         <span class="add-label">Add</span>
       </div>
     </div>
