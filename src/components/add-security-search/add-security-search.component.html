@@ -14,10 +14,10 @@
     </div>
   </div>
 
-  <div class="results-dropdown" *ngIf="isDropdownVisible() && (results$ | async) as results">
-    <div *ngIf="results.length > 0; else noResults" class="results-list">
+  <div class="results-dropdown" *ngIf="isDropdownVisible()">
+    <div *ngIf="results().length > 0; else noResults" class="results-list">
       <div 
-        *ngFor="let result of results" 
+        *ngFor="let result of results()" 
         class="result-item" 
         (click)="selectSecurity(result.ticker)">
         <span class="ticker">{{ result.name }} ({{ result.ticker }})</span>

@@ -1,6 +1,6 @@
-import { Component, ChangeDetectionStrategy, inject, Signal, signal, effect } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, Signal, signal, effect, computed } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { CommonModule, CurrencyPipe } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { TransactionListComponent } from '../transaction-list/transaction-list.component';
 import { RecurringInvestmentsListComponent } from '../recurring-investments-list/recurring-investments-list.component';
 import { PlanningComponent } from '../planning/planning.component';
@@ -16,7 +16,6 @@ import { ErrorStateComponent } from '../common/error-state/error-state.component
   templateUrl: './transactions-page-v2.component.html',
   imports: [
     CommonModule,
-    CurrencyPipe,
     RouterLink,
     TransactionListComponent,
     RecurringInvestmentsListComponent,
@@ -41,6 +40,46 @@ export class TransactionsPageV2Component {
   isAddingTransaction = signal(false);
   activeView = signal<'transactions' | 'recurring' | 'planning'>('transactions');
   private queryParams = toSignal(this.route.queryParams);
+
+  // Search state
+  searchQuery = signal<string>('');
+
+  // Filtered transactions based on search query
+  filteredTransactions = computed(() => {
+    const query = this.searchQuery().toLowerCase().trim();
+    const allTransactions = this.transactions();
+    
+    if (!query) {
+      return allTransactions;
+    }
+    
+    return allTransactions.filter(transaction => {
+      const ticker = transaction.ticker.toLowerCase();
+      const securityName = (transaction.securityName || '').toLowerCase();
+      return ticker.includes(query) || securityName.includes(query);
+    });
+  });
+
+  // Dynamic total invested based on filtered transactions
+  filteredTotalInvested = computed(() => {
+    const query = this.searchQuery().trim();
+    
+    if (!query) {
+      return this.totalInvested(); // Use global total if no filter
+    }
+
+    const visibleTickers = new Set(
+      this.filteredTransactions().map(t => t.ticker.toUpperCase())
+    );
+
+    return this.portfolio()
+      .filter(p => visibleTickers.has(p.ticker))
+      .reduce((sum, p) => sum + p.totalCost, 0);
+  });
+
+  onSearchChange(query: string): void {
+    this.searchQuery.set(query);
+  }
 
   constructor() {
     effect(() => {

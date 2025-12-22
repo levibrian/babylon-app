@@ -5,8 +5,18 @@ import { ReactiveFormsModule, FormBuilder, Validators, FormGroup } from '@angula
 import { Transaction, NewTransactionData } from '../../models/transaction.model';
 import { SecurityService } from '../../services/security.service';
 import { Security } from '../../models/security.model';
-import { Subscription } from 'rxjs';
+import { Subscription, of } from 'rxjs';
+import { debounceTime, distinctUntilChanged, switchMap, catchError, tap } from 'rxjs/operators';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { environment } from '../../environments/environment';
 import { SelectOnFocusDirective } from '../../directives/select-on-focus.directive';
+
+interface SearchResult {
+  ticker: string;
+  name: string;
+  type: string;
+  exchange: string;
+}
 
 @Component({
   selector: 'app-transaction-edit-row',
@@ -22,6 +32,9 @@ export class TransactionEditRowComponent implements OnInit, OnDestroy, AfterView
   @ViewChild('tickerInput', { static: false }) tickerInputRef!: ElementRef<HTMLInputElement>;
 
   private securityService = inject(SecurityService);
+  private http = inject(HttpClient);
+  private apiUrl = `${environment.apiUrl}/api/v1/market/search`;
+  
   transactionForm: FormGroup;
   
   private formChangesSubscription!: Subscription;
@@ -31,7 +44,8 @@ export class TransactionEditRowComponent implements OnInit, OnDestroy, AfterView
   tickerInputValue = signal('');
   selectedIndex = signal(-1);
   showDropdown = signal(false);
-  
+  searchResults = signal<SearchResult[]>([]);
+
   // Form values as signals for reactivity
   private sharesValue = signal(0);
   private sharePriceValue = signal(0);
@@ -40,13 +54,8 @@ export class TransactionEditRowComponent implements OnInit, OnDestroy, AfterView
   private totalAmountValue = signal(0);
   private transactionTypeValue = signal<'buy' | 'sell' | 'dividend' | 'split'>('buy');
   
-  filteredSecurities = computed(() => {
-    const value = this.tickerInputValue();
-    if (!value || value.trim().length === 0) {
-      return [];
-    }
-    return this.securityService.filterSecurities(value);
-  });
+  // Computed used for template iteration - now just returns searchResults
+  filteredSecurities = computed(() => this.searchResults());
 
   // Computed total amount based on transaction type
   estimatedTotal = computed(() => {
@@ -208,10 +217,29 @@ export class TransactionEditRowComponent implements OnInit, OnDestroy, AfterView
 
   ngOnInit(): void {
     // Subscribe to ticker input changes for autocomplete
-    this.transactionForm.get('ticker')?.valueChanges.subscribe(value => {
-      this.tickerInputValue.set(value || '');
-      const filtered = this.filteredSecurities();
-      this.showDropdown.set(value && value.length > 0 && filtered.length > 0);
+    this.transactionForm.get('ticker')?.valueChanges.pipe(
+      debounceTime(300),
+      distinctUntilChanged(),
+      switchMap(term => {
+        this.tickerInputValue.set(term || '');
+        if (!term || term.length < 1) {
+          this.searchResults.set([]);
+          this.showDropdown.set(false);
+          return of([]);
+        }
+        
+        const params = new HttpParams().set('query', term);
+        return this.http.get<SearchResult[]>(this.apiUrl, { params }).pipe(
+          catchError(err => {
+            console.error('Search error', err);
+            return of([]);
+          })
+        );
+      })
+    ).subscribe(results => {
+      this.searchResults.set(results);
+      const hasTerm = !!this.transactionForm.get('ticker')?.value;
+      this.showDropdown.set(hasTerm && results.length > 0);
       this.selectedIndex.set(-1);
     });
 
@@ -485,16 +513,19 @@ export class TransactionEditRowComponent implements OnInit, OnDestroy, AfterView
   }
 
   // Autocomplete methods
-  selectSecurity(security: Security): void {
-    this.transactionForm.get('ticker')?.setValue(security.ticker.toUpperCase());
+  selectSecurity(result: SearchResult | Security): void {
+    // Handle both new SearchResult interface and old Security model for backward compatibility if needed
+    const ticker = 'ticker' in result ? result.ticker : (result as any).ticker;
+    this.transactionForm.get('ticker')?.setValue(ticker.toUpperCase());
     this.showDropdown.set(false);
     this.selectedIndex.set(-1);
   }
 
   onTickerInputFocus(): void {
     const value = this.tickerInputValue();
-    const filtered = this.filteredSecurities();
-    if (value && value.length > 0 && filtered.length > 0) {
+    // Re-trigger search if we have a value but no results (e.g. came back to tab)
+    // For now, just show existing results if any
+    if (value && value.length > 0 && this.searchResults().length > 0) {
       this.showDropdown.set(true);
     }
   }
@@ -508,14 +539,14 @@ export class TransactionEditRowComponent implements OnInit, OnDestroy, AfterView
   }
 
   onKeyDown(event: KeyboardEvent): void {
-    const filtered = this.filteredSecurities();
-    if (filtered.length === 0) return;
+    const results = this.searchResults();
+    if (results.length === 0) return;
 
     switch (event.key) {
       case 'ArrowDown':
         event.preventDefault();
         this.selectedIndex.update(idx => 
-          idx < filtered.length - 1 ? idx + 1 : idx
+          idx < results.length - 1 ? idx + 1 : idx
         );
         break;
       case 'ArrowUp':
@@ -525,8 +556,8 @@ export class TransactionEditRowComponent implements OnInit, OnDestroy, AfterView
       case 'Enter':
         event.preventDefault();
         const currentIndex = this.selectedIndex();
-        if (currentIndex >= 0 && currentIndex < filtered.length) {
-          this.selectSecurity(filtered[currentIndex]);
+        if (currentIndex >= 0 && currentIndex < results.length) {
+          this.selectSecurity(results[currentIndex]);
         }
         break;
       case 'Escape':

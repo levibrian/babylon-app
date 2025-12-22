@@ -1,5 +1,5 @@
 <div class="min-h-screen bg-gray-50 p-2 sm:p-4 lg:p-6">
-  <main class="flex flex-col overflow-hidden bg-white rounded-xl shadow-sm border border-gray-200/50 w-full sm:w-[80%] mx-auto h-[calc(100vh-1rem)] sm:h-[calc(100vh-2rem)] lg:h-[calc(100vh-3rem)]">
+  <main class="flex flex-col overflow-hidden bg-white rounded-xl shadow-sm border border-gray-200/50 max-w-[1800px] w-full mx-auto h-[calc(100vh-1rem)] sm:h-[calc(100vh-2rem)] lg:h-[calc(100vh-3rem)]">
     <!-- Top Navigation -->
     <div class="flex items-baseline gap-x-3 sm:gap-x-4 p-4 sm:p-6 pb-2 flex-wrap flex-shrink-0 border-b border-gray-100">
     <a routerLink="/wealth" class="text-xl sm:text-2xl font-medium text-gray-400 hover:text-gray-600 transition-colors">
@@ -42,7 +42,7 @@
 
   <!-- Main Content Area: Centered Sidebar + Content -->
   <div class="flex-1 flex justify-center overflow-hidden min-h-0">
-    <div class="flex w-full max-w-5xl">
+    <div class="flex w-full h-full">
       <!-- Vertical Sidebar Navigation -->
       <nav class="flex-shrink-0 w-52 py-6 pr-6 hidden sm:block">
         <ul class="space-y-1">
@@ -94,11 +94,13 @@
             </app-error-state>
           } @else {
             <app-transaction-list 
-              [transactions]="transactions()" 
+              [transactions]="filteredTransactions()" 
+              [searchQuery]="searchQuery()"
+              (searchQueryChange)="onSearchChange($event)"
               [isAdding]="isAddingTransaction()"
               [isLoading]="isLoading()"
               [error]="error()"
-              [totalInvested]="totalInvested()"
+              [totalInvested]="filteredTotalInvested()"
               (save)="saveTransaction($event)"
               (cancel)="cancelNewTransaction()"
               (update)="updateTransaction($event)"

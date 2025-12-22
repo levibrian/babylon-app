@@ -106,8 +106,8 @@ export class PlanningService {
       if (a.ticker) uniqueTickers.add(a.ticker);
     });
     
-    // Add tickers from portfolio positions (owned items)
-    portfolioPositions?.forEach(p => uniqueTickers.add(p.ticker));
+    // // Add tickers from portfolio positions (owned items)
+    // portfolioPositions?.forEach(p => uniqueTickers.add(p.ticker));
 
     return Array.from(uniqueTickers).map(ticker => {
       const position = portfolioPositions?.find(p => p.ticker === ticker);

@@ -28,7 +28,7 @@ export class AddSecuritySearchComponent implements OnInit {
   private apiUrl = `${environment.apiUrl}/api/v1/market/search`;
 
   searchControl = new FormControl('');
-  results$: Observable<SearchResult[]> = of([]);
+  results = signal<SearchResult[]>([]);
   isDropdownVisible = signal(false);
 
   @HostListener('document:click', ['$event'])
@@ -38,7 +38,6 @@ export class AddSecuritySearchComponent implements OnInit {
     }
   }
 
-
   onFocus() {
     if (this.searchControl.value) {
       this.isDropdownVisible.set(true);
@@ -46,15 +45,27 @@ export class AddSecuritySearchComponent implements OnInit {
   }
   
   ngOnInit() {
-    this.results$ = this.searchControl.valueChanges.pipe(
+    this.searchControl.valueChanges.pipe(
       debounceTime(300),
       distinctUntilChanged(),
       tap(term => {
-         if (term) this.isDropdownVisible.set(true); 
-         else this.isDropdownVisible.set(false);
+         const hasTerm = !!term && term.length > 0;
+         this.isDropdownVisible.set(hasTerm);
+         if (!hasTerm) {
+            this.results.set([]);
+         }
       }),
-      switchMap(term => this.searchSecurities(term || ''))
-    );
+      switchMap(term => {
+        if (!term || term.length < 1) return of([]);
+        return this.searchSecurities(term);
+      })
+    ).subscribe(data => {
+      this.results.set(data);
+      // Ensure dropdown is visible if we have results and there is a search term
+      if (this.searchControl.value && data.length > 0) {
+        this.isDropdownVisible.set(true);
+      }
+    });
   }
 
   private searchSecurities(term: string): Observable<SearchResult[]> {

@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, input, output, signal, computed } from '@angular/core';
+import { Component, ChangeDetectionStrategy, input, Output, EventEmitter, signal, computed } from '@angular/core';
 import { CommonModule, CurrencyPipe, DecimalPipe } from '@angular/common';
 // Fix: Import NewTransactionData from the correct model file.
 import { Transaction, NewTransactionData } from '../../models/transaction.model';
@@ -21,35 +21,32 @@ export class TransactionListComponent {
   error = input<string | null>(null);
   totalInvested = input<number>(0);
 
-  save = output<NewTransactionData>();
-  cancel = output<void>();
-  update = output<Transaction>();
-  delete = output<Transaction>();
-  toggleAdd = output<void>();
-  navigateToRecurring = output<void>();
+  @Output() save = new EventEmitter<NewTransactionData>();
+  @Output() cancel = new EventEmitter<void>();
+  @Output() update = new EventEmitter<Transaction>();
+  @Output() delete = new EventEmitter<Transaction>();
+  @Output() toggleAdd = new EventEmitter<void>();
+  @Output() navigateToRecurring = new EventEmitter<void>();
   
   editingTransactionId = signal<string | null>(null);
-  searchQuery = signal<string>('');
   
-  // Filtered transactions based on search query
-  filteredTransactions = computed(() => {
-    const query = this.searchQuery().toLowerCase().trim();
-    const allTransactions = this.transactions();
-    
-    if (!query) {
-      return allTransactions;
-    }
-    
-    return allTransactions.filter(transaction => {
-      const ticker = transaction.ticker.toLowerCase();
-      const securityName = (transaction.securityName || '').toLowerCase();
-      return ticker.includes(query) || securityName.includes(query);
-    });
-  });
+  // Search query synced with parent
+  searchQuery = input<string>('');
+  @Output() searchQueryChange = new EventEmitter<string>();
+  
+  // Expose transactions directly (they are already filtered by parent)
+  // We alias it to filteredTransactions for template compatibility if needed, 
+  // or better, just use transactions() in template.
+  // But wait, if I use transactions(), I need to update the template.
   
   getCompanyName(transaction: Transaction): string {
     // Use securityName from transaction if available, otherwise fall back to ticker
     return transaction.securityName || transaction.ticker;
+  }
+
+  onSearchInput(event: Event): void {
+    const value = (event.target as HTMLInputElement).value;
+    this.searchQueryChange.emit(value);
   }
 
   isEditing(transactionId: string): boolean {

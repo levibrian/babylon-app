@@ -22,7 +22,7 @@
         </div>
       } @else {
         <app-transactions-dashboard 
-          [transactions]="transactions()"
+          [transactions]="filteredTransactions()"
           [totalInvested]="totalInvested()"
           [portfolio]="portfolio()" />
       }
@@ -45,7 +45,9 @@
           </app-error-state>
         } @else {
           <app-transaction-list 
-            [transactions]="transactions()" 
+            [transactions]="filteredTransactions()" 
+            [searchQuery]="searchQuery()"
+            (searchQueryChange)="onSearchChange($event)"
             [isAdding]="isAddingTransaction()"
             [isLoading]="isLoading()"
             [error]="error()"
