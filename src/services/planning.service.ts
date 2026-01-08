@@ -9,8 +9,6 @@ import { ApiPortfolioResponse } from '../models/api-response.model';
 import { AllocationService } from './allocation.service';
 import { AllocationStrategyDto } from '../models/allocation.model';
 
-const USER_ID = 'a1b2c3d4-e5f6-4a5b-8c9d-0e1f2a3b4c5d';
-
 export interface PlanningData {
   monthlyInvestment: number;
   rows: PlanningRow[];
@@ -25,8 +23,8 @@ export class PlanningService {
   private apiUrl = `${environment.apiUrl}/api/v1`;
 
   getPlanningData(): Observable<PlanningData> {
-    // Ensure allocation service has loaded strategy so we can use it for updates later
-    this.allocationService.loadStrategy(USER_ID);
+    // Ensure allocation service has loaded strategy
+    this.allocationService.loadStrategy();
 
     return forkJoin({
       user: this.http.get<any>(`${this.apiUrl}/users/me`).pipe(
@@ -35,13 +33,13 @@ export class PlanningService {
           return of({ monthlyInvestmentAmount: 0 });
         })
       ),
-      strategy: this.http.get<any>(`${this.apiUrl}/portfolios/${USER_ID}/allocation`).pipe(
+      strategy: this.http.get<any>(`${this.apiUrl}/portfolios/allocation`).pipe(
         catchError(err => {
           console.error('Error fetching strategy:', err);
           return of({ allocations: [] });
         })
       ),
-      portfolio: this.http.get<ApiPortfolioResponse>(`${this.apiUrl}/portfolios/${USER_ID}`).pipe(
+      portfolio: this.http.get<ApiPortfolioResponse>(`${this.apiUrl}/portfolios`).pipe(
         catchError(err => {
           console.error('Error fetching portfolio:', err);
           return of({ positions: [], totalInvested: 0, dailyGainLoss: 0, dailyGainLossPercentage: 0 } as ApiPortfolioResponse);
@@ -49,9 +47,7 @@ export class PlanningService {
       )
     }).pipe(
       map(data => {
-        console.log('PlanningService raw data:', data);
         const rows = this.mergeAndMapToRows(data.portfolio.positions, data.strategy.allocations);
-        console.log('PlanningService mapped rows:', rows);
         return {
           monthlyInvestment: data.user.monthlyInvestmentAmount ?? 0,
           rows: rows
@@ -65,9 +61,7 @@ export class PlanningService {
   }
 
   updateAllocation(row: PlanningRow): Observable<any> {
-    // Delegate to AllocationService which handles the full strategy update logic
     return from(this.allocationService.updateTarget(
-      USER_ID, 
       row.ticker, 
       row.targetPercentage,
       {
@@ -79,13 +73,10 @@ export class PlanningService {
   }
 
   addSecurity(ticker: string): Observable<any> {
-    // Adding a security to planning -> Add to allocation strategy with 0% target
-    return from(this.allocationService.updateTarget(USER_ID, ticker, 0));
+    return from(this.allocationService.updateTarget(ticker, 0));
   }
 
   deleteSecurity(ticker: string): Observable<void> {
-    // Use AllocationService to remove the security from the strategy
-    // We need to get the current strategy, filter out the ticker, and save
     const currentStrategy = this.allocationService.strategy();
     if (!currentStrategy || !currentStrategy.allocations) {
       return of(undefined);
@@ -95,7 +86,7 @@ export class PlanningService {
       a => a.ticker.toUpperCase() !== ticker.toUpperCase()
     );
 
-    return from(this.allocationService.setAllocationStrategy(USER_ID, updatedAllocations));
+    return from(this.allocationService.setAllocationStrategy(updatedAllocations));
   }
 
   private mergeAndMapToRows(portfolioPositions: any[], allocations: AllocationStrategyDto[]): PlanningRow[] {

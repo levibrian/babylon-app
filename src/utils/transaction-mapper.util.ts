@@ -33,7 +33,7 @@ export function mapApiTransactionsToTransactions(
   apiTransactions: ApiTransaction[],
   fallbackTicker?: string
 ): Transaction[] {
-  return apiTransactions.map(t => mapApiTransactionToTransaction(t, fallbackTicker));
+  return (apiTransactions || []).map(t => mapApiTransactionToTransaction(t, fallbackTicker));
 }
 
 /**
@@ -49,12 +49,10 @@ export interface CreateTransactionRequest {
   Fees: number;
   TotalAmount?: number; // Total amount (required for dividends - Net Received, always 0 for splits)
   Tax?: number; // Tax withheld (for dividend transactions)
-  UserId: string | null;
 }
 
 export function mapToCreateTransactionRequest(
-  transactionData: NewTransactionData,
-  userId: string | null = null
+  transactionData: NewTransactionData
 ): CreateTransactionRequest {
   // Convert transaction type to numeric enum value expected by backend
   // Backend enum: Buy=0, Sell=1, Dividend=2, Split=3
@@ -73,16 +71,6 @@ export function mapToCreateTransactionRequest(
     dateFormatted = dateObj.toISOString().split('T')[0];
   }
   
-  // Debug logging
-  console.log('Mapping to CreateTransactionRequest:', {
-    transactionType: transactionData.transactionType,
-    transactionTypeEnum: transactionTypeMap[transactionData.transactionType],
-    shares: transactionData.shares,
-    sharesQuantity: transactionData.shares, // This will be mapped to SharesQuantity
-    totalAmount: transactionData.totalAmount,
-    tax: transactionData.tax
-  });
-  
   const request = {
     Ticker: transactionData.ticker,
     TransactionType: transactionTypeMap[transactionData.transactionType],
@@ -92,11 +80,7 @@ export function mapToCreateTransactionRequest(
     Fees: transactionData.fees, // Typically 0 for splits
     TotalAmount: transactionData.totalAmount, // Include totalAmount (required for dividends, always 0 for splits)
     Tax: transactionData.tax, // Typically 0 for splits
-    UserId: userId,
   };
-  
-  console.log('Final CreateTransactionRequest:', request);
-  console.log('SharesQuantity value:', request.SharesQuantity, 'Type:', typeof request.SharesQuantity);
   
   return request;
 }
@@ -114,7 +98,6 @@ export interface BulkTransactionRequestItem {
   fees: number;
   tax: number;
   totalAmount: number;
-  userId: string;
 }
 
 /**
@@ -123,8 +106,7 @@ export interface BulkTransactionRequestItem {
  * Returns an array directly (ASP.NET Core binds List<T> from array body).
  */
 export function mapToBulkTransactionRequest(
-  transactions: NewTransactionData[],
-  userId: string
+  transactions: NewTransactionData[]
 ): BulkTransactionRequestItem[] {
   // Convert transaction type to numeric enum value
   const transactionTypeMap: Record<'buy' | 'sell' | 'dividend' | 'split', number> = {
@@ -156,7 +138,6 @@ export function mapToBulkTransactionRequest(
       fees: transactionData.fees || 0,
       tax: transactionData.tax || 0,
       totalAmount: transactionData.totalAmount || 0,
-      userId,
     };
   });
 }

@@ -38,29 +38,34 @@
   <!-- Right Pane (45% width on large screens, full width on mobile) -->
   <div class="w-full lg:w-[30%] flex flex-col" style="height: 100%; overflow: hidden;">
     
-    <div class="flex items-baseline gap-x-3 sm:gap-x-4 px-3 pt-4 sm:pt-6 mb-3 flex-shrink-0">
+    <div class="flex items-center justify-between px-3 pt-4 sm:pt-6 mb-3 flex-shrink-0 gap-4">
       
-      <!-- Positions -->
-      @if (activeView() === 'positions') {
-        <h2 class="text-sm font-bold tracking-tight text-gray-900">Positions</h2>
-      } @else {
-        <button
-          (click)="setActiveView('positions')"
-          class="text-sm font-medium text-gray-400 hover:text-gray-600 transition-colors">
-          Positions
-        </button>
-      }
+      <div class="flex items-baseline gap-x-3 sm:gap-x-4">
+        <!-- Positions -->
+        @if (activeView() === 'positions') {
+          <h2 class="text-sm font-bold tracking-tight text-gray-900">Positions</h2>
+        } @else {
+          <button
+            (click)="setActiveView('positions')"
+            class="text-sm font-medium text-gray-400 hover:text-gray-600 transition-colors">
+            Positions
+          </button>
+        }
 
-      <!-- Strategy -->
-      @if (activeView() === 'strategy') {
-        <h2 class="text-sm font-bold tracking-tight text-gray-900">Strategy</h2>
-      } @else {
-        <button
-          (click)="setActiveView('strategy')"
-          class="text-sm font-medium text-gray-400 hover:text-gray-600 transition-colors">
-          Strategy
-        </button>
-      }
+        <!-- Strategy -->
+        @if (activeView() === 'strategy') {
+          <h2 class="text-sm font-bold tracking-tight text-gray-900">Strategy</h2>
+        } @else {
+          <button
+            (click)="setActiveView('strategy')"
+            class="text-sm font-medium text-gray-400 hover:text-gray-600 transition-colors">
+            Strategy
+          </button>
+        }
+      </div>
+
+      <!-- User Profile -->
+      <app-user-profile></app-user-profile>
     </div>
 
     <!-- Content Area -->

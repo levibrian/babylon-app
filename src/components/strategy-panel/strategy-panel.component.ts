@@ -1026,7 +1026,7 @@ export class StrategyPanelComponent implements OnInit {
       }));
 
       // Send complete list to backend (includes all portfolio items)
-      await this.allocationService.setAllocationStrategy(undefined, allAllocations);
+      await this.allocationService.setAllocationStrategy(allAllocations);
       
       // Clear local inputs after successful save - this will trigger recomputation with sorted order
       // The service will reload the strategy, and computed signals will use service values

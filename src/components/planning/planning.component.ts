@@ -1,8 +1,9 @@
-import { Component, OnInit, inject, OnDestroy, ChangeDetectorRef, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, inject, OnDestroy, ChangeDetectorRef, ChangeDetectionStrategy, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, FormArray, FormControl } from '@angular/forms';
 import { AddSecuritySearchComponent } from '../add-security-search/add-security-search.component';
 import { PlanningService } from '../../services/planning.service';
+import { PortfolioService } from '../../services/portfolio.service';
 import { Subject, Subscription, merge } from 'rxjs';
 import { debounceTime, switchMap, tap } from 'rxjs/operators';
 import { PlanningRow, AssetGroup, PlanningRowFormValue } from '../../models/planning.model';
@@ -17,11 +18,15 @@ import { PlanningRow, AssetGroup, PlanningRowFormValue } from '../../models/plan
 })
 export class PlanningComponent implements OnInit, OnDestroy {
   private planningService = inject(PlanningService);
+  private portfolioService = inject(PortfolioService);
   private cdr = inject(ChangeDetectorRef);
   private fb = inject(FormBuilder);
   
   planningForm!: FormGroup;
   groupedRows: AssetGroup[] = [];
+
+  // Track save status per ticker: 'idle' | 'saving' | 'saved' | 'error'
+  saveStatus = signal<Map<string, 'idle' | 'saving' | 'saved' | 'error'>>(new Map());
 
   private subscriptions = new Subscription();
 
@@ -154,8 +159,9 @@ export class PlanningComponent implements OnInit, OnDestroy {
   }
 
   private saveAllocation(rowGroup: FormGroup) {
+    const ticker = rowGroup.get('ticker')!.value;
     const row: PlanningRow = {
-      ticker: rowGroup.get('ticker')!.value,
+      ticker,
       securityName: rowGroup.get('securityName')!.value,
       assetType: rowGroup.get('assetType')!.value,
       targetPercentage: rowGroup.get('targetPercentage')!.value,
@@ -167,10 +173,43 @@ export class PlanningComponent implements OnInit, OnDestroy {
       monthlyEur: rowGroup.get('monthlyEur')!.value
     };
 
+    // Set status to 'saving'
+    this.updateSaveStatus(ticker, 'saving');
+
     this.planningService.updateAllocation(row).subscribe({
-      next: () => {},
-      error: err => console.error('Error updating allocation', err)
+      next: () => {
+        // Set status to 'saved'
+        this.updateSaveStatus(ticker, 'saved');
+        
+        // Trigger silent portfolio refresh to update allocation metrics
+        this.portfolioService.reloadSilent();
+        
+        // Clear 'saved' status after 2 seconds
+        setTimeout(() => {
+          this.updateSaveStatus(ticker, 'idle');
+        }, 2000);
+      },
+      error: err => {
+        console.error('Error updating allocation', err);
+        this.updateSaveStatus(ticker, 'error');
+        
+        // Clear 'error' status after 3 seconds
+        setTimeout(() => {
+          this.updateSaveStatus(ticker, 'idle');
+        }, 3000);
+      }
     });
+  }
+
+  private updateSaveStatus(ticker: string, status: 'idle' | 'saving' | 'saved' | 'error') {
+    const newMap = new Map(this.saveStatus());
+    newMap.set(ticker, status);
+    this.saveStatus.set(newMap);
+    this.cdr.markForCheck();
+  }
+
+  getSaveStatus(ticker: string): 'idle' | 'saving' | 'saved' | 'error' {
+    return this.saveStatus().get(ticker) || 'idle';
   }
 
   addSecurity(ticker: string) {

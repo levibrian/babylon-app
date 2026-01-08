@@ -12,12 +12,6 @@ import { CommonModule, CurrencyPipe } from '@angular/common';
 import { PortfolioAnalyticsService } from '../../../services/portfolio-analytics.service';
 import { ApiSmartRebalancingRecommendation } from '../../../models/api-response.model';
 
-const USER_ID = 'a1b2c3d4-e5f6-4a5b-8c9d-0e1f2a3b4c5d';
-
-/**
- * Reusable Smart Rebalancing component.
- * Provides an expandable overlay for smart rebalancing recommendations.
- */
 @Component({
   selector: 'app-smart-rebalancing',
   standalone: true,
@@ -27,9 +21,6 @@ const USER_ID = 'a1b2c3d4-e5f6-4a5b-8c9d-0e1f2a3b4c5d';
 })
 export class SmartRebalancingComponent {
   private analyticsService = inject(PortfolioAnalyticsService);
-
-  /** User ID for fetching recommendations (optional, defaults to constant) */
-  userId = input<string>(USER_ID);
 
   /** Whether the overlay is expanded */
   isExpanded = signal<boolean>(false);
@@ -119,8 +110,7 @@ export class SmartRebalancingComponent {
           investmentAmount: amount,
           maxSecurities: maxSec || null,
           onlyBuyUnderweight: true,
-        },
-        this.userId()
+        }
       );
 
       if (response) {

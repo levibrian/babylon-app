@@ -10,11 +10,12 @@ import { RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { PortfolioSkeletonComponent } from '../ghosting-elements/portfolio-skeleton/portfolio-skeleton.component';
 import { ErrorStateComponent } from '../common/error-state/error-state.component';
+import { UserProfileComponent } from '../user-profile/user-profile.component';
 
 @Component({
   selector: 'app-wealth-page',
   templateUrl: './wealth-page.component.html',
-  imports: [PortfolioListComponent, StrategyPanelComponent, PortfolioDashboardComponent, RouterLink, CommonModule, PortfolioSkeletonComponent, ErrorStateComponent],
+  imports: [PortfolioListComponent, StrategyPanelComponent, PortfolioDashboardComponent, RouterLink, CommonModule, PortfolioSkeletonComponent, ErrorStateComponent, UserProfileComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class WealthPageComponent implements OnDestroy {

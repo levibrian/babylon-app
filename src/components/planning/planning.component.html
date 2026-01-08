@@ -51,6 +51,14 @@
                   <input type="number" formControlName="targetPercentage" />
                   <span class="unit">%</span>
                 </div>
+                <!-- Save Status Indicator -->
+                <span class="save-status" [ngClass]="getSaveStatus(row.ticker)">
+                  <ng-container [ngSwitch]="getSaveStatus(row.ticker)">
+                    <span *ngSwitchCase="'saving'" class="saving">⏳</span>
+                    <span *ngSwitchCase="'saved'" class="saved">✓</span>
+                    <span *ngSwitchCase="'error'" class="error">✗</span>
+                  </ng-container>
+                </span>
               </div>
 
               <!-- Estimated Amount -->

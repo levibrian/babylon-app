@@ -1,17 +1,19 @@
-import { Injectable, signal, Signal, computed } from '@angular/core';
+import { Injectable, signal, Signal, computed, inject, effect } from '@angular/core';
+import { AuthService } from './auth.service';
 import { PortfolioItem, PortfolioInsight } from '../models/portfolio.model';
 import { ApiPortfolioResponse, ApiPortfolioInsight } from '../models/api-response.model';
 import { Transaction, NewTransactionData } from '../models/transaction.model';
 import { mapApiTransactionsToTransactions } from '../utils/transaction-mapper.util';
+import { HttpClient } from '@angular/common/http';
+import { lastValueFrom } from 'rxjs';
 
 import { environment } from '../environments/environment';
-
-const USER_ID = 'a1b2c3d4-e5f6-4a5b-8c9d-0e1f2a3b4c5d';
 
 @Injectable({
   providedIn: 'root',
 })
 export class PortfolioService {
+  private http = inject(HttpClient);
   private readonly _portfolio = signal<PortfolioItem[]>([]);
   private readonly _totalInvested = signal(0);
   private readonly _loading = signal(true);
@@ -59,8 +61,30 @@ export class PortfolioService {
     return (this.totalPnL() / invested) * 100;
   });
 
+  private authService = inject(AuthService);
+
   constructor() {
-    this.fetchPortfolio();
+    // Reactive data fetching based on auth state
+    effect(() => {
+      if (this.authService.isAuthenticated()) {
+        this.fetchPortfolio();
+      } else {
+        this.reset();
+      }
+    });
+  }
+
+  /**
+   * Clears all portfolio state. Called on logout.
+   */
+  public reset(): void {
+    this._portfolio.set([]);
+    this._totalInvested.set(0);
+    this._loading.set(false);
+    this._error.set(null);
+    this._dailyGainLoss.set(0);
+    this._dailyGainLossPercentage.set(0);
+    this._insights.set([]);
   }
 
   async reload(): Promise<void> {
@@ -82,47 +106,20 @@ export class PortfolioService {
       this._error.set(null);
       this._loading.set(true);
       
-        const [portfolioResponse, insightsResponse] = await Promise.all([
-        fetch(`${environment.apiUrl}/api/v1/portfolios/${USER_ID}`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }),
-        fetch(`${environment.apiUrl}/api/v1/portfolios/${USER_ID}/insights?limit=5`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        })
-      ]);
+      const portfolioResponse = await lastValueFrom(
+        this.http.get<ApiPortfolioResponse>(`${environment.apiUrl}/api/v1/portfolios`)
+      );
 
-      if (!portfolioResponse.ok) {
-        throw new Error(`Failed to fetch portfolio: ${portfolioResponse.status} ${portfolioResponse.statusText}`);
-      }
-
-      const data: ApiPortfolioResponse = await portfolioResponse.json();
-      const portfolioItems = this.mapApiDataToPortfolio(data);
+      const portfolioItems = this.mapApiDataToPortfolio(portfolioResponse);
       this._recalculateAndSetPortfolio(portfolioItems);
 
-      this._dailyGainLoss.set(data.dailyGainLoss ?? 0);
-      this._dailyGainLossPercentage.set(data.dailyGainLossPercentage ?? 0);
+      this._dailyGainLoss.set(portfolioResponse.dailyGainLoss ?? 0);
+      this._dailyGainLossPercentage.set(portfolioResponse.dailyGainLossPercentage ?? 0);
 
-      // Fetch insights from dedicated endpoint
-      if (insightsResponse.ok) {
-        const insightsResponseData = await insightsResponse.json();
-        // Handle both array response and wrapped response
-        const insightsArray: ApiPortfolioInsight[] = Array.isArray(insightsResponseData) 
-          ? insightsResponseData 
-          : (insightsResponseData.insights || insightsResponseData.data || []);
-        this._insights.set(this.mapApiInsightsToPortfolioInsights(insightsArray));
-      } else {
-        // Fallback to insights from portfolio response if insights endpoint fails
-        this._insights.set(this.mapApiInsightsToPortfolioInsights(data.insights || []));
-      }
+      this._insights.set(this.mapApiInsightsToPortfolioInsights(portfolioResponse.insights || []));
 
     } catch (err) {
-      this._error.set('Could not load portfolio. Please ensure the backend server is running and accessible.');
+      this._error.set('Could not load portfolio data. Please ensure the backend server is running and accessible.');
       console.error('Error fetching portfolio:', err);
     } finally {
       this._loading.set(false);
@@ -135,40 +132,17 @@ export class PortfolioService {
    */
   private async fetchPortfolioSilent(): Promise<void> {
     try {
-      const [portfolioResponse, insightsResponse] = await Promise.all([
-        fetch(`${environment.apiUrl}/api/v1/portfolios/${USER_ID}`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }),
-        fetch(`${environment.apiUrl}/api/v1/portfolios/${USER_ID}/insights?limit=5`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        })
-      ]);
+      const portfolioResponse = await lastValueFrom(
+        this.http.get<ApiPortfolioResponse>(`${environment.apiUrl}/api/v1/portfolios`)
+      );
 
-      if (!portfolioResponse.ok) {
-        throw new Error(`Failed to fetch portfolio: ${portfolioResponse.status} ${portfolioResponse.statusText}`);
-      }
-
-      const data: ApiPortfolioResponse = await portfolioResponse.json();
-      const portfolioItems = this.mapApiDataToPortfolio(data);
+      const portfolioItems = this.mapApiDataToPortfolio(portfolioResponse);
       this._recalculateAndSetPortfolio(portfolioItems);
 
-      this._dailyGainLoss.set(data.dailyGainLoss ?? 0);
-      this._dailyGainLossPercentage.set(data.dailyGainLossPercentage ?? 0);
+      this._dailyGainLoss.set(portfolioResponse.dailyGainLoss ?? 0);
+      this._dailyGainLossPercentage.set(portfolioResponse.dailyGainLossPercentage ?? 0);
 
-      // Fetch insights from dedicated endpoint
-      if (insightsResponse.ok) {
-        const insightsResponseData = await insightsResponse.json();
-        const insightsArray: ApiPortfolioInsight[] = Array.isArray(insightsResponseData) 
-          ? insightsResponseData 
-          : (insightsResponseData.insights || insightsResponseData.data || []);
-        this._insights.set(this.mapApiInsightsToPortfolioInsights(insightsArray));
-      }
+      this._insights.set(this.mapApiInsightsToPortfolioInsights(portfolioResponse.insights || []));
 
     } catch (err) {
       console.error('Error fetching portfolio (silent):', err);
@@ -384,7 +358,7 @@ export class PortfolioService {
   }
 
   private mapApiDataToPortfolio(data: ApiPortfolioResponse): PortfolioItem[] {
-    return data.positions.map(position => ({
+    return (data.positions || []).map(position => ({
       ticker: position.ticker,
       companyName: position.securityName,
       totalCost: position.totalInvested,

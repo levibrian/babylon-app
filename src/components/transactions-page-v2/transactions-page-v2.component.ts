@@ -10,6 +10,7 @@ import { Transaction, NewTransactionData } from '../../models/transaction.model'
 import { RouterLink, ActivatedRoute, Router } from '@angular/router';
 import { TransactionSkeletonComponent } from '../ghosting-elements/transaction-skeleton/transaction-skeleton.component';
 import { ErrorStateComponent } from '../common/error-state/error-state.component';
+import { UserProfileComponent } from '../user-profile/user-profile.component';
 
 @Component({
   selector: 'app-transactions-page-v2',
@@ -21,7 +22,8 @@ import { ErrorStateComponent } from '../common/error-state/error-state.component
     RecurringInvestmentsListComponent,
     PlanningComponent,
     TransactionSkeletonComponent,
-    ErrorStateComponent
+    ErrorStateComponent,
+    UserProfileComponent
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

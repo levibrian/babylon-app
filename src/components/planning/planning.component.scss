@@ -210,6 +210,27 @@
         margin-left: 2px;
       }
     }
+
+    .save-status {
+      margin-left: 8px;
+      min-width: 20px;
+      text-align: center;
+      font-size: 0.9rem;
+      
+      .saving {
+        animation: pulse 1s infinite;
+      }
+      
+      .saved {
+        color: #22c55e; // Green
+        animation: fadeIn 0.2s ease-in;
+      }
+      
+      .error {
+        color: #ef4444; // Red
+        animation: shake 0.3s ease-in-out;
+      }
+    }
   }
 
   .col-estimation {
@@ -314,4 +335,21 @@
       &.under-budget { color: #22c55e; }
     }
   }
+}
+
+// Keyframe animations for save status
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.8); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-2px); }
+  75% { transform: translateX(2px); }
 }

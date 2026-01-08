@@ -1,14 +1,16 @@
-import { Injectable, Signal, signal, computed } from '@angular/core';
+import { Injectable, Signal, signal, computed, inject, effect } from '@angular/core';
+import { AuthService } from './auth.service';
 import { AllocationStrategyResponse, AllocationStrategyDto, SetAllocationStrategyRequest } from '../models/allocation.model';
+import { HttpClient } from '@angular/common/http';
+import { lastValueFrom } from 'rxjs';
 
 import { environment } from '../environments/environment';
-
-const USER_ID = 'a1b2c3d4-e5f6-4a5b-8c9d-0e1f2a3b4c5d';
 
 @Injectable({
   providedIn: 'root',
 })
 export class AllocationService {
+  private http = inject(HttpClient);
   private readonly _strategy = signal<AllocationStrategyResponse | null>(null);
   private readonly _loading = signal(false);
   private readonly _error = signal<string | null>(null);
@@ -17,7 +19,6 @@ export class AllocationService {
   public readonly loading: Signal<boolean> = this._loading.asReadonly();
   public readonly error: Signal<string | null> = this._error.asReadonly();
 
-  // Computed signal for O(1) lookups of target percentages by ticker
   public readonly targetMap: Signal<Map<string, number>> = computed(() => {
     const currentStrategy = this._strategy();
     if (!currentStrategy || !currentStrategy.allocations) {
@@ -31,8 +32,7 @@ export class AllocationService {
     return map;
   });
 
-  async loadStrategy(userId: string = USER_ID): Promise<void> {
-    // Prevent multiple simultaneous loads
+  async loadStrategy(): Promise<void> {
     if (this._loading()) {
       return;
     }
@@ -41,18 +41,7 @@ export class AllocationService {
       this._loading.set(true);
       this._error.set(null);
 
-      const response = await fetch(`${environment.apiUrl}/api/v1/portfolios/${userId}/allocation`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch allocation strategy: ${response.status} ${response.statusText}`);
-      }
-
-      const data: AllocationStrategyResponse = await response.json();
+      const data = await lastValueFrom(this.http.get<AllocationStrategyResponse>(`${environment.apiUrl}/api/v1/portfolios/allocation`));
       this._strategy.set(data);
 
     } catch (err) {
@@ -64,14 +53,7 @@ export class AllocationService {
     }
   }
 
-  /**
-   * Update a single target allocation.
-   * NOTE: This method only sends allocations that are currently in the loaded strategy.
-   * For sending ALL portfolio items (including new ones), use setAllocationStrategy() instead.
-   * The backend expects ALL items to be sent so it can determine what to delete, update, or add.
-   */
   async updateTarget(
-    userId: string = USER_ID, 
     ticker: string, 
     newPercentage: number,
     options?: { isEnabledForWeekly?: boolean, isEnabledForBiWeekly?: boolean, isEnabledForMonthly?: boolean }
@@ -82,18 +64,14 @@ export class AllocationService {
       throw new Error('Allocation strategy not loaded. Please load strategy first.');
     }
 
-    // Create a copy of current allocations
-    // WARNING: This only includes allocations already in the strategy, not all portfolio items
     const updatedAllocations: AllocationStrategyDto[] = [...currentStrategy.allocations];
     
-    // Find existing allocation for this ticker
     const tickerUpper = ticker.toUpperCase();
     const existingIndex = updatedAllocations.findIndex(
       alloc => alloc.ticker.toUpperCase() === tickerUpper
     );
 
     if (existingIndex >= 0) {
-      // Update existing allocation
       updatedAllocations[existingIndex] = {
         ...updatedAllocations[existingIndex],
         targetPercentage: newPercentage,
@@ -102,23 +80,20 @@ export class AllocationService {
         ...(options?.isEnabledForMonthly !== undefined && { isEnabledForMonthly: options.isEnabledForMonthly }),
       };
     } else {
-      // Add new allocation
       updatedAllocations.push({
         ticker: tickerUpper,
         targetPercentage: newPercentage,
-        isEnabledForWeekly: options?.isEnabledForWeekly ?? true, // Default to true if not specified for new
+        isEnabledForWeekly: options?.isEnabledForWeekly ?? true,
         isEnabledForBiWeekly: options?.isEnabledForBiWeekly ?? true,
         isEnabledForMonthly: options?.isEnabledForMonthly ?? true,
       });
     }
 
-    // Calculate new total allocated
     const newTotalAllocated = updatedAllocations.reduce(
       (sum, alloc) => sum + alloc.targetPercentage,
       0
     );
 
-    // Optimistic update: update local signal immediately
     const previousStrategy = currentStrategy;
     this._strategy.set({
       allocations: updatedAllocations,
@@ -126,51 +101,25 @@ export class AllocationService {
     });
 
     try {
-      // Send PUT request with full list
       const request: SetAllocationStrategyRequest = {
         allocations: updatedAllocations,
       };
 
-      const response = await fetch(`${environment.apiUrl}/api/v1/portfolios/${userId}/allocation`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(request),
-      });
+      await lastValueFrom(this.http.put(`${environment.apiUrl}/api/v1/portfolios/allocation`, request));
 
-      if (!response.ok) {
-        // Revert optimistic update on error
-        this._strategy.set(previousStrategy);
-        const errorText = await response.text();
-        console.error('API Error:', response.status, errorText);
-        throw new Error(`Failed to update allocation strategy: ${response.status} ${response.statusText}`);
-      }
-
-      // Reload to ensure consistency with backend
-      await this.loadStrategy(userId);
+      await this.loadStrategy();
 
     } catch (err) {
       console.error('Error updating allocation target:', err);
-      // Strategy already reverted on error, but ensure error state is set
+      this._strategy.set(previousStrategy);
       this._error.set(err instanceof Error ? err.message : 'Failed to update allocation target');
       throw err;
     }
   }
 
-  /**
-   * Set the complete allocation strategy for all portfolio items.
-   * This method sends ALL allocations (modified and unmodified) to the backend,
-   * which expects the complete list to determine what to delete, update, or add.
-   */
-  async setAllocationStrategy(userId: string = USER_ID, allocations: AllocationStrategyDto[]): Promise<void> {
-    // Calculate total allocated
-    const totalAllocated = allocations.reduce(
-      (sum, alloc) => sum + alloc.targetPercentage,
-      0
-    );
+  async setAllocationStrategy(allocations: AllocationStrategyDto[]): Promise<void> {
+    const totalAllocated = allocations.reduce((sum, alloc) => sum + alloc.targetPercentage, 0);
 
-    // Optimistic update: update local signal immediately
     const previousStrategy = this._strategy();
     this._strategy.set({
       allocations: [...allocations],
@@ -178,38 +127,43 @@ export class AllocationService {
     });
 
     try {
-      // Send PUT request with complete list of ALL allocations
       const request: SetAllocationStrategyRequest = {
         allocations: allocations,
       };
 
-      const response = await fetch(`${environment.apiUrl}/api/v1/portfolios/${userId}/allocation`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(request),
-      });
+      await lastValueFrom(this.http.put(`${environment.apiUrl}/api/v1/portfolios/allocation`, request));
 
-      if (!response.ok) {
-        // Revert optimistic update on error
-        if (previousStrategy) {
-          this._strategy.set(previousStrategy);
-        }
-        const errorText = await response.text();
-        console.error('API Error:', response.status, errorText);
-        throw new Error(`Failed to set allocation strategy: ${response.status} ${response.statusText}`);
-      }
-
-      // Reload to ensure consistency with backend
-      await this.loadStrategy(userId);
+      await this.loadStrategy();
 
     } catch (err) {
       console.error('Error setting allocation strategy:', err);
-      // Strategy already reverted on error, but ensure error state is set
+      if (previousStrategy) {
+        this._strategy.set(previousStrategy);
+      }
       this._error.set(err instanceof Error ? err.message : 'Failed to set allocation strategy');
       throw err;
     }
+  }
+  private authService = inject(AuthService);
+
+  constructor() {
+    // Reactive data fetching based on auth state
+    effect(() => {
+      if (this.authService.isAuthenticated()) {
+        this.loadStrategy();
+      } else {
+        this.reset();
+      }
+    });
+  }
+
+  /**
+   * Clears all allocation state. Called on logout.
+   */
+  public reset(): void {
+    this._strategy.set(null);
+    this._loading.set(false);
+    this._error.set(null);
   }
 }
 

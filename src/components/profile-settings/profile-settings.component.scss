@@ -1,0 +1,17 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap');
+
+.font-outfit {
+  font-family: 'Outfit', sans-serif;
+}
+
+section {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+input:focus {
+  transform: translateY(-1px);
+}
+
+button:active {
+  transform: scale(0.98);
+}

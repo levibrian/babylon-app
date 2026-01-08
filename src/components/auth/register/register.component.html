@@ -1,0 +1,61 @@
+<div class="login-container">
+  <div class="login-card">
+    <h1 class="title">Create an account<br>to collaborate</h1>
+    
+    <div class="google-btn-wrapper">
+      <asl-google-signin-button 
+        type="standard" 
+        size="large" 
+        theme="outline" 
+        text="signup_with" 
+        width="320">
+      </asl-google-signin-button>
+    </div>
+
+    <div class="divider">
+      <span>or</span>
+    </div>
+
+    <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
+      <div class="input-group">
+        <label for="email" class="sr-only">Email</label>
+        <input 
+          id="email" 
+          type="email" 
+          formControlName="email" 
+          placeholder="Email" 
+          [class.error]="registerForm.get('email')?.invalid && registerForm.get('email')?.touched"
+        />
+      </div>
+
+      <div class="input-group">
+        <label for="password" class="sr-only">Password</label>
+        <input 
+          id="password" 
+          type="password" 
+          formControlName="password" 
+          placeholder="Password" 
+          [class.error]="registerForm.get('password')?.invalid && registerForm.get('password')?.touched"
+        />
+      </div>
+
+      <div class="error-message" *ngIf="error()">
+        {{ error() }}
+      </div>
+
+      <button type="submit" class="submit-btn" [disabled]="registerForm.invalid || isLoading()">
+        {{ isLoading() ? 'Creating account...' : 'Create account' }}
+      </button>
+    </form>
+
+    <div class="links">
+      <div class="create-account">
+        Already have an account? <a routerLink="/login" class="link">Log in</a>
+      </div>
+    </div>
+  </div>
+  
+  <footer class="footer">
+    Manage cookies or opt out
+  </footer>
+</div>

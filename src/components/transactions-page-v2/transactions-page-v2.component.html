@@ -1,14 +1,17 @@
 <div class="min-h-screen bg-gray-50 p-2 sm:p-4 lg:p-6">
   <main class="flex flex-col overflow-hidden bg-white rounded-xl shadow-sm border border-gray-200/50 max-w-[1800px] w-full mx-auto h-[calc(100vh-1rem)] sm:h-[calc(100vh-2rem)] lg:h-[calc(100vh-3rem)]">
     <!-- Top Navigation -->
-    <div class="flex items-baseline gap-x-3 sm:gap-x-4 p-4 sm:p-6 pb-2 flex-wrap flex-shrink-0 border-b border-gray-100">
-    <a routerLink="/wealth" class="text-xl sm:text-2xl font-medium text-gray-400 hover:text-gray-600 transition-colors">
-      Wealth
-    </a>
-    <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-gray-900">
-      Transactions
-    </h1>
-  </div>
+    <div class="flex items-center justify-between p-4 sm:p-6 pb-2 border-b border-gray-100">
+      <div class="flex items-baseline gap-x-3 sm:gap-x-4 flex-wrap">
+        <a routerLink="/wealth" class="text-xl sm:text-2xl font-medium text-gray-400 hover:text-gray-600 transition-colors">
+          Wealth
+        </a>
+        <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-gray-900">
+          Transactions
+        </h1>
+      </div>
+      <app-user-profile></app-user-profile>
+    </div>
 
   <!-- Mobile Tab Navigation (visible on small screens) -->
   <div class="sm:hidden flex-shrink-0 border-b border-gray-100 px-4 py-2 bg-white">

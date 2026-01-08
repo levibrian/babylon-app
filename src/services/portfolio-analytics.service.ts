@@ -1,4 +1,5 @@
-import { Injectable, signal, Signal } from '@angular/core';
+import { Injectable, signal, Signal, inject, effect } from '@angular/core';
+import { AuthService } from './auth.service';
 import { environment } from '../environments/environment';
 import {
   ApiDiversificationMetrics,
@@ -7,13 +8,37 @@ import {
   ApiSmartRebalancingRequest,
   ApiSmartRebalancingResponse,
 } from '../models/api-response.model';
-
-const USER_ID = 'a1b2c3d4-e5f6-4a5b-8c9d-0e1f2a3b4c5d';
+import { HttpClient } from '@angular/common/http';
+import { lastValueFrom } from 'rxjs';
 
 @Injectable({
   providedIn: 'root',
 })
 export class PortfolioAnalyticsService {
+  private http = inject(HttpClient);
+  private authService = inject(AuthService);
+
+  constructor() {
+    // Reactive data fetching based on auth state
+    effect(() => {
+      if (this.authService.isAuthenticated()) {
+        this.loadAllAnalytics();
+      } else {
+        this.reset();
+      }
+    });
+  }
+
+  /**
+   * Clears all analytics state. Called on logout.
+   */
+  public reset(): void {
+    this._diversificationMetrics.set(null);
+    this._riskMetrics.set(null);
+    this._rebalancingActions.set(null);
+    this._loading.set(false);
+    this._error.set(null);
+  }
   private readonly _diversificationMetrics = signal<ApiDiversificationMetrics | null>(null);
   private readonly _riskMetrics = signal<ApiRiskMetrics | null>(null);
   private readonly _rebalancingActions = signal<ApiRebalancingActions | null>(null);
@@ -29,29 +54,14 @@ export class PortfolioAnalyticsService {
   public readonly loading: Signal<boolean> = this._loading.asReadonly();
   public readonly error: Signal<string | null> = this._error.asReadonly();
 
-  /**
-   * Fetches diversification metrics for a user
-   */
-  async getDiversificationMetrics(userId: string = USER_ID): Promise<ApiDiversificationMetrics | null> {
+  async getDiversificationMetrics(): Promise<ApiDiversificationMetrics | null> {
     try {
       this._loading.set(true);
       this._error.set(null);
 
-      const response = await fetch(
-        `${environment.apiUrl}/api/v1/portfolios/${userId}/diversification`,
-        {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
+      const data = await lastValueFrom(
+        this.http.get<ApiDiversificationMetrics>(`${environment.apiUrl}/api/v1/portfolios/diversification`)
       );
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch diversification metrics: ${response.status} ${response.statusText}`);
-      }
-
-      const data: ApiDiversificationMetrics = await response.json();
       this._diversificationMetrics.set(data);
       return data;
     } catch (err) {
@@ -64,32 +74,14 @@ export class PortfolioAnalyticsService {
     }
   }
 
-  /**
-   * Fetches risk metrics for a user
-   */
-  async getRiskMetrics(
-    userId: string = USER_ID,
-    period: '1Y' | '6M' | '3M' = '1Y'
-  ): Promise<ApiRiskMetrics | null> {
+  async getRiskMetrics(period: '1Y' | '6M' | '3M' = '1Y'): Promise<ApiRiskMetrics | null> {
     try {
       this._loading.set(true);
       this._error.set(null);
 
-      const response = await fetch(
-        `${environment.apiUrl}/api/v1/portfolios/${userId}/risk?period=${period}`,
-        {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
+      const data = await lastValueFrom(
+        this.http.get<ApiRiskMetrics>(`${environment.apiUrl}/api/v1/portfolios/risk?period=${period}`)
       );
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch risk metrics: ${response.status} ${response.statusText}`);
-      }
-
-      const data: ApiRiskMetrics = await response.json();
       this._riskMetrics.set(data);
       return data;
     } catch (err) {
@@ -102,29 +94,14 @@ export class PortfolioAnalyticsService {
     }
   }
 
-  /**
-   * Fetches rebalancing actions for a user
-   */
-  async getRebalancingActions(userId: string = USER_ID): Promise<ApiRebalancingActions | null> {
+  async getRebalancingActions(): Promise<ApiRebalancingActions | null> {
     try {
       this._loading.set(true);
       this._error.set(null);
 
-      const response = await fetch(
-        `${environment.apiUrl}/api/v1/portfolios/${userId}/rebalancing/actions`,
-        {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
+      const data = await lastValueFrom(
+        this.http.get<ApiRebalancingActions>(`${environment.apiUrl}/api/v1/portfolios/rebalancing/actions`)
       );
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch rebalancing actions: ${response.status} ${response.statusText}`);
-      }
-
-      const data: ApiRebalancingActions = await response.json();
       this._rebalancingActions.set(data);
       return data;
     } catch (err) {
@@ -137,35 +114,14 @@ export class PortfolioAnalyticsService {
     }
   }
 
-  /**
-   * Calculates smart rebalancing recommendations
-   */
-  async getSmartRecommendations(
-    request: ApiSmartRebalancingRequest,
-    userId: string = USER_ID
-  ): Promise<ApiSmartRebalancingResponse | null> {
+  async getSmartRecommendations(request: ApiSmartRebalancingRequest): Promise<ApiSmartRebalancingResponse | null> {
     try {
       this._loading.set(true);
       this._error.set(null);
 
-      const response = await fetch(
-        `${environment.apiUrl}/api/v1/portfolios/${userId}/rebalancing/recommendations`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(request),
-        }
+      const data = await lastValueFrom(
+        this.http.post<ApiSmartRebalancingResponse>(`${environment.apiUrl}/api/v1/portfolios/rebalancing/recommendations`, request)
       );
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('API Error:', response.status, errorText);
-        throw new Error(`Failed to calculate recommendations: ${response.status} ${response.statusText}`);
-      }
-
-      const data: ApiSmartRebalancingResponse = await response.json();
       return data;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to calculate recommendations';
@@ -177,14 +133,11 @@ export class PortfolioAnalyticsService {
     }
   }
 
-  /**
-   * Loads all analytics data in parallel
-   */
-  async loadAllAnalytics(userId: string = USER_ID, riskPeriod: '1Y' | '6M' | '3M' = '1Y'): Promise<void> {
+  async loadAllAnalytics(riskPeriod: '1Y' | '6M' | '3M' = '1Y'): Promise<void> {
     await Promise.all([
-      this.getDiversificationMetrics(userId),
-      this.getRiskMetrics(userId, riskPeriod),
-      this.getRebalancingActions(userId),
+      this.getDiversificationMetrics(),
+      this.getRiskMetrics(riskPeriod),
+      this.getRebalancingActions(),
     ]);
   }
 }
