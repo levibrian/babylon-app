@@ -160,18 +160,18 @@
     flex-direction: column;
     justify-content: center;
 
-    .ticker {
+    .company {
       font-weight: 700;
       font-size: 0.95rem;
       color: #222;
-    }
-    .company {
-      font-size: 0.8rem;
-      color: #888;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
       max-width: 90%;
+    }
+    .ticker {
+      font-size: 0.8rem;
+      color: #888;
     }
   }
 

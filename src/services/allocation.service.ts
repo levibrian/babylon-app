@@ -72,12 +72,25 @@ export class AllocationService {
     );
 
     if (existingIndex >= 0) {
+      const currentAlloc = updatedAllocations[existingIndex];
+      const weekly = options?.isEnabledForWeekly ?? currentAlloc.isEnabledForWeekly;
+      const biWeekly = options?.isEnabledForBiWeekly ?? currentAlloc.isEnabledForBiWeekly;
+      const monthly = options?.isEnabledForMonthly ?? currentAlloc.isEnabledForMonthly;
+
+      // Check if anything actually changed
+      if (currentAlloc.targetPercentage === newPercentage &&
+          currentAlloc.isEnabledForWeekly === weekly &&
+          currentAlloc.isEnabledForBiWeekly === biWeekly &&
+          currentAlloc.isEnabledForMonthly === monthly) {
+        return; // No changes, skip update
+      }
+
       updatedAllocations[existingIndex] = {
-        ...updatedAllocations[existingIndex],
+        ...currentAlloc,
         targetPercentage: newPercentage,
-        ...(options?.isEnabledForWeekly !== undefined && { isEnabledForWeekly: options.isEnabledForWeekly }),
-        ...(options?.isEnabledForBiWeekly !== undefined && { isEnabledForBiWeekly: options.isEnabledForBiWeekly }),
-        ...(options?.isEnabledForMonthly !== undefined && { isEnabledForMonthly: options.isEnabledForMonthly }),
+        isEnabledForWeekly: weekly,
+        isEnabledForBiWeekly: biWeekly,
+        isEnabledForMonthly: monthly,
       };
     } else {
       updatedAllocations.push({

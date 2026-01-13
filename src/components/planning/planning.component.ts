@@ -5,7 +5,7 @@ import { AddSecuritySearchComponent } from '../add-security-search/add-security-
 import { PlanningService } from '../../services/planning.service';
 import { PortfolioService } from '../../services/portfolio.service';
 import { Subject, Subscription, merge } from 'rxjs';
-import { debounceTime, switchMap, tap } from 'rxjs/operators';
+import { debounceTime, switchMap, tap, distinctUntilChanged } from 'rxjs/operators';
 import { PlanningRow, AssetGroup, PlanningRowFormValue } from '../../models/planning.model';
 
 @Component({
@@ -114,6 +114,7 @@ export class PlanningComponent implements OnInit, OnDestroy {
     // Watch target percentage changes
     this.subscriptions.add(
       targetPercentage.valueChanges.pipe(
+        distinctUntilChanged(),
         tap(() => this.recalculateRow(rowGroup)),
         debounceTime(500)
       ).subscribe(() => {
@@ -128,6 +129,7 @@ export class PlanningComponent implements OnInit, OnDestroy {
         isBiWeeklyEnabled.valueChanges,
         isMonthlyEnabled.valueChanges
       ).pipe(
+        distinctUntilChanged(),
         tap(() => this.recalculateRow(rowGroup)),
         debounceTime(300)
       ).subscribe(() => {

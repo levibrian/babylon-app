@@ -87,25 +87,26 @@
       flex: 1;
     }
 
-    .ticker {
+    .company-name {
       font-weight: 600;
       color: #1f2937;
       font-size: 0.9rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      flex: 1;
+      min-width: 0; // Allow truncation
+    }
+
+    .ticker {
+      font-weight: 400;
+      color: #6b7280;
+      font-size: 0.85rem;
       white-space: nowrap;
       flex-shrink: 0; // Ticker never shrinks
       background-color: #f3f4f6;
       padding: 2px 6px;
       border-radius: 4px;
-    }
-
-    .company-name {
-      font-weight: 400;
-      color: #6b7280;
-      font-size: 0.85rem;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      min-width: 0; // Allow truncation
     }
 
     .add-label {

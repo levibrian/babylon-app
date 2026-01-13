@@ -23,9 +23,6 @@ export class PlanningService {
   private apiUrl = `${environment.apiUrl}/api/v1`;
 
   getPlanningData(): Observable<PlanningData> {
-    // Ensure allocation service has loaded strategy
-    this.allocationService.loadStrategy();
-
     return forkJoin({
       user: this.http.get<any>(`${this.apiUrl}/users/me`).pipe(
         catchError(err => {
