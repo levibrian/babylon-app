@@ -60,7 +60,7 @@ export class PortfolioAnalyticsService {
       this._error.set(null);
 
       const data = await lastValueFrom(
-        this.http.get<ApiDiversificationMetrics>(`${environment.apiUrl}/api/v1/portfolios/diversification`)
+        this.http.get<ApiDiversificationMetrics>(`${environment.apiUrl}/api/v1/portfolios/analytics/diversification`)
       );
       this._diversificationMetrics.set(data);
       return data;
@@ -80,7 +80,7 @@ export class PortfolioAnalyticsService {
       this._error.set(null);
 
       const data = await lastValueFrom(
-        this.http.get<ApiRiskMetrics>(`${environment.apiUrl}/api/v1/portfolios/risk?period=${period}`)
+        this.http.get<ApiRiskMetrics>(`${environment.apiUrl}/api/v1/portfolios/analytics/risk?period=${period}`)
       );
       this._riskMetrics.set(data);
       return data;

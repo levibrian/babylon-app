@@ -113,10 +113,11 @@ export class PortfolioService {
       const portfolioItems = this.mapApiDataToPortfolio(portfolioResponse);
       this._recalculateAndSetPortfolio(portfolioItems);
 
-      this._dailyGainLoss.set(portfolioResponse.dailyGainLoss ?? 0);
-      this._dailyGainLossPercentage.set(portfolioResponse.dailyGainLossPercentage ?? 0);
+      this._dailyGainLoss.set(portfolioResponse.dailyGainLoss ?? portfolioResponse.DailyGainLoss ?? 0);
+      this._dailyGainLossPercentage.set(portfolioResponse.dailyGainLossPercentage ?? portfolioResponse.DailyGainLossPercentage ?? 0);
 
-      this._insights.set(this.mapApiInsightsToPortfolioInsights(portfolioResponse.insights || []));
+      const rawInsights = portfolioResponse.insights || portfolioResponse.Insights || [];
+      this._insights.set(this.mapApiInsightsToPortfolioInsights(rawInsights));
 
     } catch (err) {
       this._error.set('Could not load portfolio data. Please ensure the backend server is running and accessible.');
@@ -139,10 +140,11 @@ export class PortfolioService {
       const portfolioItems = this.mapApiDataToPortfolio(portfolioResponse);
       this._recalculateAndSetPortfolio(portfolioItems);
 
-      this._dailyGainLoss.set(portfolioResponse.dailyGainLoss ?? 0);
-      this._dailyGainLossPercentage.set(portfolioResponse.dailyGainLossPercentage ?? 0);
+      this._dailyGainLoss.set(portfolioResponse.dailyGainLoss ?? portfolioResponse.DailyGainLoss ?? 0);
+      this._dailyGainLossPercentage.set(portfolioResponse.dailyGainLossPercentage ?? portfolioResponse.DailyGainLossPercentage ?? 0);
 
-      this._insights.set(this.mapApiInsightsToPortfolioInsights(portfolioResponse.insights || []));
+      const rawInsights = portfolioResponse.insights || portfolioResponse.Insights || [];
+      this._insights.set(this.mapApiInsightsToPortfolioInsights(rawInsights));
 
     } catch (err) {
       console.error('Error fetching portfolio (silent):', err);
@@ -390,19 +392,19 @@ export class PortfolioService {
   private mapApiInsightsToPortfolioInsights(insights: ApiPortfolioInsight[] | undefined): PortfolioInsight[] {
     if (!insights || !Array.isArray(insights)) return [];
     return insights.map(i => ({
-      category: i.category,
-      title: i.title,
-      message: i.message,
-      relatedTicker: i.relatedTicker,
-      metadata: i.metadata,
-      severity: i.severity, // 'Info' | 'Warning' | 'Critical'
-      actionLabel: i.actionLabel,
-      actionPayload: i.actionPayload,
-      visualContext: i.visualContext ? {
-        currentValue: i.visualContext.currentValue,
-        targetValue: i.visualContext.targetValue,
-        projectedValue: i.visualContext.projectedValue,
-        format: i.visualContext.format
+      category: (i.category || i.Category || 'Trend') as "Risk" | "Opportunity" | "Trend" | "Efficiency" | "Income",
+      title: i.title || i.Title || '',
+      message: i.message || i.Message || '',
+      relatedTicker: i.relatedTicker || i.RelatedTicker || null,
+      metadata: i.metadata || i.Metadata || {},
+      severity: i.severity || i.Severity || 'Info',
+      actionLabel: i.actionLabel || i.ActionLabel || null,
+      actionPayload: i.actionPayload || i.ActionPayload || null,
+      visualContext: (i.visualContext || i.VisualContext) ? {
+        currentValue: (i.visualContext || i.VisualContext)?.currentValue || 0,
+        targetValue: (i.visualContext || i.VisualContext)?.targetValue || 0,
+        projectedValue: (i.visualContext || i.VisualContext)?.projectedValue || null,
+        format: (i.visualContext || i.VisualContext)?.format || 'Currency'
       } : null
     }));
   }

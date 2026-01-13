@@ -64,6 +64,17 @@ export interface ApiPortfolioInsight {
   actionLabel: string | null;
   actionPayload: any | null;
   visualContext: ApiVisualContext | null;
+
+  // PascalCase Config
+  Category?: "Risk" | "Opportunity" | "Trend" | "Efficiency" | "Income";
+  Title?: string;
+  Message?: string;
+  RelatedTicker?: string | null;
+  Metadata?: Record<string, any>;
+  Severity?: "Info" | "Warning" | "Critical";
+  ActionLabel?: string | null;
+  ActionPayload?: any | null;
+  VisualContext?: ApiVisualContext | null; // Casing for VisualContext nested fields to be handled in mapper if needed
 }
 
 // Backend API: PortfolioResponse
@@ -73,6 +84,13 @@ export interface ApiPortfolioResponse {
   dailyGainLoss?: number;
   dailyGainLossPercentage?: number;
   insights?: ApiPortfolioInsight[];
+
+  // PascalCase Config
+  Positions?: ApiPortfolioPosition[];
+  TotalInvested?: number;
+  DailyGainLoss?: number;
+  DailyGainLossPercentage?: number;
+  Insights?: ApiPortfolioInsight[];
 }
 
 // Backend API: TransactionsResponse (for GET /api/v1/transactions/{userId})

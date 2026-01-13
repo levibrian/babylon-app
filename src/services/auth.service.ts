@@ -25,9 +25,12 @@ interface AuthResponse {
   photoUrl?: string;
   // Make these optional to handle potential PascalCase from some backends
   Token?: string;
+  RefreshToken?: string;
+  refreshToken?: string;
   Username?: string;
   Email?: string;
   UserId?: string;
+  PhotoUrl?: string;
 }
 
 @Injectable({
@@ -78,16 +81,23 @@ export class AuthService {
   }
 
   private handleAuthSuccess(response: AuthResponse): void {
-    if (response.token) {
-      localStorage.setItem('token', response.token);
+    const token = response.token || response.Token;
+    const refreshToken = response.refreshToken || response.RefreshToken;
+
+    if (token) {
+      localStorage.setItem('token', token);
       
+      if (refreshToken) {
+        localStorage.setItem('refreshToken', refreshToken);
+      }
+
       const user: User = {
         id: response.id,
         email: response.email,
         firstName: response.firstName,
         lastName: response.lastName,
         name: response.name,
-        photoUrl: response.photoUrl
+        photoUrl: response.photoUrl || response.PhotoUrl
       };
       
       localStorage.setItem('user', JSON.stringify(user));
@@ -99,11 +109,22 @@ export class AuthService {
     }
   }
 
-  logout(manual: boolean = false): void {
+  async logout(manual: boolean = false): Promise<void> {
     console.log(`Logging out (manual: ${manual})`);
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    this._currentUser.set(null);
+    
+    // Call backend to revoke refresh token if we have one
+    const refreshToken = localStorage.getItem('refreshToken');
+    if (refreshToken) {
+      try {
+        await lastValueFrom(
+          this.http.post(`${this.apiUrl}/logout`, { refreshToken })
+        );
+      } catch (err) {
+        console.warn('Backend logout failed', err);
+      }
+    }
+
+    this.clearSession();
     
     // Only call social signOut if it was a manual user action
     // Forcefully signing out on 401 can cause GIS (Google Identity Services) to crash or fail re-init
@@ -114,6 +135,33 @@ export class AuthService {
     }
     
     this.router.navigate(['/login']);
+  }
+
+  private clearSession(): void {
+    localStorage.removeItem('token');
+    localStorage.removeItem('refreshToken');
+    localStorage.removeItem('user');
+    this._currentUser.set(null);
+  }
+
+  async refreshToken(): Promise<string> {
+    const refreshToken = localStorage.getItem('refreshToken');
+    if (!refreshToken) {
+      throw new Error('No refresh token available');
+    }
+
+    try {
+      const response = await lastValueFrom(
+        this.http.post<AuthResponse>(`${this.apiUrl}/refresh`, { refreshToken })
+      );
+      
+      this.handleAuthSuccess(response);
+      return response.token || response.Token || '';
+    } catch (error) {
+      console.error('Refresh token failed:', error);
+      this.logout(false);
+      throw error;
+    }
   }
 
   async login(email: string, password: string): Promise<void> {

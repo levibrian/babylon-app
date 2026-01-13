@@ -5,6 +5,8 @@
 
 export interface AllocationStrategyDto {
   ticker: string;
+  securityName?: string;
+  securityType?: string; // e.g. "Stock", "ETF"
   targetPercentage: number;
   isEnabledForWeekly?: boolean;
   isEnabledForBiWeekly?: boolean;

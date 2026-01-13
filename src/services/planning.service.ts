@@ -23,28 +23,26 @@ export class PlanningService {
   private apiUrl = `${environment.apiUrl}/api/v1`;
 
   getPlanningData(): Observable<PlanningData> {
-    return forkJoin({
-      user: this.http.get<any>(`${this.apiUrl}/users/me`).pipe(
-        catchError(err => {
-          console.error('Error fetching user:', err);
-          return of({ monthlyInvestmentAmount: 0 });
-        })
-      ),
-      strategy: this.http.get<any>(`${this.apiUrl}/portfolios/allocation`).pipe(
-        catchError(err => {
-          console.error('Error fetching strategy:', err);
-          return of({ allocations: [] });
-        })
-      ),
-      portfolio: this.http.get<ApiPortfolioResponse>(`${this.apiUrl}/portfolios`).pipe(
-        catchError(err => {
-          console.error('Error fetching portfolio:', err);
-          return of({ positions: [], totalInvested: 0, dailyGainLoss: 0, dailyGainLossPercentage: 0 } as ApiPortfolioResponse);
-        })
-      )
-    }).pipe(
+    return from(this.allocationService.loadStrategy()).pipe(
+      switchMap(() => {
+        return forkJoin({
+          user: this.http.get<any>(`${this.apiUrl}/users/me`).pipe(
+            catchError(err => {
+              console.error('Error fetching user:', err);
+              return of({ monthlyInvestmentAmount: 0 });
+            })
+          ),
+          portfolio: this.http.get<ApiPortfolioResponse>(`${this.apiUrl}/portfolios`).pipe(
+            catchError(err => {
+              console.error('Error fetching portfolio:', err);
+              return of({ positions: [], totalInvested: 0, dailyGainLoss: 0, dailyGainLossPercentage: 0 } as ApiPortfolioResponse);
+            })
+          )
+        });
+      }),
       map(data => {
-        const rows = this.mergeAndMapToRows(data.portfolio.positions, data.strategy.allocations);
+        const strategy = this.allocationService.strategy();
+        const rows = this.mergeAndMapToRows(data.portfolio.positions, strategy?.allocations || []);
         return {
           monthlyInvestment: data.user.monthlyInvestmentAmount ?? 0,
           rows: rows
@@ -58,6 +56,37 @@ export class PlanningService {
   }
 
   updateAllocation(row: PlanningRow): Observable<any> {
+    console.log(`PlanningService.updateAllocation called for ${row.ticker}`, row);
+    const currentStrategy = this.allocationService.strategy();
+    if (currentStrategy && currentStrategy.allocations) {
+      const currentAlloc = currentStrategy.allocations.find(a => a.ticker.toUpperCase() === row.ticker.toUpperCase());
+      
+      if (currentAlloc) {
+          console.log(`Current strategy found for ${row.ticker}:`, currentAlloc);
+          
+          // Helper for boolean comparison with default true
+          const isEnabled = (val: boolean | undefined) => val ?? true;
+
+          // Compare values (ensure number type for percentage)
+          // Use epsilon for floating point comparison (e.g. 33.3 vs 33.29999999)
+          const epsilon = 0.0001;
+          const currentPercent = Number(currentAlloc.targetPercentage);
+          const newPercent = Number(row.targetPercentage);
+          const percentMatch = Math.abs(currentPercent - newPercent) < epsilon;
+          const weeklyMatch = isEnabled(currentAlloc.isEnabledForWeekly) === row.isWeeklyEnabled;
+          const biWeeklyMatch = isEnabled(currentAlloc.isEnabledForBiWeekly) === row.isBiWeeklyEnabled;
+          const monthlyMatch = isEnabled(currentAlloc.isEnabledForMonthly) === row.isMonthlyEnabled;
+
+          console.log(`Matches: percent=${percentMatch}, weekly=${weeklyMatch}, biWeekly=${biWeeklyMatch}, monthly=${monthlyMatch}`);
+
+          // If allocation exists and strictly matches, skip update
+          if (percentMatch && weeklyMatch && biWeeklyMatch && monthlyMatch) {
+            console.log('Guard hit: No changes detected, skipping update.');
+            return of(null);
+          }
+      }
+    }
+
     return from(this.allocationService.updateTarget(
       row.ticker, 
       row.targetPercentage,
@@ -101,16 +130,18 @@ export class PlanningService {
       const position = portfolioPositions?.find(p => p.ticker === ticker);
       const allocation = allocations?.find(a => a.ticker === ticker);
       
-      // Determine type: prefer position info, default to Stock
+      // Determine type: prefer allocation info (new API), then position info, default to Stock
       let type: SecurityType = "Stock";
-      if (position && position.securityType !== undefined) {
+      if (allocation?.securityType) {
+        type = allocation.securityType as SecurityType;
+      } else if (position && position.securityType !== undefined) {
         type = position.securityType;
       }
 
       const row: PlanningRow = {
         ticker,
-        securityName: position?.securityName,
-        assetType: position ? this.mapAssetType(position.securityType) : 'Stocks',
+        securityName: allocation?.securityName || position?.securityName,
+        assetType: this.mapAssetType(type),
         weeklyEur: 0, 
         biWeeklyEur: 0, 
         monthlyEur: 0, 

@@ -170,13 +170,68 @@ export class PortfolioDashboardComponent implements OnDestroy {
   // Portfolio Insights from backend API
   portfolioInsights = computed<PortfolioInsight[]>(() => {
     const backendInsights = this.portfolioService.insights();
-    
-    // If no insights from backend, return empty array (or fallback message)
-    if (!backendInsights || backendInsights.length === 0) {
-      return [];
+    const localInsights: PortfolioInsight[] = [];
+    const items = this.portfolio();
+    const totalValue = this.netWorth();
+
+    // 1. Generate Efficiency Insights for Rebalancing
+    items.forEach(item => {
+      if (item.rebalancingStatus !== 'Balanced' && item.rebalancingStatus) {
+        // Safe check for rebalancingStatus as it might be undefined/null in edge cases
+        localInsights.push({
+          category: 'Efficiency',
+          title: 'Rebalancing Opportunity',
+          message: `${item.companyName} is ${item.rebalancingStatus.toLowerCase()} by ${(Math.abs(item.allocationDifference)).toFixed(1)}%.`,
+          relatedTicker: item.ticker,
+          severity: 'Warning',
+          actionLabel: item.rebalancingStatus === 'Overweight' ? 'Reduce Position' : 'Increase Position',
+          actionPayload: null,
+          metadata: { amount: item.rebalanceAmount },
+          visualContext: {
+            currentValue: item.currentAllocationPercentage,
+            targetValue: item.targetAllocationPercentage,
+            projectedValue: item.targetAllocationPercentage, 
+            format: 'Percent'
+          }
+        });
+      }
+    });
+
+    // 2. Generate Risk Insights for Concentration
+    if (items.length > 0 && totalValue > 0) {
+      const sortedByValue = [...items].sort((a, b) => b.totalCost - a.totalCost);
+      const topHolding = sortedByValue[0];
+      const topHoldingPercentage = (topHolding.totalCost / totalValue) * 100;
+
+      if (topHoldingPercentage > 25) {
+         localInsights.push({
+          category: 'Risk',
+          title: 'High Concentration Risk',
+          message: `${topHolding.companyName} makes up ${topHoldingPercentage.toFixed(1)}% of your portfolio.`,
+          relatedTicker: topHolding.ticker,
+          severity: topHoldingPercentage > 50 ? 'Critical' : 'Warning',
+          actionLabel: 'Analyze',
+          actionPayload: null,
+          metadata: {},
+          visualContext: {
+            currentValue: topHoldingPercentage,
+            targetValue: 15, // Suggested max
+            projectedValue: null,
+            format: 'Percent'
+          }
+         });
+      }
     }
+
+    // Combine backend and local insights
+    // Deduplicate based on message/title to avoid showing same thing twice if backend sends it later
+    const allInsights = [...(backendInsights || []), ...localInsights];
     
-    return backendInsights;
+    // Sort by severity (Critical first)
+    return allInsights.sort((a, b) => {
+        const severityScore = { 'Critical': 3, 'Warning': 2, 'Info': 1 };
+        return (severityScore[b.severity] || 0) - (severityScore[a.severity] || 0);
+    });
   });
 
   // Health Score (computed from backend insights)

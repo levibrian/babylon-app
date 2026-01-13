@@ -32,25 +32,33 @@ export class AllocationService {
     return map;
   });
 
+  private _loadingPromise: Promise<void> | null = null;
+
   async loadStrategy(): Promise<void> {
-    if (this._loading()) {
-      return;
+    if (this._loadingPromise) {
+      console.log('AllocationService: loadStrategy reusing in-flight promise');
+      return this._loadingPromise;
     }
 
-    try {
+    // Don't rely on _loading signal for deduplication as it doesn't return the promise
+    this._loadingPromise = (async () => {
+      console.log('AllocationService: loadStrategy starting new request');
       this._loading.set(true);
       this._error.set(null);
+      try {
+        const data = await lastValueFrom(this.http.get<AllocationStrategyResponse>(`${environment.apiUrl}/api/v1/portfolios/allocation`));
+        this._strategy.set(data);
+      } catch (err) {
+        console.error('Error loading allocation strategy:', err);
+        this._error.set(err instanceof Error ? err.message : 'Failed to load allocation strategy');
+        this._strategy.set(null);
+      } finally {
+        this._loading.set(false);
+        this._loadingPromise = null;
+      }
+    })();
 
-      const data = await lastValueFrom(this.http.get<AllocationStrategyResponse>(`${environment.apiUrl}/api/v1/portfolios/allocation`));
-      this._strategy.set(data);
-
-    } catch (err) {
-      console.error('Error loading allocation strategy:', err);
-      this._error.set(err instanceof Error ? err.message : 'Failed to load allocation strategy');
-      this._strategy.set(null);
-    } finally {
-      this._loading.set(false);
-    }
+    return this._loadingPromise;
   }
 
   async updateTarget(
@@ -162,7 +170,9 @@ export class AllocationService {
   constructor() {
     // Reactive data fetching based on auth state
     effect(() => {
-      if (this.authService.isAuthenticated()) {
+      const isAuthenticated = this.authService.isAuthenticated();
+      console.log(`AllocationService effect triggering. Authenticated: ${isAuthenticated}`);
+      if (isAuthenticated) {
         this.loadStrategy();
       } else {
         this.reset();

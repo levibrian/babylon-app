@@ -29,15 +29,20 @@ export class PlanningComponent implements OnInit, OnDestroy {
   saveStatus = signal<Map<string, 'idle' | 'saving' | 'saved' | 'error'>>(new Map());
 
   private subscriptions = new Subscription();
+  private rowSubscriptions = new Subscription();
+  private isInitializing = false;
 
   ngOnInit() {
+    console.log('PlanningComponent initialized');
     this.initializeForm();
     this.loadData();
     this.setupReactiveCalculations();
   }
 
   ngOnDestroy() {
+    console.log('PlanningComponent destroyed');
     this.subscriptions.unsubscribe();
+    this.rowSubscriptions.unsubscribe();
   }
 
   private initializeForm() {
@@ -79,12 +84,24 @@ export class PlanningComponent implements OnInit, OnDestroy {
   }
 
   private populateRows(rows: PlanningRow[]) {
-    this.rowsArray.clear();
-    rows.forEach(row => {
-      const rowGroup = this.createRowFormGroup(row);
-      this.rowsArray.push(rowGroup);
-      this.setupRowCalculations(rowGroup);
-    });
+    this.isInitializing = true;
+    // Clear previous row subscriptions to avoid duplicates/leaks
+    this.rowSubscriptions.unsubscribe();
+    this.rowSubscriptions = new Subscription();
+    
+    try {
+      this.rowsArray.clear();
+      rows.forEach(row => {
+        const rowGroup = this.createRowFormGroup(row);
+        this.rowsArray.push(rowGroup);
+        // Defer subscription to avoid initial value events
+        setTimeout(() => {
+          this.setupRowCalculations(rowGroup);
+        }, 0);
+      });
+    } finally {
+      this.isInitializing = false;
+    }
   }
 
   private createRowFormGroup(row: PlanningRow): FormGroup {
@@ -112,18 +129,19 @@ export class PlanningComponent implements OnInit, OnDestroy {
     const isMonthlyEnabled = rowGroup.get('isMonthlyEnabled')!;
 
     // Watch target percentage changes
-    this.subscriptions.add(
+    this.rowSubscriptions.add(
       targetPercentage.valueChanges.pipe(
         distinctUntilChanged(),
         tap(() => this.recalculateRow(rowGroup)),
         debounceTime(500)
-      ).subscribe(() => {
+      ).subscribe((val) => {
+        console.log(`Target percentage changed for ${rowGroup.get('ticker')?.value}:`, val);
         this.saveAllocation(rowGroup);
       })
     );
 
     // Watch frequency toggle changes
-    this.subscriptions.add(
+    this.rowSubscriptions.add(
       merge(
         isWeeklyEnabled.valueChanges,
         isBiWeeklyEnabled.valueChanges,
@@ -161,7 +179,12 @@ export class PlanningComponent implements OnInit, OnDestroy {
   }
 
   private saveAllocation(rowGroup: FormGroup) {
+    if (this.isInitializing) {
+      console.log('Skipping saveAllocation during initialization');
+      return;
+    }
     const ticker = rowGroup.get('ticker')!.value;
+    console.log(`Saving allocation for ${ticker}`);
     const row: PlanningRow = {
       ticker,
       securityName: rowGroup.get('securityName')!.value,
