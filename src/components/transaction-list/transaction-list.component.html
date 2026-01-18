@@ -1,16 +1,70 @@
-<div class="flex flex-col h-full overflow-hidden min-h-0 px-3 pb-4 sm:pb-6 pt-4 sm:pt-6">
+<div class="flex flex-col h-full min-h-0 px-3 pb-4 sm:pb-6 pt-4 sm:pt-6 bg-white !overflow-visible">
   <!-- Header: Total Invested & Add Button -->
   <div class="flex items-center justify-between mb-3 flex-shrink-0">
     <!-- Total Invested (Top Left) -->
-    <div class="text-xs font-medium text-gray-500 uppercase tracking-wide">
-      Total invested: <span class="text-gray-900 font-bold">{{ totalInvested() | currency:'EUR':'symbol':'1.2-2' }}</span>
+    <div class="text-xs font-normal text-gray-900 uppercase tracking-wide flex items-center gap-8 whitespace-nowrap">
+      <div>
+        Total invested: <span class="text-black font-bold text-lg">{{ totalInvested() | currency:'EUR':'symbol':'1.2-2' }}</span>
+      </div>
+      
+      <!-- Cash Balance Section -->
+      <div class="flex items-center gap-2 group/cash">
+        <span class="flex items-center gap-1.5">
+          CASH:
+          <!-- Info Icon with Tooltip -->
+          <div class="relative inline-block group/tooltip">
+            <svg class="w-3.5 h-3.5 text-gray-400 hover:text-black cursor-help transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <!-- Tooltip Content -->
+            <div class="absolute top-full right-0 mt-2 w-72 p-4 bg-black text-white text-[11px] normal-case font-normal leading-relaxed rounded shadow-2xl opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all z-[100] pointer-events-none">
+              <!-- Arrow -->
+              <div class="absolute bottom-full right-2 border-8 border-transparent border-b-black"></div>
+              <p class="font-bold mb-1 text-white">Your cash is part of your portfolio.</p>
+              <p class="mb-2 text-white/90">It affects every allocation you see.</p>
+              <p class="text-white/60">Keep your cash accurate to understand your real investment exposure.</p>
+            </div>
+          </div>
+        </span>
+        
+        @if (isEditingCash()) {
+          <div class="flex items-center gap-1 bg-gray-50 border-b border-black">
+            <input 
+              #cashInput
+              type="number" 
+              [value]="cashEditValue()"
+              (keydown)="onCashInputKeydown($event, cashInput.value)"
+              class="bg-transparent text-black font-bold text-lg rounded-none px-2 py-0 w-28 focus:outline-none tabular-nums"
+              autoFocus
+            >
+            <button 
+              (click)="saveCashEdit(cashInput.value)"
+              class="p-1 text-black hover:bg-gray-200 rounded-sm transition-colors flex items-center justify-center"
+              title="Save">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+              </svg>
+            </button>
+          </div>
+        } @else {
+          <span class="text-black font-bold text-lg inline-block min-w-[3rem]">{{ (cashBalance() ?? 0) | currency:'EUR':'symbol':'1.2-2' }}</span>
+          <button 
+            (click)="startCashEdit()"
+            class="text-gray-400 hover:text-black transition-colors focus:outline-none p-1 rounded-full hover:bg-gray-100"
+            aria-label="Edit cash balance">
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+        }
+      </div>
     </div>
 
     <!-- Add Button (Top Right) -->
     @if (!isLoading() && !error()) {
       <button 
         (click)="toggleAdd.emit()" 
-        class="flex items-center justify-center w-8 h-8 rounded-full bg-gray-900 text-white hover:bg-gray-800 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-2"
+        class="flex items-center justify-center w-8 h-8 rounded-full bg-black text-white hover:bg-gray-800 transition-colors focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2"
         [attr.aria-label]="isAdding() ? 'Cancel adding transaction' : 'Add new transaction'">
         @if (isAdding()) {
           <!-- X icon -->
@@ -26,6 +80,8 @@
       </button>
     }
   </div>
+
+
   
   <!-- Search Bar -->
   <div class="mb-4 flex-shrink-0">
@@ -40,7 +96,7 @@
         [value]="searchQuery()"
         (input)="onSearchInput($event)"
         placeholder="Search by ticker or security name..."
-        class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-gray-900 focus:border-gray-900 text-sm"
+        class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white text-black placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-black focus:border-black text-sm"
       />
       @if (searchQuery()) {
         <button
@@ -82,7 +138,7 @@
             <!-- Middle: Stacked Content -->
             <div class="flex-1 min-w-0">
               <!-- Top Line: Asset Name (Bold) -->
-              <div class="font-bold text-gray-900 truncate mb-1">
+              <div class="font-medium text-black truncate mb-1">
                 {{ getCompanyName(transaction) }}
               </div>
               <!-- Bottom Line: Ticker • Type • Shares @ Price (Gray, Small) -->
@@ -132,7 +188,7 @@
             </div>
 
             <!-- Action Buttons - Ghost Toolbar (visible on group-hover) -->
-            <div class="hidden group-hover:flex absolute right-3 top-1/2 -translate-y-1/2 bg-white shadow-sm border border-gray-100 rounded-full px-2 py-1 items-center gap-1 z-10">
+            <div class="hidden group-hover:flex absolute right-3 top-1/2 -translate-y-1/2 bg-white shadow-sm rounded-full border border-gray-200 px-2 py-1 items-center gap-1 z-10">
               <button 
                 (click)="startEdit(transaction)" 
                 class="text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded p-1 transition-colors duration-150">
@@ -162,13 +218,13 @@
               <svg class="w-16 h-16 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607z" />
               </svg>
-              <h3 class="mt-4 text-xl font-semibold text-gray-900">No transactions found</h3>
+              <h3 class="mt-4 text-xl font-semibold text-black">No transactions found</h3>
               <p class="mt-2 text-base text-gray-600 max-w-md mx-auto">No transactions match your search query "{{ searchQuery() }}". Try a different search term.</p>
             } @else {
               <svg class="w-16 h-16 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18 9 11.25l4.306 4.306a11.95 11.95 0 0 1 5.814-5.518l2.74-1.22m0 0-5.94-2.281m5.94 2.28-2.28 5.941" />
               </svg>
-              <h3 class="mt-4 text-xl font-semibold text-gray-900">Your Investing Journey Begins!</h3>
+              <h3 class="mt-4 text-xl font-semibold text-black">Your Investing Journey Begins!</h3>
               <p class="mt-2 text-base text-gray-600 max-w-md mx-auto">This is the beginning of your journey as an investor. Start adding transactions and you will be able to see how your wealth starts to build in the Portfolio view.</p>
             }
           </div>

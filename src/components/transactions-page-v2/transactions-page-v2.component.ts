@@ -38,6 +38,7 @@ export class TransactionsPageV2Component {
   error: Signal<string | null> = this.transactionService.error;
   totalInvested: Signal<number> = this.portfolioService.totalInvested;
   portfolio: Signal<any[]> = this.portfolioService.portfolio;
+  cashBalance: Signal<number> = this.transactionService.cashBalance;
   
   isAddingTransaction = signal(false);
   activeView = signal<'transactions' | 'recurring' | 'planning'>('transactions');
@@ -141,6 +142,10 @@ export class TransactionsPageV2Component {
 
   navigateToTransactions(): void {
     this.activeView.set('transactions');
+  }
+
+  async updateCashBalance(amount: number): Promise<void> {
+    await this.transactionService.updateCashBalance(amount);
   }
 }
 

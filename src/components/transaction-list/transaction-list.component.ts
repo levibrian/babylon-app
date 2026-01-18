@@ -11,7 +11,7 @@ import { formatDateShort } from '../../utils/date-formatter.util';
   imports: [CommonModule, CurrencyPipe, DecimalPipe, TransactionEditRowComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
-    class: 'block h-full overflow-hidden'
+    class: 'block h-full'
   },
 })
 export class TransactionListComponent {
@@ -28,7 +28,43 @@ export class TransactionListComponent {
   @Output() toggleAdd = new EventEmitter<void>();
   @Output() navigateToRecurring = new EventEmitter<void>();
   
+  // Cash Balance Props
+  cashBalance = input.required<number>();
+  @Output() updateCash = new EventEmitter<number>();
+  
   editingTransactionId = signal<string | null>(null);
+  
+  // Cash Edit State
+  isEditingCash = signal<boolean>(false);
+  cashEditValue = signal<number>(0);
+  
+  startCashEdit(): void {
+    this.cashEditValue.set(this.cashBalance());
+    this.isEditingCash.set(true);
+    // Focus will be handled by template auto-focus or we can do it here if we had a ref
+    // For now, template should handle it ideally, but native input autofocus might need helper
+    // We'll rely on the directive we saw in earlier chats or just standard autofocus
+  }
+  
+  saveCashEdit(value: string): void {
+    const amount = parseFloat(value);
+    if (!isNaN(amount) && amount >= 0) {
+      this.updateCash.emit(amount);
+      this.isEditingCash.set(false);
+    }
+  }
+  
+  cancelCashEdit(): void {
+    this.isEditingCash.set(false);
+  }
+  
+  onCashInputKeydown(event: KeyboardEvent, value: string): void {
+    if (event.key === 'Enter') {
+      this.saveCashEdit(value);
+    } else if (event.key === 'Escape') {
+      this.cancelCashEdit();
+    }
+  }
   
   // Search query synced with parent
   searchQuery = input<string>('');
