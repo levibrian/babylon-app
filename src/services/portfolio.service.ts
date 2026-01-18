@@ -16,6 +16,10 @@ export class PortfolioService {
   private http = inject(HttpClient);
   private readonly _portfolio = signal<PortfolioItem[]>([]);
   private readonly _totalInvested = signal(0);
+  private readonly _cashAmount = signal(0); // NEW
+  private readonly _totalMarketValue = signal<number | null>(null); // NEW
+  private readonly _totalPnL = signal<number | null>(null); // NEW
+  private readonly _totalPnLPercentage = signal<number | null>(null); // NEW
   private readonly _loading = signal(true);
   private readonly _error = signal<string | null>(null);
   private readonly _dailyGainLoss = signal(0);
@@ -24,6 +28,7 @@ export class PortfolioService {
 
   public readonly portfolio: Signal<PortfolioItem[]> = this._portfolio.asReadonly();
   public readonly totalInvested: Signal<number> = this._totalInvested.asReadonly();
+  public readonly cashAmount: Signal<number> = this._cashAmount.asReadonly(); // NEW
   public readonly loading: Signal<boolean> = this._loading.asReadonly();
   public readonly error: Signal<string | null> = this._error.asReadonly();
   public readonly dailyGainLoss: Signal<number> = this._dailyGainLoss.asReadonly();
@@ -35,10 +40,13 @@ export class PortfolioService {
    * This provides the most accurate portfolio value based on current/last close prices.
    */
   public readonly totalPortfolioValue: Signal<number> = computed(() => {
+    // 1. Use backend-provided total market value if available
+    const backendTotal = this._totalMarketValue();
+    if (backendTotal !== null) return backendTotal;
+
+    // 2. Fallback to client-side calculation from positions
     const items = this._portfolio();
     const totalMarketValue = items.reduce((sum, item) => {
-      // Use currentMarketValue if available (current or last close price)
-      // Fall back to totalCost if market value is not available
       return sum + (item.currentMarketValue ?? item.totalCost);
     }, 0);
     return totalMarketValue;
@@ -49,6 +57,11 @@ export class PortfolioService {
    * This represents unrealized gains/losses across all positions.
    */
   public readonly totalPnL: Signal<number> = computed(() => {
+    // 1. Use backend-provided total P&L if available
+    const backendPnL = this._totalPnL();
+    if (backendPnL !== null) return backendPnL;
+
+    // 2. Fallback to client-side calculation
     return this.totalPortfolioValue() - this.totalInvested();
   });
 
@@ -56,6 +69,11 @@ export class PortfolioService {
    * All-time P&L percentage.
    */
   public readonly totalPnLPercentage: Signal<number> = computed(() => {
+    // 1. Use backend-provided total P&L % if available
+    const backendPnLPercentage = this._totalPnLPercentage();
+    if (backendPnLPercentage !== null) return backendPnLPercentage;
+
+    // 2. Fallback to client-side calculation
     const invested = this.totalInvested();
     if (invested === 0) return 0;
     return (this.totalPnL() / invested) * 100;
@@ -80,6 +98,10 @@ export class PortfolioService {
   public reset(): void {
     this._portfolio.set([]);
     this._totalInvested.set(0);
+    this._cashAmount.set(0);
+    this._totalMarketValue.set(null);
+    this._totalPnL.set(null);
+    this._totalPnLPercentage.set(null);
     this._loading.set(false);
     this._error.set(null);
     this._dailyGainLoss.set(0);
@@ -113,6 +135,13 @@ export class PortfolioService {
       const portfolioItems = this.mapApiDataToPortfolio(portfolioResponse);
       this._recalculateAndSetPortfolio(portfolioItems);
 
+      // Set backend totals
+      this._totalInvested.set(portfolioResponse.totalInvested ?? portfolioResponse.TotalInvested ?? 0);
+      this._cashAmount.set(portfolioResponse.cashAmount ?? portfolioResponse.CashAmount ?? 0);
+      this._totalMarketValue.set(portfolioResponse.totalMarketValue ?? portfolioResponse.TotalMarketValue ?? null);
+      this._totalPnL.set(portfolioResponse.totalUnrealizedPnL ?? portfolioResponse.TotalUnrealizedPnL ?? null);
+      this._totalPnLPercentage.set(portfolioResponse.totalUnrealizedPnLPercentage ?? portfolioResponse.TotalUnrealizedPnLPercentage ?? null);
+
       this._dailyGainLoss.set(portfolioResponse.dailyGainLoss ?? portfolioResponse.DailyGainLoss ?? 0);
       this._dailyGainLossPercentage.set(portfolioResponse.dailyGainLossPercentage ?? portfolioResponse.DailyGainLossPercentage ?? 0);
 
@@ -139,6 +168,13 @@ export class PortfolioService {
 
       const portfolioItems = this.mapApiDataToPortfolio(portfolioResponse);
       this._recalculateAndSetPortfolio(portfolioItems);
+
+      // Set backend totals
+      this._totalInvested.set(portfolioResponse.totalInvested ?? portfolioResponse.TotalInvested ?? 0);
+      this._cashAmount.set(portfolioResponse.cashAmount ?? portfolioResponse.CashAmount ?? 0);
+      this._totalMarketValue.set(portfolioResponse.totalMarketValue ?? portfolioResponse.TotalMarketValue ?? null);
+      this._totalPnL.set(portfolioResponse.totalUnrealizedPnL ?? portfolioResponse.TotalUnrealizedPnL ?? null);
+      this._totalPnLPercentage.set(portfolioResponse.totalUnrealizedPnLPercentage ?? portfolioResponse.TotalUnrealizedPnLPercentage ?? null);
 
       this._dailyGainLoss.set(portfolioResponse.dailyGainLoss ?? portfolioResponse.DailyGainLoss ?? 0);
       this._dailyGainLossPercentage.set(portfolioResponse.dailyGainLossPercentage ?? portfolioResponse.DailyGainLossPercentage ?? 0);
@@ -360,7 +396,8 @@ export class PortfolioService {
   }
 
   private mapApiDataToPortfolio(data: ApiPortfolioResponse): PortfolioItem[] {
-    return (data.positions || []).map(position => ({
+    const rawPositions = data.positions || data.Positions || [];
+    return rawPositions.map(position => ({
       ticker: position.ticker,
       companyName: position.securityName,
       totalCost: position.totalInvested,

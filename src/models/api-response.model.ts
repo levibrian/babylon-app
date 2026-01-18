@@ -80,14 +80,22 @@ export interface ApiPortfolioInsight {
 // Backend API: PortfolioResponse
 export interface ApiPortfolioResponse {
   positions: ApiPortfolioPosition[];
+  cashAmount: number;
   totalInvested: number;
+  totalMarketValue?: number;
+  totalUnrealizedPnL?: number;
+  totalUnrealizedPnLPercentage?: number;
   dailyGainLoss?: number;
   dailyGainLossPercentage?: number;
   insights?: ApiPortfolioInsight[];
 
-  // PascalCase Config
+  // PascalCase Config (for source property mapping)
   Positions?: ApiPortfolioPosition[];
+  CashAmount?: number;
   TotalInvested?: number;
+  TotalMarketValue?: number;
+  TotalUnrealizedPnL?: number;
+  TotalUnrealizedPnLPercentage?: number;
   DailyGainLoss?: number;
   DailyGainLossPercentage?: number;
   Insights?: ApiPortfolioInsight[];

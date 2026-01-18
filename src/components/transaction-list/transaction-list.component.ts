@@ -11,7 +11,7 @@ import { formatDateShort } from '../../utils/date-formatter.util';
   imports: [CommonModule, CurrencyPipe, DecimalPipe, TransactionEditRowComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
-    class: 'block h-full'
+    class: 'block h-full !overflow-visible'
   },
 })
 export class TransactionListComponent {

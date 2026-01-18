@@ -35,7 +35,7 @@ export class PlanningService {
           portfolio: this.http.get<ApiPortfolioResponse>(`${this.apiUrl}/portfolios`).pipe(
             catchError(err => {
               console.error('Error fetching portfolio:', err);
-              return of({ positions: [], totalInvested: 0, dailyGainLoss: 0, dailyGainLossPercentage: 0 } as ApiPortfolioResponse);
+              return of({ positions: [], cashAmount: 0, totalInvested: 0, dailyGainLoss: 0, dailyGainLossPercentage: 0 } as ApiPortfolioResponse);
             })
           )
         });
