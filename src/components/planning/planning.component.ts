@@ -112,7 +112,8 @@ export class PlanningComponent implements OnInit, OnDestroy {
       ticker: [{ value: row.ticker, disabled: true }],
       securityName: [{ value: row.securityName || null, disabled: true }],
       assetType: [{ value: row.assetType, disabled: true }],
-      targetPercentage: [row.targetPercentage],
+      targetPercentage: [Number(row.targetPercentage.toFixed(2))], // Round to 2 decimals for display
+      targetAmount: [Number(monthlyAlloc.toFixed(2))], // New control for amount
       isWeeklyEnabled: [row.isWeeklyEnabled],
       isBiWeeklyEnabled: [row.isBiWeeklyEnabled],
       isMonthlyEnabled: [row.isMonthlyEnabled],
@@ -124,6 +125,7 @@ export class PlanningComponent implements OnInit, OnDestroy {
 
   private setupRowCalculations(rowGroup: FormGroup) {
     const targetPercentage = rowGroup.get('targetPercentage')!;
+    const targetAmount = rowGroup.get('targetAmount')!;
     const isWeeklyEnabled = rowGroup.get('isWeeklyEnabled')!;
     const isBiWeeklyEnabled = rowGroup.get('isBiWeeklyEnabled')!;
     const isMonthlyEnabled = rowGroup.get('isMonthlyEnabled')!;
@@ -132,10 +134,38 @@ export class PlanningComponent implements OnInit, OnDestroy {
     this.rowSubscriptions.add(
       targetPercentage.valueChanges.pipe(
         distinctUntilChanged(),
-        tap(() => this.recalculateRow(rowGroup)),
+        tap((val) => {
+          // Sync Amount based on new Percentage
+          const monthlyInvestment = this.monthlyInvestmentControl.value || 0;
+          const newAmount = monthlyInvestment * (val / 100);
+          targetAmount.setValue(Number(newAmount.toFixed(2)), { emitEvent: false });
+          
+          this.recalculateRow(rowGroup, 'percentage');
+        }),
         debounceTime(500)
       ).subscribe((val) => {
         console.log(`Target percentage changed for ${rowGroup.get('ticker')?.value}:`, val);
+        this.saveAllocation(rowGroup);
+      })
+    );
+
+    // Watch target amount changes (New Bidirectional Logic)
+    this.rowSubscriptions.add(
+      targetAmount.valueChanges.pipe(
+        distinctUntilChanged(),
+        tap((val) => {
+          // Sync Percentage based on new Amount
+          const monthlyInvestment = this.monthlyInvestmentControl.value || 0;
+          if (monthlyInvestment > 0) {
+            const newPercentage = (val / monthlyInvestment) * 100;
+            // Round to 2 decimals for display as requested by user
+            targetPercentage.setValue(Number(newPercentage.toFixed(2)), { emitEvent: false });
+            this.recalculateRow(rowGroup, 'amount');
+          }
+        }),
+        debounceTime(500)
+      ).subscribe((val) => {
+        console.log(`Target amount changed for ${rowGroup.get('ticker')?.value}:`, val);
         this.saveAllocation(rowGroup);
       })
     );
@@ -156,14 +186,28 @@ export class PlanningComponent implements OnInit, OnDestroy {
     );
   }
 
-  private recalculateRow(rowGroup: FormGroup) {
+  private recalculateRow(rowGroup: FormGroup, source: 'amount' | 'percentage' | 'budget' = 'budget') {
     const monthlyInvestment = this.monthlyInvestmentControl.value || 0;
     const targetPercentage = rowGroup.get('targetPercentage')!.value;
     const isWeeklyEnabled = rowGroup.get('isWeeklyEnabled')!.value;
     const isBiWeeklyEnabled = rowGroup.get('isBiWeeklyEnabled')!.value;
     const isMonthlyEnabled = rowGroup.get('isMonthlyEnabled')!.value;
 
-    const monthlyAlloc = monthlyInvestment * (targetPercentage / 100);
+    let monthlyAlloc = 0;
+
+    if (source === 'amount') {
+      // If amount is the source, use it directly for derived calcs
+      monthlyAlloc = rowGroup.get('targetAmount')!.value || 0;
+    } else {
+      // Otherwise fallback to percentage-based calculation
+      monthlyAlloc = monthlyInvestment * (targetPercentage / 100);
+      
+      // Update amount control if not source (avoid overwriting user input loop)
+      const currentAmount = rowGroup.get('targetAmount')!.value;
+      if (Math.abs(currentAmount - monthlyAlloc) > 0.01) {
+         rowGroup.get('targetAmount')!.setValue(Number(monthlyAlloc.toFixed(2)), { emitEvent: false });
+      }
+    }
 
     rowGroup.get('weeklyEur')!.setValue(isWeeklyEnabled ? monthlyAlloc / 4 : 0, { emitEvent: false });
     rowGroup.get('biWeeklyEur')!.setValue(isBiWeeklyEnabled ? monthlyAlloc / 2 : 0, { emitEvent: false });
@@ -174,7 +218,7 @@ export class PlanningComponent implements OnInit, OnDestroy {
 
   private recalculateAll() {
     this.rowsArray.controls.forEach(control => {
-      this.recalculateRow(control as FormGroup);
+      this.recalculateRow(control as FormGroup, 'budget');
     });
   }
 
@@ -185,11 +229,27 @@ export class PlanningComponent implements OnInit, OnDestroy {
     }
     const ticker = rowGroup.get('ticker')!.value;
     console.log(`Saving allocation for ${ticker}`);
+
+    const monthlyInvestment = this.monthlyInvestmentControl.value || 0;
+    let targetPercentage = rowGroup.get('targetPercentage')!.value;
+    const targetAmount = rowGroup.get('targetAmount')!.value;
+
+    // Recalculate precise percentage if Amount > 0 and Monthly > 0 to preserve precision
+    // This allows the UI to show 2 decimals (e.g. 3.85%) while backend gets precision (3.8461%)
+    // matching the exact amount (e.g. 50 EUR / 1300 EUR)
+    if (monthlyInvestment > 0 && targetAmount > 0) {
+      const precisePercentage = (targetAmount / monthlyInvestment) * 100;
+      // Use precise percentage if it's close to the UI value (indicates derived value)
+      if (Math.abs(precisePercentage - targetPercentage) < 0.05) {
+        targetPercentage = precisePercentage;
+      }
+    }
+
     const row: PlanningRow = {
       ticker,
       securityName: rowGroup.get('securityName')!.value,
       assetType: rowGroup.get('assetType')!.value,
-      targetPercentage: rowGroup.get('targetPercentage')!.value,
+      targetPercentage: targetPercentage,
       isWeeklyEnabled: rowGroup.get('isWeeklyEnabled')!.value,
       isBiWeeklyEnabled: rowGroup.get('isBiWeeklyEnabled')!.value,
       isMonthlyEnabled: rowGroup.get('isMonthlyEnabled')!.value,

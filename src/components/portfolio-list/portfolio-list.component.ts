@@ -15,6 +15,8 @@ import { formatDateShort } from '../../utils/date-formatter.util';
 })
 export class PortfolioListComponent {
   portfolio = input.required<PortfolioItem[]>();
+  cashBalance = input.required<number>();
+  totalValue = input.required<number>();
   
   private expandedTickers = signal(new Set<string>());
   editingTransactionId = signal<string | null>(null);
@@ -25,6 +27,27 @@ export class PortfolioListComponent {
 
   isExpanded(ticker: string): boolean {
     return this.expandedTickers().has(ticker);
+  }
+
+  get expandCollapseButtonText(): string {
+    const expandedCount = this.expandedTickers().size;
+    // If any element is expanded -> Collapse All
+    // If all elements are collapsed (0 expanded) -> Expand All
+    return expandedCount > 0 ? 'Collapse All' : 'Expand All';
+  }
+
+  toggleAll(): void {
+    const portfolio = this.portfolio();
+    const currentExpanded = this.expandedTickers();
+    
+    // If any item is expanded, we collapse all (clear the set)
+    if (currentExpanded.size > 0) {
+      this.expandedTickers.set(new Set<string>());
+    } else {
+      // If no items are expanded, we expand all (add all tickers)
+      const allTickers = new Set(portfolio.map(p => p.ticker));
+      this.expandedTickers.set(allTickers);
+    }
   }
 
   toggleExpand(ticker: string): void {

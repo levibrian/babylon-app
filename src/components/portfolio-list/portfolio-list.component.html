@@ -1,130 +1,181 @@
-<div class="flex flex-col h-full overflow-y-auto min-h-0">
-  <ul>
-    @for (item of portfolio(); track item.ticker) {
-      <li class="group hover:bg-gray-50 transition-colors duration-150">
-        <!-- Parent Row: Security Name - PnL (PnL%) - Chevron -->
-        <div class="cursor-pointer grid grid-cols-[3rem_1fr_auto_1.5rem] gap-3 items-center py-1.5 px-2" 
-             (click)="toggleExpand(item.ticker)">
-          <!-- Avatar -->
-          <div class="row-span-2">
-            <div [class]="'w-9 h-9 rounded-full flex items-center justify-center font-mono font-bold text-sm ' + getPortfolioAvatarClass(item) + ' ' + getAvatarColor(item.ticker)">
-              {{ item.ticker.substring(0, 1) }}
-            </div>
-          </div>
-          
-          <!-- Security Name -->
-          <div class="min-w-0">
-            <span class="text-sm font-semibold text-gray-900 truncate block">{{ item.companyName }}</span>
-            <!-- Total Value (sub-row) -->
-            <div class="mt-0.5">
-              <span class="text-xs font-mono text-gray-500">{{ item.ticker }} • </span>
-              @if (item.currentMarketValue !== null) {
-                <span class="text-xs font-mono text-gray-500">{{ item.currentMarketValue | currency:'EUR':'symbol':'1.0-0' }}</span>
-              } @else {
-                <span class="text-xs font-mono text-gray-500">{{ item.totalCost | currency:'EUR':'symbol':'1.0-0' }}</span>
-              }
-            </div>
-          </div>
+<div class="flex flex-col h-full relative">
+  <!-- Header with Actions -->
+  @if (portfolio().length > 0) {
+    <div class="flex justify-end px-4 py-2 border-b border-gray-100 bg-white sticky top-0 z-10">
+      <button 
+        (click)="toggleAll()" 
+        class="text-xs font-medium text-gray-500 hover:text-gray-800 transition-colors focus:outline-none flex items-center gap-1">
+        {{ expandCollapseButtonText }}
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-3 h-3">
+          @if (expandCollapseButtonText === 'Collapse All') {
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 4.5h14.25M3 9h9.75M3 13.5h9.75m4.5-4.5v12m0 0l-3.75-3.75M17.25 21L21 17.25" />
+          } @else {
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 4.5h14.25M3 9h9.75M3 13.5h5.25m5.25-.75L17.25 9m0 0L21 12.75M17.25 9v12" />
+          }
+        </svg>
+      </button>
+    </div>
+  }
 
-          <!-- Unrealized P&L -->
-          <div class="text-right font-mono row-span-2 flex items-center justify-end">
-            @if (item.unrealizedPnL !== null && item.unrealizedPnLPercentage !== null) {
-              <div class="flex items-center justify-end gap-1">
-                @if (item.unrealizedPnL >= 0) {
-                  <!-- Up triangle for positive -->
-                  <svg class="w-3 h-3 text-green-600 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                    <path d="M10 3L3 17h14L10 3z" />
-                  </svg>
+  <!-- Scrollable List Area -->
+  <div class="flex-1 overflow-y-auto min-h-0">
+    <ul class="divide-y divide-gray-50">
+      @for (item of portfolio(); track item.ticker) {
+        <li class="group hover:bg-gray-50 transition-colors duration-150">
+          <!-- Parent Row: Security Name - PnL (PnL%) - Chevron -->
+          <div class="cursor-pointer grid grid-cols-[3rem_1fr_auto_1.5rem] gap-3 items-center py-1.5 px-2" 
+               (click)="toggleExpand(item.ticker)">
+            <!-- Avatar -->
+            <div class="row-span-2">
+              <div [class]="'w-9 h-9 rounded-full flex items-center justify-center font-mono font-bold text-sm ' + getPortfolioAvatarClass(item) + ' ' + getAvatarColor(item.ticker)">
+                {{ item.ticker.substring(0, 1) }}
+              </div>
+            </div>
+            
+            <!-- Security Name -->
+            <div class="min-w-0">
+              <span class="text-sm font-semibold text-gray-900 truncate block">{{ item.companyName }}</span>
+              <!-- Total Value (sub-row) -->
+              <div class="mt-0.5">
+                <span class="text-xs font-mono text-gray-500">{{ item.ticker }} • </span>
+                @if (item.currentMarketValue !== null) {
+                  <span class="text-xs font-mono text-gray-500">{{ item.currentMarketValue | currency:'EUR':'symbol':'1.0-0' }}</span>
                 } @else {
-                  <!-- Down triangle for negative -->
-                  <svg class="w-3 h-3 text-red-600 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                    <path d="M10 17L3 3h14L10 17z" />
-                  </svg>
+                  <span class="text-xs font-mono text-gray-500">{{ item.totalCost | currency:'EUR':'symbol':'1.0-0' }}</span>
                 }
-                <span [class]="'text-sm font-semibold ' + (item.unrealizedPnL >= 0 ? 'text-green-600' : 'text-red-600')">
-                  {{ abs(item.unrealizedPnL) | currency:'EUR':'symbol':'1.0-0' }}
-                </span>
-                <span [class]="'text-xs font-normal ' + (item.unrealizedPnL >= 0 ? 'text-green-600' : 'text-red-600')">
-                  ({{ item.unrealizedPnLPercentage >= 0 ? '+' : '' }}{{ item.unrealizedPnLPercentage | number:'1.1-1' }}%)
-                </span>
               </div>
-            } @else {
-              <span class="text-sm text-gray-400">—</span>
-            }
-          </div>
-
-          <!-- Chevron -->
-          <div class="row-span-2 flex items-center">
-            <svg [class]="'w-4 h-4 text-gray-400 transition-transform duration-200 ' + (isExpanded(item.ticker) ? 'rotate-180' : '')" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-              <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
-            </svg>
-          </div>
-        </div>
-
-        <!-- Child Row (Expandable): units @ avg price - Act % - Tgt % - Rebalancing action -->
-        <div class="overflow-hidden transition-all duration-300 ease-in-out -mt-3" 
-             [class.max-h-0]="!isExpanded(item.ticker)" 
-             [class.max-h-[100px]]="isExpanded(item.ticker)">
-          <div class="grid grid-cols-[3rem_1fr_auto_1.5rem] gap-3 items-center py-0.5 px-2">
-            <!-- Spacer for avatar -->
-            <div></div>
-            
-            <!-- Child content positioned between Total Value end and PnL start -->
-            <div class="flex items-center justify-center gap-2.5">
-              <!-- Shares @ Avg Price -->
-              <div class="text-xs text-gray-600 flex items-center gap-1">
-                <span class="font-medium">{{ item.totalShares | number:'1.0-4' }}</span>
-                <!-- Stacked coins icon -->
-                <svg class="w-3.5 h-3.5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 2C6.48 2 2 4.01 2 6.5v3C2 11.99 6.48 14 12 14s10-2.01 10-4.5v-3C22 4.01 17.52 2 12 2z"/>
-                  <path d="M2 12.5v3C2 17.99 6.48 20 12 20s10-2.01 10-4.5v-3c-1.95 1.76-5.65 3-10 3s-8.05-1.24-10-3z"/>
-                </svg>
-                <span class="text-gray-500">@</span>
-                <span class="font-medium">{{ item.averageSharePrice | currency:'EUR':'symbol':'1.2-2' }}</span>
-              </div>
-
-              <span class="text-gray-300">•</span>
-
-              <!-- Current % > Target % -->
-              <div class="text-xs flex items-center gap-1">
-                <span [class]="'font-medium ' + getCurrentAllocationColorClass(item)">
-                  {{ item.currentAllocationPercentage | number:'1.1-1' }}%
-                </span>
-                <span class="text-gray-400">›</span>
-                <span class="font-medium text-gray-900">
-                  {{ item.targetAllocationPercentage | number:'1.1-1' }}%
-                </span>
-              </div>
-
-              @if (item.rebalancingStatus !== 'Balanced') {
-                <span class="text-gray-300">•</span>
-                <!-- Rebalancing Action -->
-                <div>
-                  <div [class]="'inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium font-mono ' + getRebalancingStatusClass(item)">
-                    {{ getRebalancingStatusWithAction(item) }}
-                  </div>
+            </div>
+  
+            <!-- Unrealized P&L -->
+            <div class="text-right font-mono row-span-2 flex items-center justify-end">
+              @if (item.unrealizedPnL !== null && item.unrealizedPnLPercentage !== null) {
+                <div class="flex items-center justify-end gap-1">
+                  @if (item.unrealizedPnL >= 0) {
+                    <!-- Up triangle for positive -->
+                    <svg class="w-3 h-3 text-green-600 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                      <path d="M10 3L3 17h14L10 3z" />
+                    </svg>
+                  } @else {
+                    <!-- Down triangle for negative -->
+                    <svg class="w-3 h-3 text-red-600 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                      <path d="M10 17L3 3h14L10 17z" />
+                    </svg>
+                  }
+                  <span [class]="'text-sm font-semibold ' + (item.unrealizedPnL >= 0 ? 'text-green-600' : 'text-red-600')">
+                    {{ abs(item.unrealizedPnL) | currency:'EUR':'symbol':'1.0-0' }}
+                  </span>
+                  <span [class]="'text-xs font-normal ' + (item.unrealizedPnL >= 0 ? 'text-green-600' : 'text-red-600')">
+                    ({{ item.unrealizedPnLPercentage >= 0 ? '+' : '' }}{{ item.unrealizedPnLPercentage | number:'1.1-1' }}%)
+                  </span>
                 </div>
+              } @else {
+                <span class="text-sm text-gray-400">—</span>
               }
             </div>
-
-            <!-- Spacer for PnL column -->
-            <div></div>
-            
-            <!-- Spacer for chevron -->
-            <div></div>
+  
+            <!-- Chevron -->
+            <div class="row-span-2 flex items-center">
+              <svg [class]="'w-4 h-4 text-gray-400 transition-transform duration-200 ' + (isExpanded(item.ticker) ? 'rotate-180' : '')" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+              </svg>
+            </div>
           </div>
-        </div>
-      </li>
-    } @empty {
-        <li class="p-8 text-center">
-          <div class="flex flex-col items-center">
-            <svg class="w-16 h-16 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M21 12a2.25 2.25 0 0 0-2.25-2.25H15a3 3 0 1 1-6 0H5.25A2.25 2.25 0 0 0 3 12m18 0v6a2.25 2.25 0 0 1-2.25 2.25H5.25A2.25 2.25 0 0 1 3 18v-6m18 0V9M3 12V9m18 0a2.25 2.25 0 0 0-2.25-2.25H5.25A2.25 2.25 0 0 0 3 9m18 0V6a2.25 2.25 0 0 0-2.25-2.25H5.25A2.25 2.25 0 0 0 3 6v3" />
-            </svg>
-            <h3 class="mt-4 text-xl font-semibold text-gray-900">Your Portfolio is Empty</h3>
-            <p class="mt-2 text-base text-gray-600 max-w-md mx-auto">Start by adding your first transaction. Once you do, you'll see your investments and their performance right here.</p>
+  
+          <!-- Child Row (Expandable): units @ avg price - Act % - Tgt % - Rebalancing action -->
+          <div class="overflow-hidden transition-all duration-300 ease-in-out -mt-3" 
+               [class.max-h-0]="!isExpanded(item.ticker)" 
+               [class.max-h-[100px]]="isExpanded(item.ticker)">
+            <div class="grid grid-cols-[3rem_1fr_auto_1.5rem] gap-3 items-center py-0.5 px-2">
+              <!-- Spacer for avatar -->
+              <div></div>
+              
+              <!-- Child content positioned between Total Value end and PnL start -->
+              <div class="flex items-center justify-center gap-2.5">
+                <!-- Shares @ Avg Price -->
+                <div class="text-xs text-gray-600 flex items-center gap-1">
+                  <span class="font-medium">{{ item.totalShares | number:'1.0-4' }}</span>
+                  <!-- Stacked coins icon -->
+                  <svg class="w-3.5 h-3.5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2C6.48 2 2 4.01 2 6.5v3C2 11.99 6.48 14 12 14s10-2.01 10-4.5v-3C22 4.01 17.52 2 12 2z"/>
+                    <path d="M2 12.5v3C2 17.99 6.48 20 12 20s10-2.01 10-4.5v-3c-1.95 1.76-5.65 3-10 3s-8.05-1.24-10-3z"/>
+                  </svg>
+                  <span class="text-gray-500">@</span>
+                  <span class="font-medium">{{ item.averageSharePrice | currency:'EUR':'symbol':'1.2-2' }}</span>
+                </div>
+  
+                <span class="text-gray-300">•</span>
+  
+                <!-- Current % > Target % -->
+                <div class="text-xs flex items-center gap-1">
+                  <span [class]="'font-medium ' + getCurrentAllocationColorClass(item)">
+                    {{ item.currentAllocationPercentage | number:'1.1-1' }}%
+                  </span>
+                  <span class="text-gray-400">›</span>
+                  <span class="font-medium text-gray-900">
+                    {{ item.targetAllocationPercentage | number:'1.1-1' }}%
+                  </span>
+                </div>
+  
+                @if (item.rebalancingStatus !== 'Balanced') {
+                  <span class="text-gray-300">•</span>
+                  <!-- Rebalancing Action -->
+                  <div>
+                    <div [class]="'inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium font-mono ' + getRebalancingStatusClass(item)">
+                      {{ getRebalancingStatusWithAction(item) }}
+                    </div>
+                  </div>
+                }
+              </div>
+  
+              <!-- Spacer for PnL column -->
+              <div></div>
+              
+              <!-- Spacer for chevron -->
+              <div></div>
+            </div>
           </div>
         </li>
-    }
-  </ul>
+      } @empty {
+          <li class="p-8 text-center">
+            <div class="flex flex-col items-center">
+              <svg class="w-16 h-16 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M21 12a2.25 2.25 0 0 0-2.25-2.25H15a3 3 0 1 1-6 0H5.25A2.25 2.25 0 0 0 3 12m18 0v6a2.25 2.25 0 0 1-2.25 2.25H5.25A2.25 2.25 0 0 1 3 18v-6m18 0V9M3 12V9m18 0a2.25 2.25 0 0 0-2.25-2.25H5.25A2.25 2.25 0 0 0 3 9m18 0V6a2.25 2.25 0 0 0-2.25-2.25H5.25A2.25 2.25 0 0 0 3 6v3" />
+              </svg>
+              <h3 class="mt-4 text-xl font-semibold text-gray-900">Your Portfolio is Empty</h3>
+              <p class="mt-2 text-base text-gray-600 max-w-md mx-auto">Start by adding your first transaction. Once you do, you'll see your investments and their performance right here.</p>
+            </div>
+          </li>
+      }
+    </ul>
+  </div>
+
+  <!-- Cash Balance Footer -->
+  <div class="flex-shrink-0 border-t border-gray-100 bg-white p-3 z-10 shadow-[0_-2px_10px_rgba(0,0,0,0.02)]">
+    <div class="grid grid-cols-[3rem_1fr_auto_1.5rem] gap-3 items-center px-2">
+      <!-- Icon Placeholder -->
+      <div class="w-9 h-9 rounded-full bg-gray-50 flex items-center justify-center text-gray-400">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5">
+          <path d="M12 2C6.48 2 2 4.01 2 6.5v3C2 11.99 6.48 14 12 14s10-2.01 10-4.5v-3C22 4.01 17.52 2 12 2zM2 12.5v3C2 17.99 6.48 20 12 20s10-2.01 10-4.5v-3c-1.95 1.76-5.65 3-10 3s-8.05-1.24-10-3z"/>
+        </svg>          
+      </div>
+
+      <!-- Label -->
+      <div class="text-sm font-semibold text-gray-900">
+        CASH
+      </div>
+
+      <!-- Value -->
+      <div class="text-right font-mono text-sm font-semibold text-gray-900 flex flex-col items-end leading-tight">
+        <span>{{ cashBalance() | currency:'EUR':'symbol':'1.0-0' }}</span>
+        @if (totalValue() > 0) {
+          <span class="text-xs text-gray-500 font-normal">
+            {{ (cashBalance() / totalValue()) | percent:'1.1-1' }}
+          </span>
+        }
+      </div>
+
+      <!-- Spacer for alignment with rows -->
+      <div></div>
+    </div>
+  </div>
 </div>

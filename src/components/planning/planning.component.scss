@@ -142,7 +142,8 @@
 .list-item {
   display: grid;
   // Grid Layout: Asset | Allocation | Est Amount | Frequency | Action
-  grid-template-columns: minmax(180px, 1fr) 120px 100px 140px 50px;
+  // Increased column widths for inputs
+  grid-template-columns: minmax(180px, 1fr) 140px 140px 140px 50px;
   align-items: center;
   padding: 0.75rem 1.5rem;
   border-bottom: 1px solid #fbfbfb;
@@ -175,7 +176,8 @@
     }
   }
 
-  .col-allocation {
+  // Shared input wrapper style mixin pattern (applied explicitly)
+  .col-allocation, .col-estimation {
     display: flex;
     justify-content: flex-end;
 
@@ -193,7 +195,7 @@
       }
 
       input {
-        width: 40px;
+        width: 50px; // Slightly wider
         background: transparent;
         border: none;
         text-align: right;
@@ -202,6 +204,14 @@
         color: #333;
         
         &:focus { outline: none; }
+
+        // Hide spinners
+        &::-webkit-outer-spin-button,
+        &::-webkit-inner-spin-button {
+          -webkit-appearance: none;
+          margin: 0;
+        }
+        -moz-appearance: textfield;
       }
 
       .unit {
@@ -210,7 +220,9 @@
         margin-left: 2px;
       }
     }
+  }
 
+  .col-allocation {
     .save-status {
       margin-left: 8px;
       min-width: 20px;
@@ -232,21 +244,13 @@
       }
     }
   }
-
+  
+  // col-estimation specific adjustments if needed, but shared style above covers it
   .col-estimation {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    font-size: 0.9rem;
-    
-    .value {
-      color: #333;
-      font-weight: 500;
-    }
-    .label {
-      font-size: 0.7rem;
-      color: #aaa;
-    }
+     // specific overrides can go here
+     .input-wrapper input {
+         width: 70px; // Amount needs more space than percentage
+     }
   }
 
   .col-frequency {

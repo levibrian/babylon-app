@@ -82,6 +82,8 @@
         } @else {
           <app-portfolio-list 
             [portfolio]="portfolio()"
+            [cashBalance]="portfolioService.cashAmount()"
+            [totalValue]="totalValue()"
             (update)="updateTransaction($event)"
             (delete)="deleteTransaction($event)"
             (assetClick)="onAssetClick($event)">

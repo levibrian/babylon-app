@@ -36,6 +36,14 @@ export class TransactionService {
         this.reset();
       }
     });
+
+    // Sync cash balance from PortfolioService (single source of truth)
+    effect(() => {
+      const portfolioCash = this.portfolioService.cashAmount();
+      // Only update if not currently optimistically updating (or just accept source of truth)
+      // Since portfolio reload happens after update, this should be consistent.
+      this._cashBalance.set(portfolioCash);
+    }, { allowSignalWrites: true });
   }
 
   /**
@@ -59,17 +67,14 @@ export class TransactionService {
   private readonly _cashBalance = signal<number>(0);
   public readonly cashBalance: Signal<number> = this._cashBalance.asReadonly();
 
-  // ... existing code ...
+
 
   private async fetchTransactions(): Promise<void> {
     try {
       this._error.set(null);
       this._loading.set(true);
       
-      const [transactionsData, cashData] = await Promise.all([
-        lastValueFrom(this.http.get<ApiTransaction[]>(`${environment.apiUrl}/api/v1/transactions`)),
-        this.getCashBalance()
-      ]);
+      const transactionsData = await lastValueFrom(this.http.get<ApiTransaction[]>(`${environment.apiUrl}/api/v1/transactions`));
 
       const mappedTransactions = mapApiTransactionsToTransactions(transactionsData);
       this._transactions.set(mappedTransactions);
@@ -84,10 +89,7 @@ export class TransactionService {
 
   private async fetchTransactionsSilent(): Promise<void> {
     try {
-      const [transactionsData, _] = await Promise.all([
-        lastValueFrom(this.http.get<ApiTransaction[]>(`${environment.apiUrl}/api/v1/transactions`)),
-        this.getCashBalance() 
-      ]);
+      const transactionsData = await lastValueFrom(this.http.get<ApiTransaction[]>(`${environment.apiUrl}/api/v1/transactions`));
       const mappedTransactions = mapApiTransactionsToTransactions(transactionsData);
       this._transactions.set(mappedTransactions);
     } catch (err) {
@@ -130,16 +132,6 @@ export class TransactionService {
     } catch (err) {
       console.error('Error updating transaction:', err);
       toast.error('Could not update transaction. Please try again.');
-    }
-  }
-
-  async getCashBalance(): Promise<void> {
-    try {
-      const response = await lastValueFrom(this.http.get<{ balance: number }>(`${environment.apiUrl}/api/v1/cash`));
-      this._cashBalance.set(response.balance);
-    } catch (err) {
-      console.error('Error fetching cash balance:', err);
-      // Don't block the UI, just leave it at 0 or previous value
     }
   }
 
