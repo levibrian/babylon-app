@@ -150,6 +150,7 @@ export class TransactionService {
 
     try {
       await lastValueFrom(this.http.put(`${environment.apiUrl}/api/v1/cash`, { amount }));
+      await this.portfolioService.reloadSilent();
       toast.success('Cash balance updated');
     } catch (err) {
       console.error('Error updating cash balance:', err);
