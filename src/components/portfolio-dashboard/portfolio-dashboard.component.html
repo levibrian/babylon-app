@@ -1,5 +1,5 @@
 <div class="h-full flex flex-col gap-6 p-6 overflow-y-auto">
-  <!-- Section 1: Wealth Header - Net Worth, P&L, and Insights Carousel -->
+  <!-- Section 1: Wealth Header - Net Worth, P&L, and Rebalancing Carousel -->
   <div class="flex flex-col lg:flex-row lg:items-start gap-6 flex-shrink-0 pb-4 border-b border-gray-50">
     <!-- Left: Net Worth (Dominant) -->
     <div class="flex-shrink-0">
@@ -18,40 +18,15 @@
       </div>
     </div>
 
-    <!-- Right: Insights Carousel (pushed to end) -->
+    <!-- Right: Rebalancing Actions Carousel (pushed to end) -->
     <div class="flex-1 lg:flex lg:justify-end">
-      @if (portfolioInsights().length > 0) {
-        <div class="w-full lg:max-w-sm">
-          <!-- Single Insight Card with fade animation -->
-          <div class="transition-opacity duration-300 ease-in-out">
-            @if (currentInsight(); as insight) {
-              <app-insight-card 
-                [insight]="insight"
-                (executeAction)="handleInsightAction($event)">
-              </app-insight-card>
-            }
-          </div>
-          
-          <!-- Dot Navigation -->
-          @if (portfolioInsights().length > 1) {
-            <div class="flex items-center justify-center gap-2 mt-3">
-              @for (insight of portfolioInsights(); track insight.message; let i = $index) {
-                <button 
-                  (click)="goToInsight(i)"
-                  class="w-2 h-2 rounded-full transition-all duration-300"
-                  [class]="currentInsightIndex() === i ? 'bg-gray-900 w-4' : 'bg-gray-300 hover:bg-gray-400'"
-                  [attr.aria-label]="'Go to insight ' + (i + 1)"
-                  [attr.aria-current]="currentInsightIndex() === i ? 'true' : 'false'">
-                </button>
-              }
-            </div>
-          }
-        </div>
-      }
+      <div class="w-full lg:max-w-sm">
+        <app-rebalancing-widget />
+      </div>
     </div>
   </div>
 
-  <!-- Section 3: Upcoming Events (Bottom Right) -->
+  <!-- Section 2: Upcoming Payouts -->
   <div class="w-full flex-shrink-0 pb-4 border-b border-gray-50 flex justify-end">
     <div class="w-full lg:w-1/2 flex flex-col gap-2 min-h-0 overflow-hidden" style="height: 100%;">
       <div class="flex-shrink-0">
@@ -62,6 +37,4 @@
       </div>
     </div>
   </div>
-
-
 </div>

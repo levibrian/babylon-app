@@ -8,6 +8,10 @@ import {
   ApiSmartRebalancingRequest,
   ApiSmartRebalancingResponse,
 } from '../models/api-response.model';
+import {
+  TimedRebalancingActionsResponse,
+  TimedRebalancingActionsRequest,
+} from '../models/timed-rebalancing.model';
 import { HttpClient } from '@angular/common/http';
 import { lastValueFrom } from 'rxjs';
 
@@ -36,12 +40,14 @@ export class PortfolioAnalyticsService {
     this._diversificationMetrics.set(null);
     this._riskMetrics.set(null);
     this._rebalancingActions.set(null);
+    this._timedRebalancingActions.set(null);
     this._loading.set(false);
     this._error.set(null);
   }
   private readonly _diversificationMetrics = signal<ApiDiversificationMetrics | null>(null);
   private readonly _riskMetrics = signal<ApiRiskMetrics | null>(null);
   private readonly _rebalancingActions = signal<ApiRebalancingActions | null>(null);
+  private readonly _timedRebalancingActions = signal<TimedRebalancingActionsResponse | null>(null);
   private readonly _loading = signal(false);
   private readonly _error = signal<string | null>(null);
 
@@ -51,6 +57,8 @@ export class PortfolioAnalyticsService {
     this._riskMetrics.asReadonly();
   public readonly rebalancingActions: Signal<ApiRebalancingActions | null> = 
     this._rebalancingActions.asReadonly();
+  public readonly timedRebalancingActions: Signal<TimedRebalancingActionsResponse | null> = 
+    this._timedRebalancingActions.asReadonly();
   public readonly loading: Signal<boolean> = this._loading.asReadonly();
   public readonly error: Signal<string | null> = this._error.asReadonly();
 
@@ -127,6 +135,47 @@ export class PortfolioAnalyticsService {
       const errorMessage = err instanceof Error ? err.message : 'Failed to calculate recommendations';
       this._error.set(errorMessage);
       console.error('Error calculating smart recommendations:', err);
+      return null;
+    } finally {
+      this._loading.set(false);
+    }
+  }
+
+  /**
+   * Fetches timed rebalancing actions that combine allocation gaps with market timing signals.
+   * Supports AI-powered optimization when useAi=true.
+   */
+  async getTimedRebalancingActions(
+    request?: TimedRebalancingActionsRequest
+  ): Promise<TimedRebalancingActionsResponse | null> {
+    try {
+      this._loading.set(true);
+      this._error.set(null);
+
+      // Build query params
+      const params: Record<string, string> = {};
+      if (request?.investmentAmount !== undefined) {
+        params['investmentAmount'] = request.investmentAmount.toString();
+      }
+      if (request?.maxActions !== undefined) {
+        params['maxActions'] = request.maxActions.toString();
+      }
+      if (request?.useAi !== undefined) {
+        params['useAi'] = request.useAi.toString();
+      }
+
+      const data = await lastValueFrom(
+        this.http.get<TimedRebalancingActionsResponse>(
+          `${environment.apiUrl}/api/v1/portfolios/rebalancing/timed-actions`,
+          { params }
+        )
+      );
+      this._timedRebalancingActions.set(data);
+      return data;
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load timed rebalancing actions';
+      this._error.set(errorMessage);
+      console.error('Error fetching timed rebalancing actions:', err);
       return null;
     } finally {
       this._loading.set(false);
