@@ -35,7 +35,6 @@ export class RebalancingWidgetComponent implements OnInit, OnDestroy {
   loading = signal<boolean>(false);
   error = signal<string | null>(null);
   data = signal<TimedRebalancingActionsResponse | null>(null);
-  useAi = signal<boolean>(true);
 
   // Carousel state
   currentActionIndex = signal(0);
@@ -75,14 +74,6 @@ export class RebalancingWidgetComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Toggles the AI functionality and refetches data
-   */
-  async toggleAi(): Promise<void> {
-    this.useAi.update(v => !v);
-    await this.fetchData();
-  }
-
-  /**
    * Fetches timed rebalancing actions from the API
    */
   async fetchData(): Promise<void> {
@@ -92,7 +83,7 @@ export class RebalancingWidgetComponent implements OnInit, OnDestroy {
     try {
       const response = await this.analyticsService.getTimedRebalancingActions({
         maxActions: 10,
-        useAi: this.useAi(),
+        useAi: false,
       });
 
       if (response) {
