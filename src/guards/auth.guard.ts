@@ -1,27 +1,24 @@
 import { inject } from '@angular/core';
 import { Router, CanActivateFn } from '@angular/router';
-import { AuthService } from '../services/auth.service';
+import { UserStore } from '../services/user.store';
 
-export const authGuard: CanActivateFn = (route, state) => {
-  const authService = inject(AuthService);
+/**
+ * Protects routes that require authentication.
+ * Reads from the UserStore's computed isAuthenticated signal.
+ */
+export const authGuard: CanActivateFn = () => {
+  const store = inject(UserStore);
   const router = inject(Router);
 
-  if (authService.currentUser()) {
-    return true;
-  }
-
-  // Redirect to login page
-  return router.parseUrl('/login');
+  return store.isAuthenticated() ? true : router.parseUrl('/login');
 };
 
-export const publicGuard: CanActivateFn = (route, state) => {
-  const authService = inject(AuthService);
+/**
+ * Redirects authenticated users away from public routes (login, register).
+ */
+export const publicGuard: CanActivateFn = () => {
+  const store = inject(UserStore);
   const router = inject(Router);
 
-  if (authService.currentUser()) {
-    // Already logged in, redirect to wealth
-    return router.parseUrl('/wealth');
-  }
-
-  return true;
+  return store.isAuthenticated() ? router.parseUrl('/wealth') : true;
 };

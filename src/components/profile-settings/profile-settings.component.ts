@@ -14,14 +14,13 @@ import { toast } from 'ngx-sonner';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ProfileSettingsComponent implements OnInit {
-  private fb = inject(FormBuilder);
-  private authService = inject(AuthService);
+  protected fb = inject(FormBuilder);
+  protected authService = inject(AuthService);
 
   user = this.authService.currentUser;
   
   profileForm = this.fb.group({
-    firstName: ['', Validators.required],
-    lastName: ['', Validators.required],
+    username: ['', Validators.required],
     email: [{ value: '', disabled: true }, [Validators.required, Validators.email]]
   });
 
@@ -42,8 +41,7 @@ export class ProfileSettingsComponent implements OnInit {
     const currentUser = this.user();
     if (currentUser) {
       this.profileForm.patchValue({
-        firstName: currentUser.firstName || currentUser.name.split(' ')[0],
-        lastName: currentUser.lastName || currentUser.name.split(' ').slice(1).join(' '),
+        username: currentUser.username,
         email: currentUser.email
       });
     }

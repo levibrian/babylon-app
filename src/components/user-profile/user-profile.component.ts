@@ -28,13 +28,8 @@ export class UserProfileComponent {
   }
 
   get initials(): string {
-    const name = this.user()?.name || '';
-    return name
-      .split(' ')
-      .map(n => n[0])
-      .slice(0, 2)
-      .join('')
-      .toUpperCase();
+    const username = this.user()?.username || '';
+    return username.slice(0, 2).toUpperCase();
   }
 
   @HostListener('document:click', ['$event'])

@@ -1,151 +1,209 @@
-.login-container {
+@use 'sass:color';
+
+// ─── Design Tokens ────────────────────────────────────────────────────────────
+$brand: #5046e5;           // indigo
+$brand-light: #ede9fe;     // indigo-100
+$text-primary: #111827;    // gray-900
+$text-muted: #6b7280;      // gray-500
+$border: #e5e7eb;          // gray-200
+$bg-input: #f9fafb;        // gray-50
+$error: #ef4444;           // red-500
+$radius: 10px;
+
+// ─── Layout ───────────────────────────────────────────────────────────────────
+.auth-container {
   min-height: 100vh;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  background-color: #fff; // Clean white background
-  font-family: 'Inter', sans-serif;
-  color: #333;
+  background: linear-gradient(135deg, #f5f3ff 0%, #faf5ff 60%, #eff6ff 100%);
+  font-family: 'Inter', system-ui, sans-serif;
+  padding: 1rem;
 }
 
-.login-card {
+.auth-card {
   width: 100%;
   max-width: 400px;
-  padding: 2rem;
+  background: #fff;
+  border-radius: 20px;
+  padding: 2.5rem 2rem;
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.05),
+    0 20px 60px -10px rgba(80, 70, 229, 0.12),
+    0 8px 20px -8px rgba(0, 0, 0, 0.08);
   display: flex;
   flex-direction: column;
   align-items: center;
+  gap: 1.25rem;
 }
 
-.title {
-  font-size: 2rem;
-  font-weight: 600;
+// ─── Brand ────────────────────────────────────────────────────────────────────
+.brand {
+  width: 100%;
   text-align: center;
-  margin-bottom: 2.5rem;
-  line-height: 1.2;
+  margin-bottom: 0.25rem;
 }
 
+.brand-name {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: $brand;
+  letter-spacing: -0.02em;
+}
+
+// ─── Tab Bar ──────────────────────────────────────────────────────────────────
+.tab-bar {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  background: $bg-input;
+  border: 1px solid $border;
+  border-radius: $radius;
+  padding: 4px;
+  gap: 4px;
+}
+
+.tab-btn {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: calc($radius - 3px);
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  background: transparent;
+  color: $text-muted;
+  transition: all 0.2s ease;
+
+  &.active {
+    background: #fff;
+    color: $brand;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  &:focus-visible {
+    outline: 2px solid $brand;
+    outline-offset: 2px;
+  }
+}
+
+// ─── Google Button ────────────────────────────────────────────────────────────
 .google-btn-wrapper {
   width: 100%;
   display: flex;
   justify-content: center;
-  margin-bottom: 1.5rem;
-  
-  // Custom wrapper to ensure button fits width if library supports it
-  // otherwise centering is key
 }
 
+// ─── Divider ─────────────────────────────────────────────────────────────────
 .divider {
   width: 100%;
-  text-align: center;
-  border-bottom: 1px solid #e5e7eb; // Tailwind gray-200
-  line-height: 0.1em;
-  margin: 1.5rem 0 2rem;
-  
-  span {
-    background: #fff;
-    padding: 0 10px;
-    color: #6b7280; // Gray-500
-    font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: $text-muted;
+  font-size: 0.85rem;
+
+  &::before,
+  &::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: $border;
   }
 }
 
+// ─── Forms ────────────────────────────────────────────────────────────────────
 form {
   width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 0.875rem;
 }
 
-.input-group {
-  width: 100%;
-  
+.field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+
   input {
     width: 100%;
     padding: 0.75rem 1rem;
-    border: 2px solid transparent; // Focus border
-    background-color: #f3f4f6; // Light gray bg like figma
-    border-radius: 6px;
-    font-size: 1rem;
+    border: 1.5px solid $border;
+    background: $bg-input;
+    border-radius: $radius;
+    font-size: 0.95rem;
+    color: $text-primary;
     outline: none;
-    transition: all 0.2s;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
 
     &::placeholder {
       color: #9ca3af;
-      text-transform: uppercase;
-      font-size: 0.8rem;
-      font-weight: 600;
-      letter-spacing: 0.05em;
     }
 
     &:focus {
-      background-color: #fff;
-      border-color: #3b82f6; // Blue focus
-      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+      background: #fff;
+      border-color: $brand;
+      box-shadow: 0 0 0 3px rgba(80, 70, 229, 0.1);
     }
-    
+
     &.error {
-      border-color: #ef4444;
-      background-color: #fef2f2;
+      border-color: $error;
+      background: #fef2f2;
     }
   }
 }
 
-.error-message {
-  color: #ef4444;
-  font-size: 0.9rem;
+.field-error {
+  font-size: 0.8rem;
+  color: $error;
+}
+
+.form-error {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  padding: 0.625rem 0.875rem;
+  font-size: 0.875rem;
+  color: #b91c1c;
   text-align: center;
 }
 
+// ─── Submit Button ────────────────────────────────────────────────────────────
 .submit-btn {
   width: 100%;
-  padding: 0.75rem;
-  background-color: #000;
+  padding: 0.8rem;
+  background: $brand;
   color: #fff;
   border: none;
-  border-radius: 6px;
-  font-size: 1rem;
-  font-weight: 500;
+  border-radius: $radius;
+  font-size: 0.95rem;
+  font-weight: 600;
   cursor: pointer;
-  margin-top: 1rem;
-  transition: opacity 0.2s;
+  margin-top: 0.25rem;
+  transition: all 0.2s ease;
+  letter-spacing: 0.01em;
 
-  &:hover {
-    opacity: 0.85;
+  &:hover:not(:disabled) {
+    background: color.adjust($brand, $lightness: -8%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(80, 70, 229, 0.35);
   }
-  
+
+  &:active:not(:disabled) {
+    transform: translateY(0);
+  }
+
   &:disabled {
-    background-color: #ccc;
+    background: #c4b5fd;
     cursor: not-allowed;
   }
 }
 
-.links {
-  margin-top: 1.5rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.75rem;
-  
-  .link {
-    color: #2563eb;
-    text-decoration: none;
-    font-size: 0.9rem;
-    
-    &:hover {
-      text-decoration: underline;
-    }
-  }
-  
-  .create-account {
-    color: #6b7280;
-    font-size: 0.9rem;
-  }
-}
-
-.footer {
-  margin-top: 4rem;
-  color: #9ca3af;
-  font-size: 0.8rem;
+// ─── Hint ─────────────────────────────────────────────────────────────────────
+.hint {
+  margin: 0;
+  font-size: 0.78rem;
+  color: $text-muted;
+  text-align: center;
+  line-height: 1.5;
 }

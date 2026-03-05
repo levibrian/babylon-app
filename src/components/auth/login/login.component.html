@@ -1,67 +1,149 @@
-<div class="login-container">
-  <div class="login-card">
-    <div class="brand-logo">
-      <!-- Placeholder for logo if needed -->
+<div class="auth-container">
+  <div class="auth-card">
+    <!-- Brand -->
+    <div class="brand">
+      <span class="brand-name">Babylon</span>
     </div>
-    
-    <h1 class="title">Log in or create an<br>account to collaborate</h1>
-    
+
+    <!-- Tab Toggle -->
+    <div class="tab-bar">
+      <button
+        class="tab-btn"
+        [class.active]="isLoginMode()"
+        (click)="setMode('login')"
+        type="button"
+        id="tab-login">
+        Log in
+      </button>
+      <button
+        class="tab-btn"
+        [class.active]="!isLoginMode()"
+        (click)="setMode('register')"
+        type="button"
+        id="tab-register">
+        Create account
+      </button>
+    </div>
+
+    <!-- Google SSO (Flows 1 & 2) — shown in both modes -->
     <div class="google-btn-wrapper">
-      <asl-google-signin-button 
-        type="standard" 
-        size="large" 
-        theme="outline" 
-        text="continue_with" 
+      <asl-google-signin-button
+        type="standard"
+        size="large"
+        theme="outline"
+        [attr.text]="isLoginMode() ? 'continue_with' : 'signup_with'"
         width="320">
       </asl-google-signin-button>
     </div>
 
-    <div class="divider">
-      <span>or</span>
-    </div>
+    <div class="divider"><span>or</span></div>
 
-    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
-      <div class="input-group">
-        <label for="email" class="sr-only">Email</label>
-        <input 
-          id="email" 
-          type="email" 
-          formControlName="email" 
-          placeholder="Email" 
-          [class.error]="loginForm.get('email')?.invalid && loginForm.get('email')?.touched"
-        />
-      </div>
+    <!-- ── Login Form (Flow 5) ───────────────────────────────────────── -->
+    @if (isLoginMode()) {
+      <form [formGroup]="loginForm" (ngSubmit)="onLogin()" novalidate>
+        <div class="field-group">
+          <input
+            id="emailOrUsername"
+            type="text"
+            formControlName="emailOrUsername"
+            placeholder="Email or username"
+            autocomplete="username"
+            [class.error]="invalid('login', 'emailOrUsername')"
+          />
+          @if (invalid('login', 'emailOrUsername')) {
+            <span class="field-error">Email or username is required</span>
+          }
+        </div>
 
-      <div class="input-group">
-        <label for="password" class="sr-only">Password</label>
-        <input 
-          id="password" 
-          type="password" 
-          formControlName="password" 
-          placeholder="Password" 
-          [class.error]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched"
-        />
-      </div>
+        <div class="field-group">
+          <input
+            id="password-login"
+            type="password"
+            formControlName="password"
+            placeholder="Password"
+            autocomplete="current-password"
+            [class.error]="invalid('login', 'password')"
+          />
+          @if (invalid('login', 'password')) {
+            <span class="field-error">Password is required</span>
+          }
+        </div>
 
-      <div class="error-message" *ngIf="error()">
-        {{ error() }}
-      </div>
+        @if (error()) {
+          <div class="form-error" role="alert">{{ error() }}</div>
+        }
 
-      <button type="submit" class="submit-btn" [disabled]="loginForm.invalid || isLoading()">
-        {{ isLoading() ? 'Logging in...' : 'Log in' }}
-      </button>
-    </form>
+        <button
+          type="submit"
+          class="submit-btn"
+          id="btn-login"
+          [disabled]="isLoading()">
+          {{ isLoading() ? 'Logging in…' : 'Log in' }}
+        </button>
+      </form>
+    }
 
-    <div class="links">
-      <a href="#" class="link">Use single sign-on</a>
-      <a href="#" class="link">Reset password</a>
-      <div class="create-account">
-        No account? <a routerLink="/register" class="link">Create one</a>
-      </div>
-    </div>
+    <!-- ── Register Form (Flows 3 & 4) ──────────────────────────────── -->
+    @if (!isLoginMode()) {
+      <form [formGroup]="registerForm" (ngSubmit)="onRegister()" novalidate>
+        <div class="field-group">
+          <input
+            id="username"
+            type="text"
+            formControlName="username"
+            placeholder="Username"
+            autocomplete="username"
+            [class.error]="invalid('register', 'username')"
+          />
+          @if (invalid('register', 'username')) {
+            <span class="field-error">Username is required (min. 3 characters)</span>
+          }
+        </div>
+
+        <div class="field-group">
+          <input
+            id="email"
+            type="email"
+            formControlName="email"
+            placeholder="Email"
+            autocomplete="email"
+            [class.error]="invalid('register', 'email')"
+          />
+          @if (invalid('register', 'email')) {
+            <span class="field-error">A valid email is required</span>
+          }
+        </div>
+
+        <div class="field-group">
+          <input
+            id="password-register"
+            type="password"
+            formControlName="password"
+            placeholder="Password"
+            autocomplete="new-password"
+            [class.error]="invalid('register', 'password')"
+          />
+          @if (invalid('register', 'password')) {
+            <span class="field-error">Password must be at least 8 characters</span>
+          }
+        </div>
+
+        @if (error()) {
+          <div class="form-error" role="alert">{{ error() }}</div>
+        }
+
+        <button
+          type="submit"
+          class="submit-btn"
+          id="btn-register"
+          [disabled]="isLoading()">
+          {{ isLoading() ? 'Creating account…' : 'Create account' }}
+        </button>
+
+        <p class="hint">
+          If your email is already linked to Google, we'll connect your accounts automatically.
+        </p>
+      </form>
+    }
   </div>
-  
-  <footer class="footer">
-    Manage cookies or opt out
-  </footer>
 </div>

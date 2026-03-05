@@ -17,21 +17,13 @@
           <form [formGroup]="profileForm" (ngSubmit)="updateProfile()" class="space-y-6">
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <div class="space-y-2">
-                <label class="text-sm font-medium text-gray-700">First Name</label>
-                <input 
-                  type="text" 
-                  formControlName="firstName"
-                  class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all placeholder:text-gray-400"
-                />
-              </div>
-              <div class="space-y-2">
-                <label class="text-sm font-medium text-gray-700">Last Name</label>
-                <input 
-                  type="text" 
-                  formControlName="lastName"
-                  class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all placeholder:text-gray-400"
-                />
-              </div>
+              <label class="text-sm font-medium text-gray-700">Username</label>
+              <input 
+                type="text" 
+                formControlName="username"
+                class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all placeholder:text-gray-400"
+              />
+            </div>
             </div>
 
             <div class="space-y-2">
@@ -66,7 +58,7 @@
               <h2 class="text-xl font-semibold text-gray-900">Security</h2>
               <p class="text-sm text-gray-500 mt-1">Configure your account password for standard login.</p>
             </div>
-            <div *ngIf="user()?.photoUrl" class="px-3 py-1 bg-blue-50 border border-blue-100 rounded-full flex items-center gap-2">
+            <div *ngIf="authService.hasProvider('Google')" class="px-3 py-1 bg-blue-50 border border-blue-100 rounded-full flex items-center gap-2">
               <span class="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></span>
               <span class="text-xs font-medium text-blue-700">Linked to Google</span>
             </div>
