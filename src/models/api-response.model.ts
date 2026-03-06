@@ -73,7 +73,7 @@ export interface ApiPortfolioInsight {
   Metadata?: Record<string, any>;
   Severity?: "Info" | "Warning" | "Critical";
   ActionLabel?: string | null;
-  ActionPayload?: any | null;
+  ActionPayload?: any | null; 
   VisualContext?: ApiVisualContext | null; // Casing for VisualContext nested fields to be handled in mapper if needed
 }
 
