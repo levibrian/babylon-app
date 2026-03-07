@@ -17,6 +17,15 @@
         <span class="text-sm">({{ percentPnL() | number:'1.2-2' }}%)</span>
       </div>
     </div>
+    
+    <!-- Middle Right: Realized P&L -->
+    <div class="flex-shrink-0">
+      <div class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Realized P&L</div>
+      <div class="font-mono text-xl font-medium" [class]="realizedPnL() >= 0 ? 'text-emerald-600' : 'text-rose-600'">
+        {{ realizedPnL() >= 0 ? '+' : '' }}{{ realizedPnL() | currency:'EUR':'symbol':'1.2-2' }}
+        <span class="text-sm">({{ realizedPnLPct() > 0 ? '+' : '' }}{{ realizedPnLPct() | number:'1.2-2' }}%)</span>
+      </div>
+    </div>
 
     <!-- Right: Rebalancing Actions Carousel (pushed to end) -->
     <div class="flex-1 lg:flex lg:justify-end">

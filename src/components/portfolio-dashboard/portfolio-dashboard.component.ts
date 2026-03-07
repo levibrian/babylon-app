@@ -133,6 +133,25 @@ export class PortfolioDashboardComponent implements OnDestroy {
     return this.portfolioService.totalPnLPercentage();
   });
 
+  realizedPnL = computed(() => {
+    // Sum of realized P&L from all sell transactions
+    const transactions = this.transactions() || [];
+    return transactions
+      .filter(t => t.transactionType === 'sell' && t.realizedPnL !== undefined)
+      .reduce((sum, t) => sum + (t.realizedPnL || 0), 0);
+  });
+
+  realizedPnLPct = computed(() => {
+    // Average percentage of realized P&L across all sell transactions
+    const transactions = this.transactions() || [];
+    const soldList = transactions.filter(t => t.transactionType === 'sell' && t.realizedPnLPct !== undefined);
+    
+    if (soldList.length === 0) return 0;
+    
+    const sumPct = soldList.reduce((sum, t) => sum + (t.realizedPnLPct || 0), 0);
+    return sumPct / soldList.length;
+  });
+
   totalIncome = computed(() => {
     const transactions = this.transactions();
     return transactions

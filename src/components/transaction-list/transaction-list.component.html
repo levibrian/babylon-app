@@ -182,7 +182,12 @@
                   <div>{{ formatDate(transaction.date) }}</div>
                   <div class="text-[10px]">(Tax: {{ transaction.tax | currency:'EUR':'symbol':'1.2-2' }})</div>
                 } @else {
-                  {{ formatDate(transaction.date) }}
+                  <div>{{ formatDate(transaction.date) }}</div>
+                  @if (transaction.transactionType === 'sell' && transaction.realizedPnL !== undefined && transaction.realizedPnLPct !== undefined) {
+                    <div class="text-[10px]" [class]="transaction.realizedPnL >= 0 ? 'text-emerald-600' : 'text-rose-600'">
+                      Sales P&L: {{ transaction.realizedPnL >= 0 ? '+' : '' }}{{ transaction.realizedPnL | currency:'EUR':'symbol':'1.2-2' }} ({{ transaction.realizedPnLPct >= 0 ? '+' : '' }}{{ transaction.realizedPnLPct | number:'1.2-2' }}%)
+                    </div>
+                  }
                 }
               </div>
             </div>

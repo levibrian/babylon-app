@@ -12,6 +12,8 @@ export interface Transaction {
   tax?: number; // Tax withheld (for dividend transactions)
   securityName?: string; // Company/security name (optional for backward compatibility)
   securityType?: SecurityType;
+  realizedPnL?: number;
+  realizedPnLPct?: number;
 }
 
 /**
