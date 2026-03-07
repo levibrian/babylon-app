@@ -11,22 +11,22 @@
   "dependencies": {
     "@abacritt/angularx-social-login": "^2.5.1",
 
-    "@angular/animations": "20.3.15",
-    "@angular/common": "20.3.15",
-    "@angular/compiler": "20.3.15",
-    "@angular/core": "20.3.15",
-    "@angular/forms": "20.3.15",
-    "@angular/platform-browser": "20.3.15",
-    "@angular/router": "20.3.15",
+    "@angular/animations": "20.3.16",
+    "@angular/common": "20.3.16",
+    "@angular/compiler": "20.3.16",
+    "@angular/core": "20.3.16",
+    "@angular/forms": "20.3.16",
+    "@angular/platform-browser": "20.3.16",
+    "@angular/router": "20.3.16",
 
     "lucide-angular": "^0.554.0",
     "ngx-sonner": "^3.1.0",
     "rxjs": "^7.8.2"
   },
   "devDependencies": {
-    "@angular/build": "20.3.15",
+    "@angular/build": "20.3.16",
     "@angular/cli": "^20.3.0",
-    "@angular/compiler-cli": "20.3.15",
+    "@angular/compiler-cli": "20.3.16",
 
     "@types/node": "^22.14.0",
     "typescript": "~5.8.2"

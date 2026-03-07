@@ -65,6 +65,22 @@
           </div>
 
           <form [formGroup]="passwordForm" (ngSubmit)="updatePassword()" class="space-y-6">
+            <!-- Current Password — disabled when user has no local password yet -->
+            <div class="space-y-2">
+              <label class="text-sm font-medium text-gray-700">Current Password</label>
+              <input
+                type="password"
+                formControlName="currentPassword"
+                placeholder="Enter your current password"
+                [class]="passwordForm.get('currentPassword')?.disabled
+                  ? 'w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-400 cursor-not-allowed outline-none'
+                  : 'w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all placeholder:text-gray-400'"
+              />
+              <p *ngIf="passwordForm.get('currentPassword')?.disabled" class="text-xs text-gray-400">
+                No password set yet — you can create one below.
+              </p>
+            </div>
+
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <div class="space-y-2">
                 <label class="text-sm font-medium text-gray-700">New Password</label>
@@ -96,7 +112,7 @@
                 class="px-6 py-3 bg-gray-900 text-white font-semibold rounded-xl hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-2"
               >
                 <span *ngIf="isLoading()" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-                Set Password
+                Update Password
               </button>
             </div>
           </form>

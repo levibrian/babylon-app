@@ -141,9 +141,10 @@ export class AuthService {
     this.store.setUser(user);
   }
 
-  async setPassword(password: string): Promise<void> {
+  async updatePassword(password: string, currentPassword?: string): Promise<void> {
     await lastValueFrom(
-      this.http.post(`${environment.apiUrl}/api/v1/users/me/password`, {
+      this.http.post(`${environment.apiUrl}/api/v1/me/password`, {
+        ...(currentPassword ? { currentPassword } : {}),
         password,
       })
     );

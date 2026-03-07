@@ -25,6 +25,7 @@ export class ProfileSettingsComponent implements OnInit {
   });
 
   passwordForm = this.fb.group({
+    currentPassword: [''],
     password: ['', [Validators.required, Validators.minLength(8)]],
     confirmPassword: ['', Validators.required]
   }, {
@@ -44,6 +45,11 @@ export class ProfileSettingsComponent implements OnInit {
         username: currentUser.username,
         email: currentUser.email
       });
+    }
+
+    // Disable currentPassword when the user has no local password set
+    if (!this.authService.hasProvider('Local')) {
+      this.passwordForm.get('currentPassword')?.disable();
     }
   }
 
@@ -66,11 +72,12 @@ export class ProfileSettingsComponent implements OnInit {
     if (this.passwordForm.valid) {
       this.isLoading.set(true);
       try {
-        await this.authService.setPassword(this.passwordForm.value.password!);
+        const { password, currentPassword } = this.passwordForm.getRawValue();
+        await this.authService.updatePassword(password!, currentPassword ?? undefined);
         this.passwordForm.reset();
-        toast.success('Password set successfully');
+        toast.success('Password updated successfully');
       } catch (error) {
-        toast.error('Failed to set password');
+        toast.error('Failed to update password');
       } finally {
         this.isLoading.set(false);
       }

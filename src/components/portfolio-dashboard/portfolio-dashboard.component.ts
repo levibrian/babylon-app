@@ -5,8 +5,6 @@ import { PortfolioItem, PortfolioInsight } from '../../models/portfolio.model';
 import { Transaction, NewTransactionData } from '../../models/transaction.model';
 import { PortfolioService } from '../../services/portfolio.service';
 import { SecurityType } from '../../models/security.model';
-import { PassiveIncomeCalendarComponent } from '../passive-income-calendar/passive-income-calendar.component';
-import { InsightCardComponent } from '../insight-card/insight-card.component';
 import { RebalancingWidgetComponent } from '../common/rebalancing-widget';
 
 interface AllocationSegment {
@@ -33,7 +31,7 @@ interface HealthScore {
 @Component({
   selector: 'app-portfolio-dashboard',
   templateUrl: './portfolio-dashboard.component.html',
-  imports: [CommonModule, CurrencyPipe, PassiveIncomeCalendarComponent, RebalancingWidgetComponent],
+  imports: [CommonModule, CurrencyPipe, RebalancingWidgetComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PortfolioDashboardComponent implements OnDestroy {
