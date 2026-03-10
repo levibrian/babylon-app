@@ -27,17 +27,46 @@ export class TransactionListComponent {
   @Output() delete = new EventEmitter<Transaction>();
   @Output() toggleAdd = new EventEmitter<void>();
   @Output() navigateToRecurring = new EventEmitter<void>();
-  
+
   // Cash Balance Props
   cashBalance = input.required<number>();
   @Output() updateCash = new EventEmitter<number>();
-  
+
   editingTransactionId = signal<string | null>(null);
-  
+
+  realizedPnL = computed(() => {
+    const txs = this.transactions() || [];
+    return txs
+      .filter(t => t.transactionType === 'sell' && t.realizedPnL !== undefined)
+      .reduce((sum, t) => sum + (t.realizedPnL || 0), 0);
+  });
+
+  realizedPnLPct = computed(() => {
+    const txs = this.transactions() || [];
+    const soldList = txs.filter(t => t.transactionType === 'sell' && t.realizedPnL !== undefined);
+
+    if (soldList.length === 0) return 0;
+
+    let totalRealizedPnL = 0;
+    let totalCostBasis = 0;
+
+    soldList.forEach(t => {
+      const pnl = t.realizedPnL || 0;
+      const costBasis = t.totalAmount - pnl;
+
+      totalRealizedPnL += pnl;
+      if (costBasis > 0) {
+        totalCostBasis += costBasis;
+      }
+    });
+
+    return totalCostBasis > 0 ? (totalRealizedPnL / totalCostBasis) * 100 : 0;
+  });
+
   // Cash Edit State
   isEditingCash = signal<boolean>(false);
   cashEditValue = signal<number>(0);
-  
+
   startCashEdit(): void {
     this.cashEditValue.set(this.cashBalance());
     this.isEditingCash.set(true);
@@ -45,7 +74,7 @@ export class TransactionListComponent {
     // For now, template should handle it ideally, but native input autofocus might need helper
     // We'll rely on the directive we saw in earlier chats or just standard autofocus
   }
-  
+
   saveCashEdit(value: string): void {
     const amount = parseFloat(value);
     if (!isNaN(amount) && amount >= 0) {
@@ -53,11 +82,11 @@ export class TransactionListComponent {
       this.isEditingCash.set(false);
     }
   }
-  
+
   cancelCashEdit(): void {
     this.isEditingCash.set(false);
   }
-  
+
   onCashInputKeydown(event: KeyboardEvent, value: string): void {
     if (event.key === 'Enter') {
       this.saveCashEdit(value);
@@ -65,16 +94,16 @@ export class TransactionListComponent {
       this.cancelCashEdit();
     }
   }
-  
+
   // Search query synced with parent
   searchQuery = input<string>('');
   @Output() searchQueryChange = new EventEmitter<string>();
-  
+
   // Expose transactions directly (they are already filtered by parent)
   // We alias it to filteredTransactions for template compatibility if needed, 
   // or better, just use transactions() in template.
   // But wait, if I use transactions(), I need to update the template.
-  
+
   getCompanyName(transaction: Transaction): string {
     // Use securityName from transaction if available, otherwise fall back to ticker
     return transaction.securityName || transaction.ticker;
@@ -104,7 +133,7 @@ export class TransactionListComponent {
 
   handleDelete(transaction: Transaction): void {
     if (window.confirm(`Are you sure you want to delete the transaction for ${transaction.ticker} on ${new Date(transaction.date).toLocaleDateString()}?`)) {
-        this.delete.emit(transaction);
+      this.delete.emit(transaction);
     }
   }
 
@@ -133,7 +162,7 @@ export class TransactionListComponent {
     if (type === 'split') return ''; // Splits have no money exchange
     return '+'; // Dividends are gains
   }
-  
+
   // Get split ratio display text
   getSplitRatioDisplay(transaction: Transaction): string {
     if (transaction.transactionType !== 'split') return '';

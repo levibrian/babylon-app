@@ -4,20 +4,24 @@
     <!-- Total Invested (Top Left) -->
     <div class="text-xs font-normal text-gray-900 uppercase tracking-wide flex items-center gap-8 whitespace-nowrap">
       <div>
-        Total invested: <span class="text-black font-bold text-lg">{{ totalInvested() | currency:'EUR':'symbol':'1.2-2' }}</span>
+        Total invested: <span class="text-black font-bold text-lg">{{ totalInvested() | currency:'EUR':'symbol':'1.2-2'
+          }}</span>
       </div>
-      
+
       <!-- Cash Balance Section -->
       <div class="flex items-center gap-2 group/cash">
         <span class="flex items-center gap-1.5">
           CASH:
           <!-- Info Icon with Tooltip -->
           <div class="relative inline-block group/tooltip">
-            <svg class="w-3.5 h-3.5 text-gray-400 hover:text-black cursor-help transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            <svg class="w-3.5 h-3.5 text-gray-400 hover:text-black cursor-help transition-colors" fill="none"
+              viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             <!-- Tooltip Content -->
-            <div class="absolute top-full right-0 mt-2 w-max max-w-[240px] p-4 bg-black text-white text-[11px] normal-case font-normal leading-relaxed rounded shadow-2xl opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all z-[100] pointer-events-none">
+            <div
+              class="absolute top-full right-0 mt-2 w-max max-w-[240px] p-4 bg-black text-white text-[11px] normal-case font-normal leading-relaxed rounded shadow-2xl opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all z-[100] pointer-events-none">
               <!-- Arrow -->
               <div class="absolute bottom-full right-2 border-8 border-transparent border-b-black"></div>
               <p class="font-bold mb-1 text-white">Your cash is part of your portfolio.</p>
@@ -26,216 +30,235 @@
             </div>
           </div>
         </span>
-        
+
         @if (isEditingCash()) {
-          <div class="flex items-center gap-1 bg-gray-50 border-b border-black">
-            <input 
-              #cashInput
-              type="number" 
-              [value]="cashEditValue()"
-              (keydown)="onCashInputKeydown($event, cashInput.value)"
-              class="bg-transparent text-black font-bold text-lg rounded-none px-2 py-0 w-28 focus:outline-none tabular-nums"
-              autoFocus
-            >
-            <button 
-              (click)="saveCashEdit(cashInput.value)"
-              class="p-1 text-black hover:bg-gray-200 rounded-sm transition-colors flex items-center justify-center"
-              title="Save">
-              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
-              </svg>
-            </button>
-          </div>
-        } @else {
-          <span class="text-black font-bold text-lg inline-block min-w-[3rem]">{{ (cashBalance() ?? 0) | currency:'EUR':'symbol':'1.2-2' }}</span>
-          <button 
-            (click)="startCashEdit()"
-            class="text-gray-400 hover:text-black transition-colors focus:outline-none p-1 rounded-full hover:bg-gray-100"
-            aria-label="Edit cash balance">
-            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <div class="flex items-center gap-1 bg-gray-50 border-b border-black">
+          <input #cashInput type="number" [value]="cashEditValue()"
+            (keydown)="onCashInputKeydown($event, cashInput.value)"
+            class="bg-transparent text-black font-bold text-lg rounded-none px-2 py-0 w-28 focus:outline-none tabular-nums"
+            autoFocus>
+          <button (click)="saveCashEdit(cashInput.value)"
+            class="p-1 text-black hover:bg-gray-200 rounded-sm transition-colors flex items-center justify-center"
+            title="Save">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
             </svg>
           </button>
+        </div>
+        } @else {
+        <span class="text-black font-bold text-lg inline-block min-w-[3rem]">{{ (cashBalance() ?? 0) |
+          currency:'EUR':'symbol':'1.2-2' }}</span>
+        <button (click)="startCashEdit()"
+          class="text-gray-400 hover:text-black transition-colors focus:outline-none p-1 rounded-full hover:bg-gray-100"
+          aria-label="Edit cash balance">
+          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path
+              d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"
+              stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+        </button>
         }
+      </div>
+
+      <!-- Performance Section -->
+      <div class="flex items-center gap-2">
+        <span class="flex items-center gap-1.5">TOTAL CLOSED:</span>
+        <span class="font-bold whitespace-nowrap text-lg"
+          [class]="realizedPnL() >= 0 ? 'text-emerald-600' : 'text-rose-600'">{{
+          realizedPnL() >= 0 ? '+' : '' }}{{
+          realizedPnL() | currency:'EUR':'symbol':'1.2-2' }} ({{ realizedPnLPct() >= 0 ? '+' : '' }}{{
+          realizedPnLPct() | number:'1.2-2' }}%)</span>
       </div>
     </div>
 
     <!-- Add Button (Top Right) -->
     @if (!isLoading() && !error()) {
-      <button 
-        (click)="toggleAdd.emit()" 
-        class="flex items-center justify-center w-8 h-8 rounded-full bg-black text-white hover:bg-gray-800 transition-colors focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2"
-        [attr.aria-label]="isAdding() ? 'Cancel adding transaction' : 'Add new transaction'">
-        @if (isAdding()) {
-          <!-- X icon -->
-          <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        } @else {
-          <!-- Plus icon -->
-          <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
-          </svg>
-        }
-      </button>
+    <button (click)="toggleAdd.emit()"
+      class="flex items-center justify-center w-8 h-8 rounded-full bg-black text-white hover:bg-gray-800 transition-colors focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2"
+      [attr.aria-label]="isAdding() ? 'Cancel adding transaction' : 'Add new transaction'">
+      @if (isAdding()) {
+      <!-- X icon -->
+      <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
+        stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+      </svg>
+      } @else {
+      <!-- Plus icon -->
+      <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
+        stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+      </svg>
+      }
+    </button>
     }
   </div>
 
 
-  
+
   <!-- Search Bar -->
   <div class="mb-4 flex-shrink-0">
     <div class="relative">
       <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
         <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-          <path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.328 3.329a.75.75 0 11-1.06 1.06l-3.329-3.328A7 7 0 012 9z" clip-rule="evenodd" />
+          <path fill-rule="evenodd"
+            d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.328 3.329a.75.75 0 11-1.06 1.06l-3.329-3.328A7 7 0 012 9z"
+            clip-rule="evenodd" />
         </svg>
       </div>
-      <input
-        type="text"
-        [value]="searchQuery()"
-        (input)="onSearchInput($event)"
+      <input type="text" [value]="searchQuery()" (input)="onSearchInput($event)"
         placeholder="Search by ticker or security name..."
-        class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white text-black placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-black focus:border-black text-sm"
-      />
+        class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white text-black placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-black focus:border-black text-sm" />
       @if (searchQuery()) {
-        <button
-          type="button"
-          (click)="searchQueryChange.emit('')"
-          class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
-        >
-          <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-            <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z" />
-          </svg>
-        </button>
+      <button type="button" (click)="searchQueryChange.emit('')"
+        class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600">
+        <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+          <path
+            d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z" />
+        </svg>
+      </button>
       }
     </div>
   </div>
-  
+
   <!-- Scrollable Content -->
   <div class="flex-1 overflow-y-auto min-h-0" style="scrollbar-gutter: stable;">
     <ul class="divide-y divide-gray-200">
-    @if (isAdding()) {
+      @if (isAdding()) {
       <app-transaction-edit-row (save)="save.emit($event)" (cancel)="cancel.emit()"></app-transaction-edit-row>
-    }
-    @for (transaction of transactions(); track transaction.id) {
+      }
+      @for (transaction of transactions(); track transaction.id) {
       @if (isEditing(transaction.id)) {
-        <app-transaction-edit-row 
-          [initialState]="transaction"
-          (save)="handleUpdate($event)" 
-          (cancel)="cancelEdit()">
-        </app-transaction-edit-row>
+      <app-transaction-edit-row [initialState]="transaction" (save)="handleUpdate($event)" (cancel)="cancelEdit()">
+      </app-transaction-edit-row>
       } @else {
-        <li class="group py-3 hover:bg-gray-50 transition-colors duration-150 rounded relative">
-          <div class="flex items-start gap-3">
-            <!-- Left: Icon -->
-            <div class="flex-shrink-0">
-              <div [class]="'w-10 h-10 rounded-full flex items-center justify-center font-semibold text-sm ' + getTransactionTypePillClass(transaction.transactionType)">
-                {{ transaction.ticker.substring(0, 1) }}
-              </div>
+      <li class="group py-3 hover:bg-gray-50 transition-colors duration-150 rounded relative">
+        <div class="flex items-start gap-3">
+          <!-- Left: Icon -->
+          <div class="flex-shrink-0">
+            <div
+              [class]="'w-10 h-10 rounded-full flex items-center justify-center font-semibold text-sm ' + getTransactionTypePillClass(transaction.transactionType)">
+              {{ transaction.ticker.substring(0, 1) }}
             </div>
+          </div>
 
-            <!-- Middle: Stacked Content -->
-            <div class="flex-1 min-w-0">
-              <!-- Top Line: Asset Name (Bold) -->
-              <div class="font-medium text-black truncate mb-1">
-                {{ getCompanyName(transaction) }}
-              </div>
-              <!-- Bottom Line: Ticker • Type • Shares @ Price (Gray, Small) -->
-              <div class="text-xs text-gray-500 flex items-center gap-1 flex-wrap">
-                <span>{{ transaction.ticker }}</span>
-                <span>•</span>
-                <span [class]="getTransactionTypeLabelClass(transaction)">
-                  {{ getTransactionTypeLabel(transaction) }}
-                </span>
-                @if (transaction.transactionType === 'dividend') {
-                  <span>•</span>
-                  <span>{{ transaction.shares | number:'1.0-4' }} shares • Gross: {{ (transaction.sharePrice || 0) | currency:'EUR':'symbol':'1.2-2' }}/sh</span>
-                } @else if (transaction.transactionType === 'split') {
-                  <span>•</span>
-                  <span>{{ getSplitRatioDisplay(transaction) }}</span>
-                } @else {
-                  <span>•</span>
-                  <span>{{ transaction.shares | number:'1.0-4' }} shares @ {{ transaction.sharePrice | currency:'EUR':'symbol':'1.0-4' }}</span>
-                }
-              </div>
+          <!-- Middle: Stacked Content -->
+          <div class="flex-1 min-w-0">
+            <!-- Top Line: Asset Name (Bold) -->
+            <div class="font-medium text-black truncate mb-1">
+              {{ getCompanyName(transaction) }}
             </div>
+            <!-- Bottom Line: Ticker • Type • Shares @ Price (Gray, Small) -->
+            <div class="text-xs text-gray-500 flex items-center gap-1 flex-wrap">
+              <span>{{ transaction.ticker }}</span>
+              <span>•</span>
+              <span [class]="getTransactionTypeLabelClass(transaction)">
+                {{ getTransactionTypeLabel(transaction) }}
+              </span>
+              @if (transaction.transactionType === 'dividend') {
+              <span>•</span>
+              <span>{{ transaction.shares | number:'1.0-4' }} shares • Gross: {{ (transaction.sharePrice || 0) |
+                currency:'EUR':'symbol':'1.2-2' }}/sh</span>
+              } @else if (transaction.transactionType === 'split') {
+              <span>•</span>
+              <span>{{ getSplitRatioDisplay(transaction) }}</span>
+              } @else {
+              <span>•</span>
+              <span>{{ transaction.shares | number:'1.0-4' }} shares @ {{ transaction.sharePrice |
+                currency:'EUR':'symbol':'1.0-4' }}</span>
+              @if (transaction.transactionType === 'sell' && transaction.realizedPnL !== undefined &&
+              transaction.realizedPnLPct !== undefined) {
+              <span>•</span>
+              <span class="normal-case">Performance: <span
+                  [class]="transaction.realizedPnL >= 0 ? 'text-emerald-600 font-medium' : 'text-rose-600 font-medium'">{{
+                  transaction.realizedPnL >= 0 ? '+' : '' }}{{ transaction.realizedPnL | currency:'EUR':'symbol':'1.2-2'
+                  }} ({{ transaction.realizedPnLPct >= 0 ? '+' : '' }}{{ transaction.realizedPnLPct | number:'1.2-2'
+                  }}%)</span></span>
+              }
+              }
+            </div>
+          </div>
 
-            <!-- Right: Stacked Content -->
-            <div class="flex-shrink-0 text-right pr-12">
-              <!-- Top Line: Amount (Bold) -->
-              <div class="font-bold mb-1" [class]="{
+          <!-- Right: Stacked Content -->
+          <div class="flex-shrink-0 text-right pr-12">
+            <!-- Top Line: Amount (Bold) -->
+            <div class="font-bold mb-1" [class]="{
                 'text-red-600': transaction.transactionType === 'buy',
                 'text-green-600': transaction.transactionType === 'sell',
                 'text-purple-600': transaction.transactionType === 'dividend',
                 'text-gray-600': transaction.transactionType === 'split'
               }">
-                @if (transaction.transactionType === 'split') {
-                  —
-                } @else {
-                  {{ getValuePrefix(transaction.transactionType) }}{{ getTotalValue(transaction) | currency:'EUR':'symbol':'1.2-2' }}
-                }
-              </div>
-              <!-- Bottom Line: Date and Tax (for dividends) -->
-              <div class="text-xs text-gray-500">
-                @if (transaction.transactionType === 'dividend' && transaction.tax) {
-                  <div>{{ formatDate(transaction.date) }}</div>
-                  <div class="text-[10px]">(Tax: {{ transaction.tax | currency:'EUR':'symbol':'1.2-2' }})</div>
-                } @else {
-                  <div>{{ formatDate(transaction.date) }}</div>
-                  @if (transaction.transactionType === 'sell' && transaction.realizedPnL !== undefined && transaction.realizedPnLPct !== undefined) {
-                    <div class="text-[10px]" [class]="transaction.realizedPnL >= 0 ? 'text-emerald-600' : 'text-rose-600'">
-                      Sales P&L: {{ transaction.realizedPnL >= 0 ? '+' : '' }}{{ transaction.realizedPnL | currency:'EUR':'symbol':'1.2-2' }} ({{ transaction.realizedPnLPct >= 0 ? '+' : '' }}{{ transaction.realizedPnLPct | number:'1.2-2' }}%)
-                    </div>
-                  }
-                }
-              </div>
+              @if (transaction.transactionType === 'split') {
+              —
+              } @else {
+              {{ getValuePrefix(transaction.transactionType) }}{{ getTotalValue(transaction) |
+              currency:'EUR':'symbol':'1.2-2' }}
+              }
             </div>
+            <!-- Bottom Line: Date and Tax (for dividends) -->
+            <div class="text-xs text-gray-500">
+              @if (transaction.transactionType === 'dividend' && transaction.tax) {
+              <div>{{ formatDate(transaction.date) }}</div>
+              <div class="text-[10px]">(Tax: {{ transaction.tax | currency:'EUR':'symbol':'1.2-2' }})</div>
+              } @else {
+              <div>{{ formatDate(transaction.date) }}</div>
+              }
+            </div>
+          </div>
 
-            <!-- Action Buttons - Ghost Toolbar (visible on group-hover) -->
-            <div class="hidden group-hover:flex absolute right-3 top-1/2 -translate-y-1/2 bg-white shadow-sm rounded-full border border-gray-200 px-2 py-1 items-center gap-1 z-10">
-              <button 
-                (click)="startEdit(transaction)" 
-                class="text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded p-1 transition-colors duration-150">
-                <span class="sr-only">Edit</span>
-                <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                  <path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" />
-                  <path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" />
-                </svg>
-              </button>
-              <button 
-                (click)="handleDelete(transaction)" 
-                class="text-gray-400 hover:text-red-600 hover:bg-red-50 rounded p-1 transition-colors duration-150">
-                <span class="sr-only">Delete</span>
-                <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
-                </svg>
-              </button>
-            </div>
+          <!-- Action Buttons - Ghost Toolbar (visible on group-hover) -->
+          <div
+            class="hidden group-hover:flex absolute right-3 top-1/2 -translate-y-1/2 bg-white shadow-sm rounded-full border border-gray-200 px-2 py-1 items-center gap-1 z-10">
+            <button (click)="startEdit(transaction)"
+              class="text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded p-1 transition-colors duration-150">
+              <span class="sr-only">Edit</span>
+              <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" />
+                <path fill-rule="evenodd"
+                  d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"
+                  clip-rule="evenodd" />
+              </svg>
+            </button>
+            <button (click)="handleDelete(transaction)"
+              class="text-gray-400 hover:text-red-600 hover:bg-red-50 rounded p-1 transition-colors duration-150">
+              <span class="sr-only">Delete</span>
+              <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                  d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+              </svg>
+            </button>
           </div>
-        </li>
+        </div>
+      </li>
       }
-    } @empty {
+      } @empty {
       @if (!isAdding()) {
-        <li class="p-8 text-center">
-          <div class="flex flex-col items-center">
-            @if (searchQuery()) {
-              <svg class="w-16 h-16 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607z" />
-              </svg>
-              <h3 class="mt-4 text-xl font-semibold text-black">No transactions found</h3>
-              <p class="mt-2 text-base text-gray-600 max-w-md mx-auto">No transactions match your search query "{{ searchQuery() }}". Try a different search term.</p>
-            } @else {
-              <svg class="w-16 h-16 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18 9 11.25l4.306 4.306a11.95 11.95 0 0 1 5.814-5.518l2.74-1.22m0 0-5.94-2.281m5.94 2.28-2.28 5.941" />
-              </svg>
-              <h3 class="mt-4 text-xl font-semibold text-black">Your Investing Journey Begins!</h3>
-              <p class="mt-2 text-base text-gray-600 max-w-md mx-auto">This is the beginning of your journey as an investor. Start adding transactions and you will be able to see how your wealth starts to build in the Portfolio view.</p>
-            }
-          </div>
-        </li>
+      <li class="p-8 text-center">
+        <div class="flex flex-col items-center">
+          @if (searchQuery()) {
+          <svg class="w-16 h-16 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+            stroke-width="1.5" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607z" />
+          </svg>
+          <h3 class="mt-4 text-xl font-semibold text-black">No transactions found</h3>
+          <p class="mt-2 text-base text-gray-600 max-w-md mx-auto">No transactions match your search query "{{
+            searchQuery() }}". Try a different search term.</p>
+          } @else {
+          <svg class="w-16 h-16 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+            stroke-width="1.5" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M2.25 18 9 11.25l4.306 4.306a11.95 11.95 0 0 1 5.814-5.518l2.74-1.22m0 0-5.94-2.281m5.94 2.28-2.28 5.941" />
+          </svg>
+          <h3 class="mt-4 text-xl font-semibold text-black">Your Investing Journey Begins!</h3>
+          <p class="mt-2 text-base text-gray-600 max-w-md mx-auto">This is the beginning of your journey as an investor.
+            Start adding transactions and you will be able to see how your wealth starts to build in the Portfolio view.
+          </p>
+          }
+        </div>
+      </li>
       }
-    }
+      }
     </ul>
   </div>
 </div>

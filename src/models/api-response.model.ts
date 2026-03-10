@@ -13,6 +13,8 @@ export interface ApiTransaction {
   securityName?: string; // Company/security name (optional for backward compatibility)
   ticker?: string; // Ticker symbol (should be included in transactions endpoint response)
   securityType?: SecurityType;
+  realizedPnL?: number;
+  realizedPnLPct?: number;
 }
 
 // Backend API: PortfolioPositionDto
@@ -23,13 +25,13 @@ export interface ApiPortfolioPosition {
   totalInvested: number;
   totalShares: number;
   averageSharePrice: number;
-  
+
   // Security metadata (NEW)
   sector: string | null;
   industry: string | null;
   geography: string | null;
   marketCap: number | null;
-  
+
   // Allocation properties
   currentAllocationPercentage: number | null;
   targetAllocationPercentage: number; // Already a percentage (e.g., 4.48 for 4.48%)
@@ -37,11 +39,11 @@ export interface ApiPortfolioPosition {
   rebalancingAmount: number | null;
   rebalancingStatus: "Balanced" | "Overweight" | "Underweight";
   currentMarketValue: number | null;
-  
+
   // P&L properties (NEW)
   unrealizedPnL: number; // Unrealized profit/loss in currency
   unrealizedPnLPercentage: number; // Unrealized profit/loss as percentage
-  
+
   transactions: ApiTransaction[];
 }
 
@@ -73,7 +75,7 @@ export interface ApiPortfolioInsight {
   Metadata?: Record<string, any>;
   Severity?: "Info" | "Warning" | "Critical";
   ActionLabel?: string | null;
-  ActionPayload?: any | null; 
+  ActionPayload?: any | null;
   VisualContext?: ApiVisualContext | null; // Casing for VisualContext nested fields to be handled in mapper if needed
 }
 

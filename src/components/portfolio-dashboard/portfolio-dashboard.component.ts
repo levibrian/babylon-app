@@ -133,25 +133,6 @@ export class PortfolioDashboardComponent implements OnDestroy {
     return this.portfolioService.totalPnLPercentage();
   });
 
-  realizedPnL = computed(() => {
-    // Sum of realized P&L from all sell transactions
-    const transactions = this.transactions() || [];
-    return transactions
-      .filter(t => t.transactionType === 'sell' && t.realizedPnL !== undefined)
-      .reduce((sum, t) => sum + (t.realizedPnL || 0), 0);
-  });
-
-  realizedPnLPct = computed(() => {
-    // Average percentage of realized P&L across all sell transactions
-    const transactions = this.transactions() || [];
-    const soldList = transactions.filter(t => t.transactionType === 'sell' && t.realizedPnLPct !== undefined);
-    
-    if (soldList.length === 0) return 0;
-    
-    const sumPct = soldList.reduce((sum, t) => sum + (t.realizedPnLPct || 0), 0);
-    return sumPct / soldList.length;
-  });
-
   totalIncome = computed(() => {
     const transactions = this.transactions();
     return transactions
@@ -164,23 +145,23 @@ export class PortfolioDashboardComponent implements OnDestroy {
   estimatedMonthlyContribution = computed(() => {
     const transactions = this.transactions();
     const buyTransactions = transactions.filter(t => t.transactionType === 'buy');
-    
+
     if (buyTransactions.length === 0) return 0;
-    
+
     // Get transactions from last 6 months
     const sixMonthsAgo = new Date();
     sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
-    
+
     const recentBuys = buyTransactions.filter(t => {
       const txDate = new Date(t.date);
       return txDate >= sixMonthsAgo;
     });
-    
+
     if (recentBuys.length === 0) return 0;
-    
+
     // Calculate total invested in last 6 months
     const totalInvested = recentBuys.reduce((sum, t) => sum + t.totalAmount, 0);
-    
+
     // Average monthly contribution over 6 months
     return totalInvested / 6;
   });
@@ -208,7 +189,7 @@ export class PortfolioDashboardComponent implements OnDestroy {
           visualContext: {
             currentValue: item.currentAllocationPercentage,
             targetValue: item.targetAllocationPercentage,
-            projectedValue: item.targetAllocationPercentage, 
+            projectedValue: item.targetAllocationPercentage,
             format: 'Percent'
           }
         });
@@ -222,7 +203,7 @@ export class PortfolioDashboardComponent implements OnDestroy {
       const topHoldingPercentage = (topHolding.totalCost / totalValue) * 100;
 
       if (topHoldingPercentage > 25) {
-         localInsights.push({
+        localInsights.push({
           category: 'Risk',
           title: 'High Concentration Risk',
           message: `${topHolding.companyName} makes up ${topHoldingPercentage.toFixed(1)}% of your portfolio.`,
@@ -237,18 +218,18 @@ export class PortfolioDashboardComponent implements OnDestroy {
             projectedValue: null,
             format: 'Percent'
           }
-         });
+        });
       }
     }
 
     // Combine backend and local insights
     // Deduplicate based on message/title to avoid showing same thing twice if backend sends it later
     const allInsights = [...(backendInsights || []), ...localInsights];
-    
+
     // Sort by severity (Critical first)
     return allInsights.sort((a, b) => {
-        const severityScore = { 'Critical': 3, 'Warning': 2, 'Info': 1 };
-        return (severityScore[b.severity] || 0) - (severityScore[a.severity] || 0);
+      const severityScore = { 'Critical': 3, 'Warning': 2, 'Info': 1 };
+      return (severityScore[b.severity] || 0) - (severityScore[a.severity] || 0);
     });
   });
 
@@ -308,15 +289,15 @@ export class PortfolioDashboardComponent implements OnDestroy {
     }
 
     // Extract amount from metadata or actionPayload if available
-    const amount = insight.metadata?.amount || insight.actionPayload?.amount || 
-                   (insight.visualContext?.currentValue && insight.visualContext.format === 'Currency' 
-                     ? insight.visualContext.currentValue : null);
+    const amount = insight.metadata?.amount || insight.actionPayload?.amount ||
+      (insight.visualContext?.currentValue && insight.visualContext.format === 'Currency'
+        ? insight.visualContext.currentValue : null);
 
     if (insight.category === 'Efficiency') {
       // Rebalancing insights - determine if it's a buy or sell based on rebalancing status
       const isSell = portfolioItem.rebalancingStatus === 'Overweight';
       const transactionType = isSell ? 'sell' : 'buy';
-      
+
       // Navigate to transactions page with query params for pre-filling
       this.router.navigate(['/transactions'], {
         queryParams: {
@@ -359,7 +340,7 @@ export class PortfolioDashboardComponent implements OnDestroy {
         return typeValue === "MutualFund" ? "Mutual Fund" : typeValue;
       }
     }
-    
+
     // If it's a number (backward compatibility with old enum values), look it up
     if (typeof typeValue === 'number') {
       const typeNames: Record<number, string> = {
@@ -374,7 +355,7 @@ export class PortfolioDashboardComponent implements OnDestroy {
       };
       return typeNames[typeValue] || 'Stock';
     }
-    
+
     return 'Stock'; // Default fallback
   }
 
@@ -442,7 +423,7 @@ export class PortfolioDashboardComponent implements OnDestroy {
 
     const typeCount = uniqueTypes.size;
     let spreadScore = 0;
-    
+
     if (typeCount === 1) {
       spreadScore = 1;
       const typeName = this.getSecurityTypeName(Array.from(uniqueTypes)[0]);
@@ -488,11 +469,11 @@ export class PortfolioDashboardComponent implements OnDestroy {
     const items = this.portfolio();
     const totalValue = this.netWorth();
     if (items.length === 0 || totalValue === 0) return false;
-    
+
     const sortedByValue = [...items].sort((a, b) => b.totalCost - a.totalCost);
     const topHolding = sortedByValue[0];
     const topHoldingPercentage = (topHolding.totalCost / totalValue) * 100;
-    
+
     return topHoldingPercentage < 25;
   });
 

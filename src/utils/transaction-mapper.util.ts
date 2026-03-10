@@ -10,7 +10,7 @@ export function mapApiTransactionToTransaction(apiTransaction: ApiTransaction, f
   const date = new Date(apiTransaction.date * 1000).toISOString();
   // Convert transaction type from "Buy"/"Sell"/"Dividend"/"Split" to lowercase
   const transactionType = apiTransaction.transactionType.toLowerCase() as 'buy' | 'sell' | 'dividend' | 'split';
-  
+
   return {
     id: apiTransaction.id,
     ticker: apiTransaction.ticker || fallbackTicker || '',
@@ -23,6 +23,8 @@ export function mapApiTransactionToTransaction(apiTransaction: ApiTransaction, f
     tax: apiTransaction.tax,
     securityName: apiTransaction.securityName,
     securityType: apiTransaction.securityType,
+    realizedPnL: apiTransaction.realizedPnL,
+    realizedPnLPct: apiTransaction.realizedPnLPct,
   };
 }
 
@@ -62,7 +64,7 @@ export function mapToCreateTransactionRequest(
     'dividend': 2,
     'split': 3,
   };
-  
+
   // Convert ISO date string to DateOnly format (YYYY-MM-DD)
   let dateFormatted: string | null = null;
   if (transactionData.date) {
@@ -70,7 +72,7 @@ export function mapToCreateTransactionRequest(
     // Format as YYYY-MM-DD
     dateFormatted = dateObj.toISOString().split('T')[0];
   }
-  
+
   const request = {
     Ticker: transactionData.ticker,
     TransactionType: transactionTypeMap[transactionData.transactionType],
@@ -81,7 +83,7 @@ export function mapToCreateTransactionRequest(
     TotalAmount: transactionData.totalAmount, // Include totalAmount (required for dividends, always 0 for splits)
     Tax: transactionData.tax, // Typically 0 for splits
   };
-  
+
   return request;
 }
 
