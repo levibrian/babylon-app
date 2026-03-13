@@ -42,25 +42,12 @@ export class TransactionListComponent {
   });
 
   realizedPnLPct = computed(() => {
-    const txs = this.transactions() || [];
-    const soldList = txs.filter(t => t.transactionType === 'sell' && t.realizedPnL !== undefined);
+    const pnl = this.realizedPnL();
+    const invested = this.totalInvested();
 
-    if (soldList.length === 0) return 0;
+    if (invested === 0) return 0;
 
-    let totalRealizedPnL = 0;
-    let totalCostBasis = 0;
-
-    soldList.forEach(t => {
-      const pnl = t.realizedPnL || 0;
-      const costBasis = t.totalAmount - pnl;
-
-      totalRealizedPnL += pnl;
-      if (costBasis > 0) {
-        totalCostBasis += costBasis;
-      }
-    });
-
-    return totalCostBasis > 0 ? (totalRealizedPnL / totalCostBasis) * 100 : 0;
+    return (pnl / invested) * 100;
   });
 
   // Cash Edit State
