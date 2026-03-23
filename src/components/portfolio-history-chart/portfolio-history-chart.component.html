@@ -1,139 +1,55 @@
-<div class="flex flex-col gap-4 relative">
-  <!-- Chart Container -->
-  @if (chartPoints().length > 0) {
-    <div class="w-full overflow-x-auto relative">
-      <svg
-        #chartSvg
-        [attr.width]="width"
-        [attr.height]="height"
-        class="w-full h-auto"
-        viewBox="0 0 800 200"
-        preserveAspectRatio="xMidYMid meet"
-        (mousemove)="onChartMouseMove($event, chartSvg)"
-        (mouseleave)="onChartMouseLeave()">
-        
-        <!-- Gradient Definition -->
-        <defs>
-          <linearGradient id="areaGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" style="stop-color:#F3F4F6;stop-opacity:0.3" />
-            <stop offset="100%" style="stop-color:#F3F4F6;stop-opacity:0" />
-          </linearGradient>
-        </defs>
+<div class="flex flex-col gap-3">
 
-        <!-- Gradient Fill Area -->
-        <path
-          [attr.d]="svgAreaPath()"
-          fill="url(#areaGradient)"
-          stroke="none" />
-
-        <!-- Line -->
-        <polyline
-          [attr.points]="svgPath()"
-          fill="none"
-          stroke="#111827"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round" />
-
-        <!-- Interactive overlay (transparent rect to capture mouse events) -->
-        <rect
-          [attr.x]="padding.left"
-          [attr.y]="padding.top"
-          [attr.width]="width - padding.left - padding.right"
-          [attr.height]="height - padding.top - padding.bottom"
-          fill="transparent"
-          style="cursor: crosshair;" />
-
-        <!-- Vertical crosshair line (when hovering) -->
-        @if (activePoint(); as point) {
-          <line
-            [attr.x1]="point.x"
-            [attr.y1]="padding.top"
-            [attr.x2]="point.x"
-            [attr.y2]="height - padding.bottom"
-            stroke="#9CA3AF"
-            stroke-width="1"
-            stroke-dasharray="4,4"
-            opacity="0.5" />
-
-          <!-- Dot at intersection -->
-          <circle
-            [attr.cx]="point.x"
-            [attr.cy]="point.y"
-            r="4"
-            fill="#111827"
-            stroke="white"
-            stroke-width="2" />
-        }
-
-        <!-- X-Axis Labels -->
-        <text
-          [attr.x]="padding.left"
-          [attr.y]="height - padding.bottom + 20"
-          class="text-[10px] font-mono fill-gray-500"
-          text-anchor="start">
-          {{ startDateLabel() }}
-        </text>
-        <text
-          [attr.x]="width - padding.right"
-          [attr.y]="height - padding.bottom + 20"
-          class="text-[10px] font-mono fill-gray-500"
-          text-anchor="end">
-          {{ endDateLabel() }}
-        </text>
-
-        <!-- Y-Axis Labels -->
-        <text
-          [attr.x]="padding.left - 10"
-          [attr.y]="padding.top"
-          class="text-[10px] font-mono fill-gray-500"
-          text-anchor="end"
-          dominant-baseline="hanging">
-          {{ maxLabel() }}
-        </text>
-        <text
-          [attr.x]="padding.left - 10"
-          [attr.y]="height - padding.bottom"
-          class="text-[10px] font-mono fill-gray-500"
-          text-anchor="end"
-          dominant-baseline="auto">
-          {{ minLabel() }}
-        </text>
-      </svg>
-      
-      <!-- Range Selector Controls (Inside Chart, Bottom Center) -->
-      <div class="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-[-10px] pointer-events-auto">
-        <div class="bg-gray-50 rounded-full p-1 inline-flex gap-1">
-          @for (range of timeRanges; track range) {
-            <button
-              (click)="selectRange(range)"
-              class="px-3 py-1 text-xs font-mono transition-all duration-200 rounded-full"
-              [class]="selectedRange() === range 
-                ? 'bg-white shadow-sm text-gray-900 font-bold' 
-                : 'text-gray-400 hover:text-gray-600'">
-              {{ range }}
-            </button>
-          }
-        </div>
-      </div>
+  <!-- Timeframe Selector + Summary Badge -->
+  <div class="flex items-center justify-between">
+    <div class="bg-gray-50 rounded-full p-1 inline-flex gap-1">
+      @for (tf of timeframes; track tf) {
+        <button
+          (click)="activeTimeframe.set(tf)"
+          class="px-2 py-0.5 text-xs font-mono transition-all duration-200 rounded-full"
+          [class]="activeTimeframe() === tf
+            ? 'bg-white shadow-sm text-gray-900 font-bold'
+            : 'text-gray-400 hover:text-gray-600'">
+          {{ tf }}
+        </button>
+      }
     </div>
 
-    <!-- Tooltip Box (Fixed positioning to escape overflow container) -->
-    @if (activePoint(); as point) {
-      <div
-        class="fixed bg-gray-900 text-white rounded-md p-3 shadow-xl border border-gray-800 z-50 pointer-events-none whitespace-nowrap"
-        [style.left.px]="point.screenX"
-        [style.top.px]="point.screenY - 60"
-        [class.-translate-x-full]="isNearRightEdge()"
-        [class.translate-x-4]="!isNearRightEdge()"
-        [style.margin-left.px]="isNearRightEdge() ? -8 : 0">
-        <div class="text-lg font-mono font-bold">{{ formatTooltipCurrency(point.value) }}</div>
-        <div class="text-xs text-gray-400 mt-1">{{ formatTooltipDate(point.date) }}</div>
-      </div>
+    @if (summary(); as s) {
+      <span
+        class="text-xs font-mono px-2 py-0.5 rounded-full"
+        [class]="isPositive()
+          ? 'bg-green-50 text-green-700'
+          : 'bg-red-50 text-red-700'">
+        {{ isPositive() ? '+' : '' }}{{ s.valueChangePercentage | number:'1.2-2' }}%
+      </span>
     }
-  } @else {
-    <div class="flex items-center justify-center h-48 border border-gray-200 rounded-sm bg-gray-50">
-      <p class="text-xs font-mono text-gray-400">No transaction history available</p>
+  </div>
+
+  <!-- Chart -->
+  @if (isLoading()) {
+    <div class="flex items-center justify-center h-32 bg-gray-50 rounded-sm animate-pulse">
+      <span class="text-xs font-mono text-gray-400">Loading history...</span>
     </div>
+  } @else if (error()) {
+    <div class="flex items-center justify-center h-32 border border-red-200 rounded-sm bg-red-50">
+      <p class="text-xs font-mono text-red-500">Failed to load portfolio history</p>
+    </div>
+  } @else if (filteredSnapshots().length === 0) {
+    <div class="flex items-center justify-center h-32 border border-gray-200 rounded-sm bg-gray-50">
+      <p class="text-xs font-mono text-gray-400">No data for this period</p>
+    </div>
+  } @else {
+    <apx-chart
+      [series]="chartSeries()"
+      [chart]="chartConfig"
+      [xaxis]="xAxisConfig()"
+      [yaxis]="yAxisConfig"
+      [stroke]="strokeConfig"
+      [tooltip]="tooltipConfig"
+      [grid]="gridConfig"
+      [dataLabels]="dataLabelsConfig">
+    </apx-chart>
   }
+
 </div>

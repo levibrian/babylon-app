@@ -2,7 +2,6 @@ import { Component, ChangeDetectionStrategy, input, computed, signal } from '@an
 import { CommonModule, CurrencyPipe } from '@angular/common';
 import { Transaction } from '../../models/transaction.model';
 import { PortfolioItem } from '../../models/portfolio.model';
-import { PortfolioHistoryChartComponent } from '../portfolio-history-chart/portfolio-history-chart.component';
 import { MilestoneTrackerComponent } from '../milestone-tracker/milestone-tracker.component';
 
 
@@ -22,7 +21,7 @@ interface CombinedMonthlyData {
 @Component({
   selector: 'app-transactions-dashboard',
   templateUrl: './transactions-dashboard.component.html',
-  imports: [CommonModule, CurrencyPipe, PortfolioHistoryChartComponent, MilestoneTrackerComponent],
+  imports: [CommonModule, CurrencyPipe, MilestoneTrackerComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TransactionsDashboardComponent {

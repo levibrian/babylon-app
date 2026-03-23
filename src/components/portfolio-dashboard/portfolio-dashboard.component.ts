@@ -6,6 +6,7 @@ import { Transaction, NewTransactionData } from '../../models/transaction.model'
 import { PortfolioService } from '../../services/portfolio.service';
 import { SecurityType } from '../../models/security.model';
 import { RebalancingWidgetComponent } from '../common/rebalancing-widget';
+import { PortfolioHistoryChartComponent } from '../portfolio-history-chart/portfolio-history-chart.component';
 
 interface AllocationSegment {
   label: string;
@@ -31,7 +32,7 @@ interface HealthScore {
 @Component({
   selector: 'app-portfolio-dashboard',
   templateUrl: './portfolio-dashboard.component.html',
-  imports: [CommonModule, CurrencyPipe, RebalancingWidgetComponent],
+  imports: [CommonModule, CurrencyPipe, RebalancingWidgetComponent, PortfolioHistoryChartComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PortfolioDashboardComponent implements OnDestroy {

@@ -4,6 +4,7 @@ import { StrategyPanelComponent } from '../strategy-panel/strategy-panel.compone
 import { PortfolioDashboardComponent } from '../portfolio-dashboard/portfolio-dashboard.component';
 import { PortfolioService } from '../../services/portfolio.service';
 import { TransactionService } from '../../services/transaction.service';
+import { PortfolioHistoryService } from '../../services/portfolio-history.service';
 import { PortfolioItem, PortfolioInsight } from '../../models/portfolio.model';
 import { Transaction } from '../../models/transaction.model';
 import { RouterLink } from '@angular/router';
@@ -21,6 +22,7 @@ import { UserProfileComponent } from '../user-profile/user-profile.component';
 export class WealthPageComponent implements OnDestroy {
   portfolioService = inject(PortfolioService);
   transactionService = inject(TransactionService);
+  private portfolioHistoryService = inject(PortfolioHistoryService);
   
   portfolio: Signal<PortfolioItem[]> = this.portfolioService.portfolio;
   transactions: Signal<Transaction[]> = this.transactionService.transactions;
@@ -39,6 +41,8 @@ export class WealthPageComponent implements OnDestroy {
   activeView = signal<'positions' | 'strategy'>('positions');
 
   constructor() {
+    this.portfolioHistoryService.loadHistory();
+
     effect(() => {
       // This effect runs whenever the insights signal changes.
       // It resets the carousel to the first slide and restarts the auto-play timer.
