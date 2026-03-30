@@ -17,6 +17,7 @@
     "@angular/forms": "20.3.16",
     "@angular/platform-browser": "20.3.16",
     "@angular/router": "20.3.16",
+    "@vercel/analytics": "^2.0.1",
     "apexcharts": "^5.10.4",
     "lucide-angular": "^0.554.0",
     "ng-apexcharts": "^2.3.0",
