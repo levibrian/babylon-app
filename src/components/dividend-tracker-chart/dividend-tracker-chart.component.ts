@@ -72,7 +72,7 @@ export class DividendTrackerChartComponent {
   protected readonly strokeConfig: ApexStroke = {
     show: true,
     width: [0, 2],
-    colors: ['transparent', '#10B981'],
+    colors: ['transparent', '#7B248D'],
     dashArray: [0, 4],
   };
 
@@ -115,14 +115,8 @@ export class DividendTrackerChartComponent {
   protected readonly dataLabelsConfig: ApexDataLabels = { enabled: false };
 
   protected readonly legendConfig: ApexLegend = {
-    show: true,
-    position: 'top',
-    horizontalAlign: 'right',
-    fontSize: '11px',
-    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
-    labels: { colors: '#6B7280' },
-    markers: { size: 6 },
+    show: false,
   };
 
-  protected readonly colors = ['#10B981', '#10B981'];
+  protected readonly colors = ['#7B248D', '#7B248D'];
 }

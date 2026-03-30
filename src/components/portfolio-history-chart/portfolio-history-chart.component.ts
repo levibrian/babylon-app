@@ -105,4 +105,6 @@ export class PortfolioHistoryChartComponent {
   };
 
   protected readonly dataLabelsConfig: ApexDataLabels = { enabled: false };
+
+  protected readonly colors = ['#7B248D'];
 }
