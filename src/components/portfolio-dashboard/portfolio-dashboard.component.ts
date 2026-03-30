@@ -4,9 +4,11 @@ import { Router } from '@angular/router';
 import { PortfolioItem, PortfolioInsight } from '../../models/portfolio.model';
 import { Transaction, NewTransactionData } from '../../models/transaction.model';
 import { PortfolioService } from '../../services/portfolio.service';
+import { DividendService } from '../../services/dividend.service';
 import { SecurityType } from '../../models/security.model';
 import { RebalancingWidgetComponent } from '../common/rebalancing-widget';
 import { PortfolioHistoryChartComponent } from '../portfolio-history-chart/portfolio-history-chart.component';
+import { DividendTrackerChartComponent } from '../dividend-tracker-chart/dividend-tracker-chart.component';
 
 interface AllocationSegment {
   label: string;
@@ -32,14 +34,18 @@ interface HealthScore {
 @Component({
   selector: 'app-portfolio-dashboard',
   templateUrl: './portfolio-dashboard.component.html',
-  imports: [CommonModule, CurrencyPipe, RebalancingWidgetComponent, PortfolioHistoryChartComponent],
+  imports: [CommonModule, CurrencyPipe, RebalancingWidgetComponent, PortfolioHistoryChartComponent, DividendTrackerChartComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PortfolioDashboardComponent implements OnDestroy {
   portfolio = input.required<PortfolioItem[]>();
   transactions = input.required<Transaction[]>();
   private portfolioService = inject(PortfolioService);
+  private dividendService = inject(DividendService);
   private router = inject(Router);
+
+  readonly dividendPaid = computed(() => this.dividendService.dividendTracker()?.paid ?? []);
+  readonly dividendProjected = computed(() => this.dividendService.dividendTracker()?.projected ?? []);
 
   // Carousel state
   currentInsightIndex = signal(0);

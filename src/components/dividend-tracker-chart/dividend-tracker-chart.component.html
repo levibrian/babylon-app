@@ -1,0 +1,40 @@
+<div class="flex flex-col gap-3">
+
+  <!-- Header -->
+  <div class="flex items-center justify-between">
+    <div class="text-xs font-bold text-gray-400 uppercase tracking-widest">Dividend Income</div>
+    <div class="flex items-center gap-3 text-xs font-mono text-gray-400">
+      <span class="flex items-center gap-1">
+        <span class="inline-block w-3 h-2 rounded-sm bg-emerald-500"></span>
+        Received
+      </span>
+      <span class="flex items-center gap-1">
+        <span class="inline-block w-3 h-2 rounded-sm border-2 border-dashed border-emerald-500 bg-emerald-50"></span>
+        Projected
+      </span>
+    </div>
+  </div>
+
+  <!-- Chart -->
+  @if (paid().length === 0 && projected().length === 0) {
+    <div class="flex items-center justify-center h-32 border border-gray-200 rounded-sm bg-gray-50">
+      <p class="text-xs font-mono text-gray-400">No dividend data available</p>
+    </div>
+  } @else {
+    <apx-chart
+      [series]="chartSeries()"
+      [chart]="chartConfig"
+      [plotOptions]="plotOptions"
+      [fill]="fillConfig"
+      [stroke]="strokeConfig"
+      [xaxis]="xAxisConfig()"
+      [yaxis]="yAxisConfig"
+      [tooltip]="tooltipConfig"
+      [grid]="gridConfig"
+      [dataLabels]="dataLabelsConfig"
+      [legend]="legendConfig"
+      [colors]="colors">
+    </apx-chart>
+  }
+
+</div>
