@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" style="height: 100%;">
+<html lang="en" data-theme="dark" style="height: 100%;">
 <head>
   <meta charset="utf-g">
   <title>Babylon</title>
@@ -15,10 +15,49 @@
       theme: {
         extend: {
           fontFamily: {
-            // Override default 'sans' to use JetBrains Mono
-            sans: ['"JetBrains Mono"', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'monospace'],
-            // Keep a dedicated 'mono' stack
+            // Inter for UI text; Mono reserved for financial data
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+            // JetBrains Mono for prices, percentages, P&L, dates, IDs
             mono: ['"JetBrains Mono"', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'monospace'],
+          },
+          colors: {
+            // Babylon design tokens — CSS custom properties from @babylon/tokens
+            accent: 'var(--color-accent)',
+            'accent-hover': 'var(--color-accent-hover)',
+            gain: 'var(--color-gain)',
+            loss: 'var(--color-loss)',
+            warning: 'var(--color-warning)',
+            info: 'var(--color-info)',
+            bg: {
+              base: 'var(--color-bg-base)',
+              surface: 'var(--color-bg-surface)',
+              elevated: 'var(--color-bg-elevated)',
+            },
+            text: {
+              primary: 'var(--color-text-primary)',
+              secondary: 'var(--color-text-secondary)',
+              muted: 'var(--color-text-muted)',
+              ghost: 'var(--color-text-ghost)',
+            },
+            border: {
+              DEFAULT: 'var(--color-border)',
+              strong: 'var(--color-border-strong)',
+            },
+          },
+          borderRadius: {
+            sm: 'var(--radius-sm)',
+            md: 'var(--radius-md)',
+            lg: 'var(--radius-lg)',
+          },
+          spacing: {
+            1: 'var(--space-1)',
+            2: 'var(--space-2)',
+            3: 'var(--space-3)',
+            4: 'var(--space-4)',
+            6: 'var(--space-6)',
+            8: 'var(--space-8)',
+            12: 'var(--space-12)',
+            16: 'var(--space-16)',
           },
         },
       },
