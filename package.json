@@ -9,7 +9,7 @@
     "preview": "ng serve --configuration=production"
   },
   "dependencies": {
-    "@babylon/tokens": "file:../babylon-tokens",
+    "@babylon/tokens": "github:levibrian/babylon-tokens",
     "@abacritt/angularx-social-login": "^2.5.1",
     "@angular/animations": "20.3.16",
     "@angular/common": "20.3.16",
