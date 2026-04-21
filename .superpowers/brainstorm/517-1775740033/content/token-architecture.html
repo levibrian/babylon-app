@@ -1,0 +1,121 @@
+<h2>Token Architecture — Single Source of Truth</h2>
+<p class="subtitle">How tokens flow from Figma to both platforms. Pick the pipeline that fits your team.</p>
+
+<div class="cards">
+
+  <div class="card" data-choice="figma-variables-manual" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#0D0D0D;padding:20px;font-family:'Inter',system-ui,sans-serif;border-bottom:1px solid rgba(255,255,255,0.07)">
+      <div style="display:flex;flex-direction:column;gap:8px;font-size:12px">
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="width:28px;height:28px;border-radius:6px;background:#7B2FBE;display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff;font-weight:700;flex-shrink:0">Fig</div>
+          <div style="color:#fff;font-weight:600">Figma Variables</div>
+          <div style="font-size:10px;color:#525252;background:#1A1A1A;padding:2px 6px;border-radius:4px">dark + light modes</div>
+        </div>
+        <div style="padding-left:14px;border-left:1px dashed rgba(255,255,255,0.1);margin-left:13px">
+          <div style="color:#525252;font-size:11px;padding:4px 0">↓ manual export (copy values)</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="width:28px;height:28px;border-radius:6px;background:#1A1A1A;border:1px solid rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;font-size:10px;color:#A3A3A3;flex-shrink:0">CSS</div>
+          <div style="color:#fff;font-weight:600">tokens.css</div>
+          <div style="font-size:10px;color:#525252;background:#1A1A1A;padding:2px 6px;border-radius:4px">shared git file</div>
+        </div>
+        <div style="padding-left:14px;border-left:1px dashed rgba(255,255,255,0.1);margin-left:13px;display:flex;gap:16px">
+          <div style="color:#525252;font-size:11px;padding:4px 0">↓ import</div>
+          <div style="color:#525252;font-size:11px;padding:4px 0">↓ import</div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <div style="flex:1;background:#1A1A1A;border:1px solid rgba(255,255,255,0.08);border-radius:6px;padding:8px;text-align:center">
+            <div style="font-size:10px;color:#A3A3A3;font-weight:600">bebabylon-ui</div>
+            <div style="font-size:9px;color:#525252;margin-top:2px">Vite / vanilla</div>
+          </div>
+          <div style="flex:1;background:#1A1A1A;border:1px solid rgba(255,255,255,0.08);border-radius:6px;padding:8px;text-align:center">
+            <div style="font-size:10px;color:#A3A3A3;font-weight:600">babylon-app</div>
+            <div style="font-size:9px;color:#525252;margin-top:2px">Angular</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A — Figma Variables → Shared CSS file</h3>
+      <p>Define tokens in Figma Variables (dark/light modes built-in). Manually copy to a shared <code>tokens.css</code> committed to git. Both repos import it. Simple, no extra tooling. Manual sync step when tokens change.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="tokens-studio" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#0D0D0D;padding:20px;font-family:'Inter',system-ui,sans-serif;border-bottom:1px solid rgba(255,255,255,0.07)">
+      <div style="display:flex;flex-direction:column;gap:8px;font-size:12px">
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="width:28px;height:28px;border-radius:6px;background:#7B2FBE;display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff;font-weight:700;flex-shrink:0">Fig</div>
+          <div style="color:#fff;font-weight:600">Figma Variables</div>
+        </div>
+        <div style="padding-left:14px;border-left:1px dashed rgba(255,255,255,0.1);margin-left:13px">
+          <div style="color:#525252;font-size:11px;padding:4px 0">↓ Variables to JSON plugin</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="width:28px;height:28px;border-radius:6px;background:#1A1A1A;border:1px solid rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;font-size:9px;color:#A3A3A3;flex-shrink:0">JSON</div>
+          <div style="color:#fff;font-weight:600">tokens.json</div>
+          <div style="font-size:10px;color:#10B981;background:rgba(16,185,129,0.1);padding:2px 6px;border-radius:4px">auto-generated</div>
+        </div>
+        <div style="padding-left:14px;border-left:1px dashed rgba(255,255,255,0.1);margin-left:13px">
+          <div style="color:#525252;font-size:11px;padding:4px 0">↓ Style Dictionary transform</div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <div style="flex:1;background:#1A1A1A;border:1px solid rgba(255,255,255,0.08);border-radius:6px;padding:8px;text-align:center">
+            <div style="font-size:10px;color:#A3A3A3;font-weight:600">tokens.css</div>
+            <div style="font-size:9px;color:#525252;margin-top:2px">CSS variables</div>
+          </div>
+          <div style="flex:1;background:#1A1A1A;border:1px solid rgba(255,255,255,0.08);border-radius:6px;padding:8px;text-align:center">
+            <div style="font-size:10px;color:#A3A3A3;font-weight:600">tailwind.config</div>
+            <div style="font-size:9px;color:#525252;margin-top:2px">Tailwind tokens</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B — Figma Variables → JSON → Style Dictionary</h3>
+      <p>Export Figma Variables to <code>tokens.json</code> via a plugin. Style Dictionary transforms it to CSS variables AND Tailwind config simultaneously. Both repos always in sync. Automated — change in Figma, run one command, done.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="babylon-tokens-package" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#0D0D0D;padding:20px;font-family:'Inter',system-ui,sans-serif;border-bottom:1px solid rgba(255,255,255,0.07)">
+      <div style="display:flex;flex-direction:column;gap:8px;font-size:12px">
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="width:28px;height:28px;border-radius:6px;background:#7B2FBE;display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff;font-weight:700;flex-shrink:0">Fig</div>
+          <div style="color:#fff;font-weight:600">Figma Variables</div>
+        </div>
+        <div style="padding-left:14px;border-left:1px dashed rgba(255,255,255,0.1);margin-left:13px">
+          <div style="color:#525252;font-size:11px;padding:4px 0">↓ plugin export</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="width:28px;height:28px;border-radius:6px;background:#1A1A1A;border:1px solid rgba(123,47,190,0.4);display:flex;align-items:center;justify-content:center;font-size:9px;color:#9D4EDD;flex-shrink:0">pkg</div>
+          <div style="color:#fff;font-weight:600">babylon-tokens</div>
+          <div style="font-size:10px;color:#9D4EDD;background:rgba(123,47,190,0.15);padding:2px 6px;border-radius:4px">new repo</div>
+        </div>
+        <div style="padding-left:14px;border-left:1px dashed rgba(255,255,255,0.1);margin-left:13px">
+          <div style="color:#525252;font-size:11px;padding:4px 0">↓ npm install @babylon/tokens</div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <div style="flex:1;background:#1A1A1A;border:1px solid rgba(255,255,255,0.08);border-radius:6px;padding:8px;text-align:center">
+            <div style="font-size:10px;color:#A3A3A3;font-weight:600">bebabylon-ui</div>
+          </div>
+          <div style="flex:1;background:#1A1A1A;border:1px solid rgba(255,255,255,0.08);border-radius:6px;padding:8px;text-align:center">
+            <div style="font-size:10px;color:#A3A3A3;font-weight:600">babylon-app</div>
+          </div>
+          <div style="flex:1;background:#1A1A1A;border:1px solid rgba(255,255,255,0.08);border-radius:6px;padding:8px;text-align:center">
+            <div style="font-size:10px;color:#A3A3A3;font-weight:600">future apps</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>C — Dedicated <code>babylon-tokens</code> package</h3>
+      <p>Tokens live in their own repo as an npm package. Every platform installs <code>@babylon/tokens</code>. Versioned releases — update at will without breaking consumers. Most scalable, most overhead. Right choice if you add a mobile app or third platform.</p>
+    </div>
+  </div>
+
+</div>
+
+<div class="section" style="margin-top:16px">
+  <p class="subtitle" style="font-size:12px"><strong>My recommendation: B.</strong> Style Dictionary is the industry standard for this exact problem. One JSON file is the source of truth. Figma Variables + a free plugin handles the export. You get CSS variables for bebabylon-ui and Tailwind config for babylon-app from the same source, automatically.</p>
+</div>

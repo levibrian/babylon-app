@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Font Comparison</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #080808; color: #fff; padding: 48px; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; }
+  .col { padding: 40px; }
+  .col-label { font-size: 10px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: #333; margin-bottom: 36px; }
+
+  /* INTER SIDE */
+  .inter { font-family: 'Inter', sans-serif; }
+  /* MONO SIDE */
+  .mono { font-family: 'JetBrains Mono', monospace; }
+
+  .col + .col { border-left: 1px solid rgba(255,255,255,0.05); }
+
+  .block { margin-bottom: 36px; }
+
+  /* Shared visual tokens */
+  .stat-card { background: #101010; border-radius: 10px; padding: 20px 22px; margin-bottom: 8px; }
+  .stat-lbl { font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #333; margin-bottom: 10px; }
+  .stat-val { font-size: 28px; font-weight: 700; color: #fff; letter-spacing: -0.02em; font-family: 'JetBrains Mono', monospace; font-variant-numeric: tabular-nums; }
+  .stat-delta { font-size: 12px; margin-top: 5px; color: #10B981; font-family: 'JetBrains Mono', monospace; }
+
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 6px; font-size: 13px; color: #333; margin-bottom: 2px; }
+  .nav-item.active { color: #fff; background: rgba(123,47,190,0.12); }
+  .nav-icon { width: 15px; height: 15px; border-radius: 3px; background: currentColor; opacity: 0.5; flex-shrink: 0; }
+  .nav-item.active .nav-icon { opacity: 1; background: #9D4EDD; }
+
+  .insight { display: flex; gap: 14px; padding: 14px 0; }
+  .insight-strip { width: 2px; border-radius: 2px; background: rgba(245,158,11,0.5); flex-shrink: 0; min-height: 36px; align-self: stretch; }
+  .insight-text { font-size: 13px; color: #525252; line-height: 1.55; }
+
+  .trow { display: grid; grid-template-columns: 2fr 1fr 1fr; padding: 12px 0; }
+  .trow:hover { background: rgba(255,255,255,0.02); }
+  .thead { display: grid; grid-template-columns: 2fr 1fr 1fr; padding: 0 0 8px; }
+  .thead span { font-size: 10px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #2E2E2E; }
+  .thead span:not(:first-child) { text-align: right; }
+  .ticker-name { font-size: 13px; font-weight: 600; color: #fff; }
+  .ticker-sub { font-size: 11px; color: #333; margin-top: 2px; }
+  .tval { font-size: 13px; font-weight: 500; text-align: right; font-family: 'JetBrains Mono', monospace; font-variant-numeric: tabular-nums; color: #A3A3A3; }
+  .tval.pos { color: #10B981; }
+
+  .btn { display: inline-flex; align-items: center; padding: 9px 18px; border-radius: 6px; font-size: 13px; font-weight: 500; border: none; cursor: pointer; margin-right: 8px; }
+  .btn-primary { background: #7B2FBE; color: #fff; }
+  .btn-ghost { background: rgba(255,255,255,0.05); color: #A3A3A3; }
+
+  .heading { font-size: 22px; font-weight: 700; letter-spacing: -0.025em; color: #fff; margin-bottom: 6px; }
+  .body-text { font-size: 13px; color: #525252; line-height: 1.6; max-width: 320px; }
+</style>
+</head>
+<body>
+
+<div class="grid">
+
+  <!-- INTER -->
+  <div class="col inter">
+    <div class="col-label">A — Inter (current choice)</div>
+
+    <div class="block">
+      <div class="heading">Portfolio Overview</div>
+      <div class="body-text">Your portfolio has grown by 12.4% this quarter. Three positions are currently outside their target allocation.</div>
+    </div>
+
+    <div class="block">
+      <div class="stat-card">
+        <div class="stat-lbl">Portfolio Value</div>
+        <div class="stat-val">$124,830.00</div>
+        <div class="stat-delta">+$2,840 · +2.4% today</div>
+      </div>
+    </div>
+
+    <div class="block">
+      <div class="nav-item active"><div class="nav-icon"></div>Portfolio</div>
+      <div class="nav-item"><div class="nav-icon"></div>Transactions</div>
+      <div class="nav-item"><div class="nav-icon"></div>Analytics</div>
+    </div>
+
+    <div class="block">
+      <div class="thead"><span>Security</span><span>Value</span><span>Return</span></div>
+      <div class="trow"><div><div class="ticker-name">AAPL</div><div class="ticker-sub">Apple Inc.</div></div><span class="tval">$21,840</span><span class="tval pos">+20.0%</span></div>
+      <div class="trow"><div><div class="ticker-name">MSFT</div><div class="ticker-sub">Microsoft Corp.</div></div><span class="tval">$28,100</span><span class="tval pos">+27.7%</span></div>
+      <div class="trow"><div><div class="ticker-name">NVDA</div><div class="ticker-sub">NVIDIA Corp.</div></div><span class="tval">$12,520</span><span class="tval" style="color:#F43F5E">−10.6%</span></div>
+    </div>
+
+    <div class="block">
+      <div class="insight">
+        <div class="insight-strip"></div>
+        <div class="insight-text">MSFT is 8.2% overweight. Consider rebalancing before end of month.</div>
+      </div>
+    </div>
+
+    <div class="block">
+      <button class="btn btn-primary inter" style="font-family:'Inter',sans-serif">Add Transaction</button>
+      <button class="btn btn-ghost inter" style="font-family:'Inter',sans-serif">Cancel</button>
+    </div>
+  </div>
+
+  <!-- JETBRAINS MONO -->
+  <div class="col mono">
+    <div class="col-label">B — JetBrains Mono everywhere</div>
+
+    <div class="block">
+      <div class="heading" style="font-family:'JetBrains Mono',monospace;letter-spacing:-0.03em">Portfolio Overview</div>
+      <div class="body-text" style="font-family:'JetBrains Mono',monospace;letter-spacing:-0.01em">Your portfolio has grown by 12.4% this quarter. Three positions are currently outside their target allocation.</div>
+    </div>
+
+    <div class="block">
+      <div class="stat-card">
+        <div class="stat-lbl" style="font-family:'JetBrains Mono',monospace">Portfolio Value</div>
+        <div class="stat-val">$124,830.00</div>
+        <div class="stat-delta">+$2,840 · +2.4% today</div>
+      </div>
+    </div>
+
+    <div class="block">
+      <div class="nav-item active" style="font-family:'JetBrains Mono',monospace"><div class="nav-icon"></div>Portfolio</div>
+      <div class="nav-item" style="font-family:'JetBrains Mono',monospace"><div class="nav-icon"></div>Transactions</div>
+      <div class="nav-item" style="font-family:'JetBrains Mono',monospace"><div class="nav-icon"></div>Analytics</div>
+    </div>
+
+    <div class="block">
+      <div class="thead" style="font-family:'JetBrains Mono',monospace"><span>Security</span><span>Value</span><span>Return</span></div>
+      <div class="trow"><div><div class="ticker-name" style="font-family:'JetBrains Mono',monospace">AAPL</div><div class="ticker-sub" style="font-family:'JetBrains Mono',monospace">Apple Inc.</div></div><span class="tval">$21,840</span><span class="tval pos">+20.0%</span></div>
+      <div class="trow"><div><div class="ticker-name" style="font-family:'JetBrains Mono',monospace">MSFT</div><div class="ticker-sub" style="font-family:'JetBrains Mono',monospace">Microsoft Corp.</div></div><span class="tval">$28,100</span><span class="tval pos">+27.7%</span></div>
+      <div class="trow"><div><div class="ticker-name" style="font-family:'JetBrains Mono',monospace">NVDA</div><div class="ticker-sub" style="font-family:'JetBrains Mono',monospace">NVIDIA Corp.</div></div><span class="tval">$12,520</span><span class="tval" style="color:#F43F5E">−10.6%</span></div>
+    </div>
+
+    <div class="block">
+      <div class="insight">
+        <div class="insight-strip"></div>
+        <div class="insight-text" style="font-family:'JetBrains Mono',monospace;letter-spacing:-0.01em">MSFT is 8.2% overweight. Consider rebalancing before end of month.</div>
+      </div>
+    </div>
+
+    <div class="block">
+      <button class="btn btn-primary" style="font-family:'JetBrains Mono',monospace">Add Transaction</button>
+      <button class="btn btn-ghost" style="font-family:'JetBrains Mono',monospace">Cancel</button>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
