@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SPEC-003 · Task 5 — Portfolio Hero</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:            #08080A;
+  --surface:       #0E0E12;
+  --raised:        #141418;
+  --hover:         #17171C;
+  --accent:        #7B2FBE;
+  --accent-dim:    rgba(123,47,190,0.12);
+  --accent-border: rgba(123,47,190,0.3);
+  --accent-text:   rgba(187,148,230,0.9);
+  --border:        rgba(255,255,255,0.05);
+  --border-mid:    rgba(255,255,255,0.09);
+  --text:          #EEEEF2;
+  --muted:         #52525F;
+  --mid:           #8585A0;
+  --positive:      #27C97A;
+  --negative:      #E8524A;
+  --sidebar-w:     220px;
+  --sidebar-col-w: 60px;
+  --topbar-h:      54px;
+  --motion:        200ms ease-out;
+  --motion-drawer: 220ms cubic-bezier(0.16,1,0.3,1);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;display:flex;overflow:hidden}
+
+/* ── Shell ── */
+.shell{display:flex;width:100%;height:100vh}
+
+/* ── Sidebar ── */
+.sidebar{width:var(--sidebar-w);height:100vh;position:relative;flex-shrink:0;transition:width var(--motion);overflow:visible;z-index:10}
+.sidebar.collapsed{width:var(--sidebar-col-w)}
+.sidebar-inner{width:100%;height:100%;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+.sidebar-brand{display:flex;align-items:center;padding:0 16px;height:58px;border-bottom:1px solid var(--border);flex-shrink:0;overflow:hidden;position:relative}
+.brand-wordmark{font-size:13px;font-weight:300;letter-spacing:0.22em;text-transform:uppercase;color:var(--text);white-space:nowrap;opacity:1;transition:opacity var(--motion)}
+.brand-letter{font-size:13px;font-weight:300;letter-spacing:0.1em;text-transform:uppercase;color:var(--text);opacity:0;position:absolute;transition:opacity var(--motion)}
+.sidebar.collapsed .brand-wordmark{opacity:0;pointer-events:none}
+.sidebar.collapsed .brand-letter{opacity:1;position:static}
+.sidebar-nav{flex:1;padding:10px 8px;display:flex;flex-direction:column;gap:1px;overflow:hidden}
+.nav-item{display:flex;align-items:center;gap:10px;padding:0 10px;height:38px;border-radius:8px;cursor:pointer;position:relative;transition:background var(--motion);overflow:hidden;white-space:nowrap;user-select:none;flex-shrink:0}
+.nav-item:hover{background:var(--hover)}
+.nav-item.active{background:rgba(123,47,190,0.08)}
+.nav-item.active::before{content:'';position:absolute;left:0;top:7px;bottom:7px;width:2px;background:var(--accent);border-radius:0 2px 2px 0}
+.nav-icon{width:20px;height:20px;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:var(--muted);transition:color var(--motion)}
+.nav-item.active .nav-icon{color:var(--accent)}
+.nav-item:hover .nav-icon{color:var(--mid)}
+.nav-label{font-size:13px;font-weight:450;color:var(--muted);letter-spacing:-0.01em;white-space:nowrap;opacity:1;transition:opacity var(--motion),color var(--motion)}
+.nav-item.active .nav-label{color:var(--text);font-weight:500}
+.nav-item:hover .nav-label{color:var(--mid)}
+.sidebar.collapsed .nav-label{opacity:0;pointer-events:none}
+.sidebar-divider{height:1px;background:var(--border);margin:0 8px;flex-shrink:0}
+.sidebar-bottom{padding:8px 8px 14px;display:flex;flex-direction:column;gap:1px;flex-shrink:0}
+.user-item{display:flex;align-items:center;gap:10px;padding:0 10px;height:42px;border-radius:8px;cursor:pointer;overflow:hidden;white-space:nowrap;transition:background var(--motion);flex-shrink:0}
+.user-item:hover{background:var(--hover)}
+.avatar{width:26px;height:26px;border-radius:50%;background:linear-gradient(140deg,#5A1A9C,#8B3FCC);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;color:rgba(255,255,255,.9)}
+.user-info{display:flex;flex-direction:column;gap:1px;min-width:0;opacity:1;transition:opacity var(--motion)}
+.sidebar.collapsed .user-info{opacity:0;pointer-events:none}
+.user-name{font-size:12.5px;font-weight:500;color:var(--text);letter-spacing:-0.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.user-email{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.collapse-btn{position:absolute;right:-11px;top:50%;transform:translateY(-50%);width:22px;height:22px;border-radius:50%;background:var(--raised);border:1px solid var(--border);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--muted);transition:background var(--motion),color var(--motion);z-index:20;outline:none}
+.collapse-btn:hover{background:var(--hover);color:var(--text);border-color:rgba(255,255,255,.12)}
+.collapse-btn svg{transition:transform var(--motion);display:block}
+.sidebar.collapsed .collapse-btn svg{transform:rotate(180deg)}
+
+/* ── Main ── */
+.main{flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden}
+.main-topbar{display:none;align-items:center;justify-content:space-between;padding:0 16px;height:var(--topbar-h);border-bottom:1px solid var(--border);background:var(--bg);flex-shrink:0;position:relative}
+.hamburger-btn{width:36px;height:36px;border-radius:6px;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--muted);transition:background var(--motion),color var(--motion);outline:none}
+.hamburger-btn:hover{background:var(--hover);color:var(--text)}
+.topbar-wordmark{position:absolute;left:50%;transform:translateX(-50%);font-size:13px;font-weight:300;letter-spacing:0.22em;text-transform:uppercase;color:var(--text);pointer-events:none}
+.topbar-avatar{width:30px;height:30px;border-radius:50%;background:linear-gradient(140deg,#5A1A9C,#8B3FCC);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:rgba(255,255,255,.9);cursor:pointer}
+
+/* ── Page ── */
+.page{flex:1;overflow-y:auto;padding:36px 32px;display:flex;flex-direction:column;gap:32px}
+
+/* ─────────────────────────────────────────────────────────
+   PORTFOLIO HERO
+───────────────────────────────────────────────────────── */
+.hero {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+/* Row 1: label + asset filter */
+.hero-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.hero-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--muted);
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.filter-sep {
+  width: 1px;
+  height: 10px;
+  background: var(--border-mid);
+  flex-shrink: 0;
+}
+
+.filter-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.filter-pill {
+  font-size: 11px;
+  font-weight: 450;
+  color: var(--muted);
+  cursor: pointer;
+  user-select: none;
+  letter-spacing: 0.01em;
+  transition: color var(--motion), background var(--motion), border-color var(--motion), opacity var(--motion);
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+.filter-pill:hover { color: var(--mid); }
+.filter-pill.active {
+  color: var(--accent-text);
+  border-color: var(--accent-border);
+  background: var(--accent-dim);
+}
+.filter-pill:not(.active) { opacity: 0.45; }
+
+/* Row 2: the dominant value */
+.hero-value {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 38px;
+  font-weight: 500;
+  letter-spacing: -0.04em;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  transition: opacity 120ms ease-out;
+}
+
+/* Row 3: P&L */
+.hero-perf-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0;
+}
+
+.hero-perf-amount {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  transition: color var(--motion), opacity 120ms ease-out;
+}
+.hero-perf-sep {
+  font-size: 13px;
+  color: var(--muted);
+  padding: 0 6px;
+  user-select: none;
+}
+.hero-perf-pct {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+  transition: color var(--motion), opacity 120ms ease-out;
+}
+.pos { color: var(--positive); }
+.neg { color: var(--negative); }
+
+/* Row 4: time filter */
+.time-filter {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.time-item {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--muted);
+  cursor: pointer;
+  user-select: none;
+  letter-spacing: 0.02em;
+  padding: 4px 9px;
+  border-radius: 5px;
+  transition: color var(--motion), background var(--motion);
+  white-space: nowrap;
+}
+.time-item:hover { color: var(--mid); background: var(--hover); }
+.time-item.active {
+  color: var(--text);
+  background: var(--raised);
+}
+
+/* ── Chart placeholder ── */
+.chart-area {
+  height: 160px;
+  border-radius: 10px;
+  background: var(--surface);
+  position: relative;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.chart-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* ── Holdings stub ── */
+.section-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--muted);
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+.holding-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 13px 0;
+  border-bottom: 1px solid var(--border);
+  transition: opacity var(--motion);
+}
+.holding-row:last-child{border-bottom:none}
+.holding-row.dimmed{opacity:0.18;pointer-events:none}
+.holding-name{font-size:13.5px;font-weight:500;color:var(--text);letter-spacing:-0.01em}
+.holding-type{font-size:11px;color:var(--muted);margin-top:2px;letter-spacing:0.02em}
+.holding-val{font-family:'JetBrains Mono',monospace;font-size:13.5px;font-weight:500;color:var(--text);font-variant-numeric:tabular-nums;letter-spacing:-0.02em;text-align:right}
+.holding-perf{font-family:'JetBrains Mono',monospace;font-size:11.5px;font-variant-numeric:tabular-nums;letter-spacing:-0.01em;margin-top:2px;text-align:right}
+
+/* ── Mobile drawer ── */
+.drawer-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0);z-index:100;transition:background var(--motion-drawer);cursor:pointer}
+.drawer-overlay.visible{display:block}
+.drawer-overlay.open{background:rgba(0,0,0,.65)}
+.mobile-drawer{display:none;position:fixed;top:0;left:0;bottom:0;width:260px;background:var(--surface);border-right:1px solid var(--border);z-index:101;flex-direction:column;transform:translateX(-100%);transition:transform var(--motion-drawer);overflow:hidden}
+.mobile-drawer.visible{display:flex}
+.mobile-drawer.open{transform:translateX(0)}
+
+/* ── Proto label ── */
+.proto-label{position:fixed;bottom:16px;right:16px;font-size:10px;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;pointer-events:none;z-index:200;font-family:'JetBrains Mono',monospace}
+
+@media(max-width:768px){
+  .sidebar{display:none}
+  .main-topbar{display:flex}
+  .page{padding:24px 16px}
+  .hero-value{font-size:30px}
+}
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+  <div class="sidebar-inner">
+    <div class="sidebar-brand">
+      <span class="brand-letter">B</span>
+      <span class="brand-wordmark">Babylon</span>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-item active">
+        <div class="nav-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12L5 8l3 2 3-5 3 2"/><path d="M2 14h12" stroke-width="1.2" opacity="0.5"/></svg></div>
+        <span class="nav-label">Portfolio</span>
+      </div>
+      <div class="nav-item" onclick="setActive(this)">
+        <div class="nav-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5h10M10.5 2.5L13 5l-2.5 2.5M13 11H3M5.5 8.5L3 11l2.5 2.5"/></svg></div>
+        <span class="nav-label">Transactions</span>
+      </div>
+      <div class="nav-item" onclick="setActive(this)">
+        <div class="nav-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 3.5A6 6 0 1 1 5.5 2"/><path d="M5.5 2v3.5H9"/></svg></div>
+        <span class="nav-label">Recurring</span>
+      </div>
+    </nav>
+    <div class="sidebar-divider"></div>
+    <div class="sidebar-bottom">
+      <div class="user-item">
+        <div class="avatar">BL</div>
+        <div class="user-info">
+          <span class="user-name">Brian Levi</span>
+          <span class="user-email">bra.levi@gmail.com</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <button class="collapse-btn" onclick="toggleCollapse()">
+    <svg width="9" height="9" viewBox="0 0 9 9" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5.5 1.5L2.5 4.5l3 3"/></svg>
+  </button>
+  </aside>
+
+  <!-- Main -->
+  <div class="main">
+
+    <!-- Mobile topbar -->
+    <div class="main-topbar">
+      <button class="hamburger-btn" onclick="openDrawer()">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><line x1="2" y1="4.5" x2="14" y2="4.5"/><line x1="2" y1="8" x2="14" y2="8"/><line x1="2" y1="11.5" x2="14" y2="11.5"/></svg>
+      </button>
+      <span class="topbar-wordmark">Babylon</span>
+      <div class="topbar-avatar">BL</div>
+    </div>
+
+    <div class="page">
+
+      <!-- ═══════════════════════════════════════════════
+           PORTFOLIO HERO
+      ════════════════════════════════════════════════ -->
+      <div class="hero">
+
+        <!-- Label + asset filter -->
+        <div class="hero-header">
+          <span class="hero-label">Total portfolio</span>
+          <div class="filter-sep"></div>
+          <div class="filter-row" id="assetFilter">
+            <span class="filter-pill active" id="fp-all"    onclick="toggleAsset('all')">All</span>
+            <span class="filter-pill active" id="fp-stock"  onclick="toggleAsset('stock')">Stock</span>
+            <span class="filter-pill active" id="fp-etf"    onclick="toggleAsset('etf')">ETF</span>
+            <span class="filter-pill active" id="fp-bond"   onclick="toggleAsset('bond')">Bond</span>
+            <span class="filter-pill active" id="fp-crypto" onclick="toggleAsset('crypto')">Crypto</span>
+          </div>
+        </div>
+
+        <!-- Value + P&L on same line -->
+        <div style="display:flex; align-items:center; gap:16px; margin-bottom:20px;">
+          <div class="hero-value" id="heroValue">$48,204.33</div>
+          <div class="hero-perf-row">
+            <span class="hero-perf-amount pos" id="perfAmount">+$3,412.18</span>
+            <span class="hero-perf-sep">·</span>
+            <span class="hero-perf-pct pos"    id="perfPct">+7.61%</span>
+          </div>
+        </div>
+
+        <!-- Time filter -->
+        <div class="time-filter">
+          <span class="time-item" data-period="1D" onclick="setTime(this)">1D</span>
+          <span class="time-item" data-period="1W" onclick="setTime(this)">1W</span>
+          <span class="time-item active" data-period="1M" onclick="setTime(this)">1M</span>
+          <span class="time-item" data-period="6M" onclick="setTime(this)">6M</span>
+          <span class="time-item" data-period="1Y" onclick="setTime(this)">1Y</span>
+          <span class="time-item" data-period="YTD" onclick="setTime(this)">YTD</span>
+          <span class="time-item" data-period="MAX" onclick="setTime(this)">MAX</span>
+        </div>
+
+      </div>
+
+      <!-- Chart placeholder -->
+      <div class="chart-area">
+        <svg class="chart-svg" id="chartSvg" viewBox="0 0 800 160" preserveAspectRatio="none" fill="none">
+          <defs>
+            <linearGradient id="cg" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#7B2FBE" stop-opacity="0.18"/>
+              <stop offset="100%" stop-color="#7B2FBE" stop-opacity="0"/>
+            </linearGradient>
+          </defs>
+          <path id="chartLine" stroke="#7B2FBE" stroke-width="1.5" stroke-linecap="round"/>
+          <path id="chartFill" fill="url(#cg)"/>
+        </svg>
+      </div>
+
+      <!-- Holdings -->
+      <div>
+        <div class="section-label">Holdings</div>
+        <div id="holdingsList">
+          <div class="holding-row" data-type="stock">
+            <div><div class="holding-name">Apple</div><div class="holding-type">Stock</div></div>
+            <div><div class="holding-val">$18,420.00</div><div class="holding-perf pos">+12.4%</div></div>
+          </div>
+          <div class="holding-row" data-type="etf">
+            <div><div class="holding-name">Vanguard S&P 500</div><div class="holding-type">ETF</div></div>
+            <div><div class="holding-val">$14,310.00</div><div class="holding-perf pos">+8.1%</div></div>
+          </div>
+          <div class="holding-row" data-type="crypto">
+            <div><div class="holding-name">Bitcoin</div><div class="holding-type">Crypto</div></div>
+            <div><div class="holding-val">$9,240.00</div><div class="holding-perf neg">−3.2%</div></div>
+          </div>
+          <div class="holding-row" data-type="stock">
+            <div><div class="holding-name">Microsoft</div><div class="holding-type">Stock</div></div>
+            <div><div class="holding-val">$6,234.33</div><div class="holding-perf pos">+5.7%</div></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Mobile drawer -->
+<div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
+<div class="mobile-drawer" id="mobileDrawer">
+  <div class="sidebar-brand" style="border-bottom:1px solid var(--border)">
+    <span class="brand-wordmark" style="opacity:1">Babylon</span>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-item active"><div class="nav-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12L5 8l3 2 3-5 3 2"/><path d="M2 14h12" stroke-width="1.2" opacity="0.5"/></svg></div><span class="nav-label" style="opacity:1">Portfolio</span></div>
+    <div class="nav-item" onclick="closeDrawer()"><div class="nav-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5h10M10.5 2.5L13 5l-2.5 2.5M13 11H3M5.5 8.5L3 11l2.5 2.5"/></svg></div><span class="nav-label" style="opacity:1">Transactions</span></div>
+    <div class="nav-item" onclick="closeDrawer()"><div class="nav-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 3.5A6 6 0 1 1 5.5 2"/><path d="M5.5 2v3.5H9"/></svg></div><span class="nav-label" style="opacity:1">Recurring</span></div>
+  </nav>
+  <div class="sidebar-divider"></div>
+  <div class="sidebar-bottom">
+    <div class="user-item"><div class="avatar">BL</div><div class="user-info" style="opacity:1"><span class="user-name">Brian Levi</span><span class="user-email">bra.levi@gmail.com</span></div></div>
+  </div>
+</div>
+
+<div class="proto-label">SPEC-003 · Task 05 · Portfolio Hero</div>
+
+<script>
+/* ── Time periods ── */
+const periods = {
+  '1D':  { value: 48204.33, amount: '+$124.50',    pct: '+0.26%',  pos: true,  path: 'M0,100 C100,98 200,95 300,90 C400,85 500,82 600,80 C680,78 740,76 800,72' },
+  '1W':  { value: 48204.33, amount: '+$890.22',    pct: '+1.88%',  pos: true,  path: 'M0,120 C80,115 180,105 280,95 C380,85 480,80 580,72 C680,64 740,60 800,55' },
+  '1M':  { value: 48204.33, amount: '+$3,412.18',  pct: '+7.61%',  pos: true,  path: 'M0,130 C80,120 160,108 240,95 C320,82 400,72 480,62 C580,50 680,38 800,28' },
+  '6M':  { value: 48204.33, amount: '+$7,840.00',  pct: '+19.4%',  pos: true,  path: 'M0,140 C80,128 160,110 260,88 C360,66 460,50 560,38 C660,26 730,20 800,16' },
+  '1Y':  { value: 48204.33, amount: '+$12,204.33', pct: '+33.9%',  pos: true,  path: 'M0,148 C100,130 200,108 320,78 C440,48 560,30 680,18 C740,12 770,10 800,8' },
+  'YTD': { value: 48204.33, amount: '+$6,100.00',  pct: '+14.5%',  pos: true,  path: 'M0,135 C100,122 200,108 300,92 C400,76 500,62 600,50 C700,38 750,32 800,26' },
+  'MAX': { value: 48204.33, amount: '+$28,204.33', pct: '+140.8%', pos: true,  path: 'M0,155 C60,148 130,138 220,118 C320,94 420,68 540,42 C640,22 720,12 800,6' },
+};
+
+let currentPeriod = '1M';
+
+function setTime(el) {
+  document.querySelectorAll('.time-item.active').forEach(e => e.classList.remove('active'));
+  el.classList.add('active');
+  currentPeriod = el.dataset.period;
+  updateHero();
+}
+
+function updateHero() {
+  const d = periods[currentPeriod];
+
+  /* Value fade */
+  const valEl = document.getElementById('heroValue');
+  valEl.style.opacity = '0';
+  setTimeout(() => { valEl.style.opacity = '1'; }, 110);
+
+  /* P&L */
+  const amtEl = document.getElementById('perfAmount');
+  const pctEl = document.getElementById('perfPct');
+  amtEl.style.opacity = '0';
+  pctEl.style.opacity = '0';
+  setTimeout(() => {
+    amtEl.textContent  = d.amount;
+    pctEl.textContent  = d.pct;
+    amtEl.className    = 'hero-perf-amount ' + (d.pos ? 'pos' : 'neg');
+    pctEl.className    = 'hero-perf-pct '    + (d.pos ? 'pos' : 'neg');
+    amtEl.style.opacity = '1';
+    pctEl.style.opacity = '1';
+  }, 110);
+
+  /* Chart */
+  const line = document.getElementById('chartLine');
+  const fill = document.getElementById('chartFill');
+  line.setAttribute('d', d.path);
+  fill.setAttribute('d', d.path + ' L800,160 L0,160 Z');
+}
+
+/* ── Asset filter (multi-select, from Task 4) ── */
+const assetTypes = ['stock','etf','bond','crypto'];
+let activeAssets = new Set(assetTypes);
+
+function toggleAsset(type) {
+  if (type === 'all') {
+    activeAssets.size === assetTypes.length ? activeAssets.clear() : assetTypes.forEach(t => activeAssets.add(t));
+  } else {
+    activeAssets.has(type) ? activeAssets.delete(type) : activeAssets.add(type);
+  }
+  const allOn = activeAssets.size === assetTypes.length;
+  document.getElementById('fp-all').classList.toggle('active', allOn);
+  assetTypes.forEach(t => document.getElementById('fp-' + t).classList.toggle('active', activeAssets.has(t)));
+  document.querySelectorAll('.holding-row').forEach(r => r.classList.toggle('dimmed', !activeAssets.has(r.dataset.type)));
+}
+
+/* ── Sidebar ── */
+function toggleCollapse() { document.getElementById('sidebar').classList.toggle('collapsed'); }
+function setActive(el) { document.querySelectorAll('.sidebar .nav-item.active').forEach(e => e.classList.remove('active')); el.classList.add('active'); }
+
+/* ── Drawer ── */
+let drawerOpen = false;
+function openDrawer() {
+  const o = document.getElementById('drawerOverlay'), d = document.getElementById('mobileDrawer');
+  o.classList.add('visible'); d.classList.add('visible');
+  o.getBoundingClientRect(); d.getBoundingClientRect();
+  o.classList.add('open'); d.classList.add('open'); drawerOpen = true;
+}
+function closeDrawer() {
+  const o = document.getElementById('drawerOverlay'), d = document.getElementById('mobileDrawer');
+  o.classList.remove('open'); d.classList.remove('open'); drawerOpen = false;
+  setTimeout(() => { if (!drawerOpen) { o.classList.remove('visible'); d.classList.remove('visible'); } }, 230);
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && drawerOpen) closeDrawer(); });
+
+/* Init chart */
+updateHero();
+</script>
+</body>
+</html>

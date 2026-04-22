@@ -1,0 +1,960 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SPEC-003 · Task 1 — Sidebar Prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,300;0,14..32,400;0,14..32,500;0,14..32,600;1,14..32,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ── Design Tokens (SPEC-001) ─────────────────────────────────────── */
+:root {
+  --color-bg:              #08080A;
+  --color-surface:         #0E0E12;
+  --color-surface-raised:  #141418;
+  --color-hover:           #17171C;
+  --color-accent:          #7B2FBE;
+  --color-accent-dim:      rgba(123, 47, 190, 0.07);
+  --color-accent-mid:      rgba(123, 47, 190, 0.18);
+  --color-border:          rgba(255, 255, 255, 0.05);
+  --color-text:            #EEEEF2;
+  --color-text-muted:      #52525F;
+  --color-text-mid:        #8585A0;
+  --color-positive:        #27C97A;
+  --color-negative:        #E8524A;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 10px;
+
+  --sidebar-w: 220px;
+  --sidebar-collapsed-w: 60px;
+  --topbar-h: 54px;
+
+  --motion: 200ms ease-out;
+  --motion-drawer: 220ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ── Reset ────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--color-bg);
+  color: var(--color-text);
+  -webkit-font-smoothing: antialiased;
+  display: flex;
+  overflow: hidden;
+}
+
+/* ── Layout shell ─────────────────────────────────────────────────── */
+.shell {
+  display: flex;
+  width: 100%;
+  height: 100vh;
+}
+
+/* ── Sidebar ──────────────────────────────────────────────────────── */
+.sidebar {
+  width: var(--sidebar-w);
+  height: 100vh;
+  position: relative;
+  flex-shrink: 0;
+  transition: width var(--motion);
+  overflow: visible;
+  z-index: 10;
+}
+
+/* Inner wrapper clips the content but not the collapse button */
+.sidebar-inner {
+  width: 100%;
+  height: 100%;
+  background: var(--color-surface);
+  border-right: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.sidebar.collapsed {
+  width: var(--sidebar-collapsed-w);
+}
+
+/* Brand ──── */
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 14px;
+  height: 58px;
+  border-bottom: 1px solid var(--color-border);
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.brand-wordmark {
+  font-size: 13px;
+  font-weight: 300;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--color-text);
+  white-space: nowrap;
+  opacity: 1;
+  transition: opacity var(--motion);
+}
+
+.sidebar.collapsed .brand-wordmark {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Single letter shown when collapsed */
+.brand-letter {
+  font-size: 13px;
+  font-weight: 300;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-text);
+  opacity: 0;
+  position: absolute;
+  transition: opacity var(--motion);
+  pointer-events: none;
+}
+
+.sidebar.collapsed .brand-letter {
+  opacity: 1;
+  position: static;
+}
+
+/* Nav ──── */
+.sidebar-nav {
+  flex: 1;
+  padding: 10px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  overflow: hidden;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 10px;
+  height: 38px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  position: relative;
+  transition: background var(--motion);
+  overflow: hidden;
+  white-space: nowrap;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.nav-item:hover {
+  background: var(--color-hover);
+}
+
+.nav-item.active {
+  background: var(--color-accent-dim);
+}
+
+/* Left active bar */
+.nav-item.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 7px;
+  bottom: 7px;
+  width: 2px;
+  background: var(--color-accent);
+  border-radius: 0 2px 2px 0;
+}
+
+.nav-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-muted);
+  transition: color var(--motion);
+}
+
+.nav-item.active .nav-icon  { color: var(--color-accent); }
+.nav-item:hover  .nav-icon  { color: var(--color-text-mid); }
+
+.nav-label {
+  font-size: 13px;
+  font-weight: 450;
+  color: var(--color-text-muted);
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  opacity: 1;
+  transition: opacity var(--motion), color var(--motion);
+}
+
+.nav-item.active .nav-label { color: var(--color-text); font-weight: 500; }
+.nav-item:hover  .nav-label { color: var(--color-text-mid); }
+
+.sidebar.collapsed .nav-label {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Tooltip on collapsed state */
+.nav-item .tooltip {
+  position: absolute;
+  left: calc(var(--sidebar-collapsed-w) + 8px);
+  top: 50%;
+  transform: translateY(-50%);
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  font-size: 12px;
+  font-weight: 500;
+  padding: 5px 10px;
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 120ms ease-out;
+  letter-spacing: -0.01em;
+  z-index: 50;
+}
+
+.sidebar.collapsed .nav-item:hover .tooltip {
+  opacity: 1;
+}
+
+/* Divider ──── */
+.sidebar-divider {
+  height: 1px;
+  background: var(--color-border);
+  margin: 0 8px;
+  flex-shrink: 0;
+}
+
+/* Bottom section ──── */
+.sidebar-bottom {
+  padding: 8px 8px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  flex-shrink: 0;
+}
+
+/* User profile item ──── */
+.user-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 10px;
+  height: 42px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  overflow: hidden;
+  white-space: nowrap;
+  transition: background var(--motion);
+  flex-shrink: 0;
+}
+
+.user-item:hover { background: var(--color-hover); }
+
+.avatar {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: linear-gradient(140deg, #5A1A9C 0%, #8B3FCC 100%);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.9);
+  letter-spacing: 0.01em;
+}
+
+.user-info {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+  opacity: 1;
+  transition: opacity var(--motion);
+}
+
+.sidebar.collapsed .user-info {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.user-name {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--color-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  letter-spacing: -0.01em;
+}
+
+.user-email {
+  font-size: 11px;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* User submenu popover ──── */
+.user-submenu {
+  position: fixed;
+  background: var(--color-surface-raised);
+  border: 1px solid rgba(255,255,255,0.09);
+  border-radius: var(--radius-lg);
+  padding: 4px;
+  min-width: 190px;
+  z-index: 300;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5), 0 2px 8px rgba(0,0,0,0.3);
+  opacity: 0;
+  transform: translateY(6px);
+  pointer-events: none;
+  transition: opacity 150ms ease-out, transform 150ms ease-out;
+}
+
+.user-submenu.open {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.submenu-header {
+  padding: 10px 12px 9px;
+  border-bottom: 1px solid var(--color-border);
+  margin-bottom: 4px;
+}
+
+.submenu-header-name {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--color-text);
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+}
+
+.submenu-header-email {
+  font-size: 11px;
+  color: var(--color-text-muted);
+  margin-top: 2px;
+  line-height: 1.3;
+}
+
+.submenu-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 0 10px;
+  height: 34px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background var(--motion);
+  user-select: none;
+}
+
+.submenu-item:hover { background: var(--color-hover); }
+
+.submenu-item-icon {
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+}
+
+.submenu-item-label {
+  font-size: 13px;
+  font-weight: 450;
+  color: var(--color-text-mid);
+  letter-spacing: -0.01em;
+}
+
+.submenu-item:hover .submenu-item-label { color: var(--color-text); }
+.submenu-item:hover .submenu-item-icon  { color: var(--color-text-mid); }
+
+.submenu-sep {
+  height: 1px;
+  background: var(--color-border);
+  margin: 4px 0;
+}
+
+.submenu-item.danger .submenu-item-label { color: #9E4040; }
+.submenu-item.danger .submenu-item-icon  { color: #6B3030; }
+.submenu-item.danger:hover               { background: rgba(180, 60, 60, 0.07); }
+.submenu-item.danger:hover .submenu-item-label { color: #E05555; }
+.submenu-item.danger:hover .submenu-item-icon  { color: #C04444; }
+
+/* Collapse toggle ──── */
+.collapse-btn {
+  position: absolute;
+  right: -11px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-muted);
+  transition: background var(--motion), color var(--motion), border-color var(--motion);
+  z-index: 20;
+  outline: none;
+}
+
+.collapse-btn:hover {
+  background: var(--color-hover);
+  color: var(--color-text);
+  border-color: rgba(255,255,255,0.12);
+}
+
+.collapse-btn svg {
+  transition: transform var(--motion);
+  display: block;
+}
+
+.sidebar.collapsed .collapse-btn svg {
+  transform: rotate(180deg);
+}
+
+/* ── Main content ─────────────────────────────────────────────────── */
+.main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.main-topbar {
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  height: var(--topbar-h);
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-bg);
+  flex-shrink: 0;
+  position: relative;
+}
+
+.hamburger-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-muted);
+  transition: background var(--motion), color var(--motion);
+  outline: none;
+}
+
+.hamburger-btn:hover {
+  background: var(--color-hover);
+  color: var(--color-text);
+}
+
+.topbar-wordmark {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 13px;
+  font-weight: 300;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--color-text);
+  pointer-events: none;
+}
+
+.topbar-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: linear-gradient(140deg, #5A1A9C 0%, #8B3FCC 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.9);
+  cursor: pointer;
+  letter-spacing: 0.01em;
+}
+
+.main-content {
+  flex: 1;
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Placeholder content to show context */
+.placeholder-title {
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  color: var(--color-text);
+}
+
+.placeholder-value {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 42px;
+  font-weight: 500;
+  letter-spacing: -0.04em;
+  color: var(--color-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.placeholder-sub {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px;
+  color: var(--color-positive);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+.placeholder-note {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  letter-spacing: -0.01em;
+}
+
+/* ── Mobile Drawer ────────────────────────────────────────────────── */
+.drawer-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0);
+  z-index: 100;
+  transition: background var(--motion-drawer);
+  cursor: pointer;
+}
+
+.drawer-overlay.visible { display: block; }
+.drawer-overlay.open    { background: rgba(0, 0, 0, 0.65); }
+
+.mobile-drawer {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 260px;
+  background: var(--color-surface);
+  border-right: 1px solid var(--color-border);
+  z-index: 101;
+  flex-direction: column;
+  transform: translateX(-100%);
+  transition: transform var(--motion-drawer);
+  overflow: hidden;
+}
+
+.mobile-drawer.visible  { display: flex; }
+.mobile-drawer.open     { transform: translateX(0); }
+
+.drawer-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 16px;
+  height: 58px;
+  border-bottom: 1px solid var(--color-border);
+  flex-shrink: 0;
+}
+
+.drawer-nav {
+  flex: 1;
+  padding: 10px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  overflow: hidden;
+}
+
+.drawer-bottom {
+  padding: 8px 8px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  flex-shrink: 0;
+}
+
+/* ── Prototype meta ───────────────────────────────────────────────── */
+.proto-label {
+  position: fixed;
+  bottom: 16px;
+  right: 16px;
+  font-size: 10px;
+  color: var(--color-text-muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  pointer-events: none;
+  z-index: 200;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* ── Responsive ───────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .sidebar      { display: none; }
+  .main-topbar  { display: flex; }
+}
+</style>
+</head>
+<body>
+
+<div class="shell">
+
+  <!-- ── Desktop Sidebar ─────────────────────────────────── -->
+  <aside class="sidebar" id="sidebar">
+  <div class="sidebar-inner">
+
+    <!-- Brand -->
+    <div class="sidebar-brand">
+      <span class="brand-letter">B</span>
+      <span class="brand-wordmark">Babylon</span>
+    </div>
+
+    <!-- Primary nav -->
+    <nav class="sidebar-nav">
+
+      <div class="nav-item active" data-section="portfolio" onclick="setActive(this)">
+        <div class="nav-icon">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M2 12 L5 8 L8 10 L11 5 L14 7"/>
+            <path d="M2 14 L14 14" stroke-width="1.2" opacity="0.5"/>
+          </svg>
+        </div>
+        <span class="nav-label">Portfolio</span>
+        <span class="tooltip">Portfolio</span>
+      </div>
+
+      <div class="nav-item" data-section="transactions" onclick="setActive(this)">
+        <div class="nav-icon">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 5 L13 5"/>
+            <path d="M10.5 2.5 L13 5 L10.5 7.5"/>
+            <path d="M13 11 L3 11"/>
+            <path d="M5.5 8.5 L3 11 L5.5 13.5"/>
+          </svg>
+        </div>
+        <span class="nav-label">Transactions</span>
+        <span class="tooltip">Transactions</span>
+      </div>
+
+      <div class="nav-item" data-section="recurring" onclick="setActive(this)">
+        <div class="nav-icon">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M13 3.5 A6 6 0 1 1 5.5 2"/>
+            <path d="M5.5 2 L5.5 5.5 L9 5.5" stroke-width="1.5"/>
+          </svg>
+        </div>
+        <span class="nav-label">Recurring</span>
+        <span class="tooltip">Recurring</span>
+      </div>
+
+    </nav>
+
+    <div class="sidebar-divider"></div>
+
+    <!-- Bottom nav -->
+    <div class="sidebar-bottom">
+
+      <div class="user-item" id="userTrigger" onclick="toggleUserMenu(this)">
+        <div class="avatar">BL</div>
+        <div class="user-info">
+          <span class="user-name">Brian Levi</span>
+          <span class="user-email">bra.levi@gmail.com</span>
+        </div>
+      </div>
+
+    </div>
+
+  </div><!-- /sidebar-inner -->
+
+    <!-- Collapse toggle — outside inner so it's not clipped -->
+    <button class="collapse-btn" id="collapseBtn" onclick="toggleCollapse()" title="Collapse sidebar">
+      <svg width="9" height="9" viewBox="0 0 9 9" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M5.5 1.5 L2.5 4.5 L5.5 7.5"/>
+      </svg>
+    </button>
+
+  </aside>
+
+  <!-- ── Main ────────────────────────────────────────────── -->
+  <div class="main">
+
+    <!-- Mobile top bar -->
+    <div class="main-topbar">
+      <button class="hamburger-btn" onclick="openDrawer()" aria-label="Open menu">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
+          <line x1="2" y1="4.5" x2="14" y2="4.5"/>
+          <line x1="2" y1="8"   x2="14" y2="8"/>
+          <line x1="2" y1="11.5" x2="14" y2="11.5"/>
+        </svg>
+      </button>
+      <span class="topbar-wordmark">babylon</span>
+      <div class="topbar-avatar">BL</div>
+    </div>
+
+    <!-- Placeholder content showing sidebar in context -->
+    <div class="main-content">
+      <div>
+        <div class="placeholder-note" style="margin-bottom:6px">Portfolio · 1M</div>
+        <div class="placeholder-value">$48,204.33</div>
+        <div style="margin-top:6px; display:flex; align-items:center; gap:8px;">
+          <span class="placeholder-sub">+$3,412.18</span>
+          <span class="placeholder-sub">+7.61%</span>
+        </div>
+      </div>
+      <div style="width:100%; height:1px; background:var(--color-border);"></div>
+      <div class="placeholder-note">← Sidebar prototype. Toggle collapse with the · button on the sidebar edge. On mobile: tap ☰ to open the drawer.</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ── Mobile drawer overlay ──────────────────────────────── -->
+<div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
+
+<!-- ── Mobile drawer ──────────────────────────────────────── -->
+<div class="mobile-drawer" id="mobileDrawer">
+
+  <div class="drawer-brand">
+    <span class="brand-wordmark" style="opacity:1">Babylon</span>
+  </div>
+
+  <nav class="drawer-nav">
+
+    <div class="nav-item active" onclick="setDrawerActive(this); closeDrawer();">
+      <div class="nav-icon">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M2 12 L5 8 L8 10 L11 5 L14 7"/>
+          <path d="M2 14 L14 14" stroke-width="1.2" opacity="0.5"/>
+        </svg>
+      </div>
+      <span class="nav-label" style="opacity:1">Portfolio</span>
+    </div>
+
+    <div class="nav-item" onclick="setDrawerActive(this); closeDrawer();">
+      <div class="nav-icon">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 5 L13 5"/>
+          <path d="M10.5 2.5 L13 5 L10.5 7.5"/>
+          <path d="M13 11 L3 11"/>
+          <path d="M5.5 8.5 L3 11 L5.5 13.5"/>
+        </svg>
+      </div>
+      <span class="nav-label" style="opacity:1">Transactions</span>
+    </div>
+
+    <div class="nav-item" onclick="setDrawerActive(this); closeDrawer();">
+      <div class="nav-icon">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M13 3.5 A6 6 0 1 1 5.5 2"/>
+          <path d="M5.5 2 L5.5 5.5 L9 5.5" stroke-width="1.5"/>
+        </svg>
+      </div>
+      <span class="nav-label" style="opacity:1">Recurring</span>
+    </div>
+
+  </nav>
+
+  <div class="sidebar-divider"></div>
+
+  <div class="drawer-bottom">
+
+    <div class="user-item" id="drawerUserTrigger" onclick="toggleUserMenu(this)">
+      <div class="avatar">BL</div>
+      <div class="user-info" style="opacity:1">
+        <span class="user-name">Brian Levi</span>
+        <span class="user-email">bra.levi@gmail.com</span>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ── User submenu ───────────────────────────────────────── -->
+<div class="user-submenu" id="userSubmenu">
+  <div class="submenu-header">
+    <div class="submenu-header-name">Brian Levi</div>
+    <div class="submenu-header-email">bra.levi@gmail.com</div>
+  </div>
+
+  <div class="submenu-item" onclick="closeUserMenu()">
+    <div class="submenu-item-icon">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="7" cy="4.5" r="2.5"/>
+        <path d="M1.5 12.5 C1.5 10 4 8.5 7 8.5 C10 8.5 12.5 10 12.5 12.5"/>
+      </svg>
+    </div>
+    <span class="submenu-item-label">Profile</span>
+  </div>
+
+  <div class="submenu-item" onclick="closeUserMenu()">
+    <div class="submenu-item-icon">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="7" cy="7" r="1.8"/>
+        <path d="M7 1.5 L7 2.6"/>
+        <path d="M7 11.4 L7 12.5"/>
+        <path d="M1.5 7 L2.6 7"/>
+        <path d="M11.4 7 L12.5 7"/>
+        <path d="M3.1 3.1 L3.9 3.9"/>
+        <path d="M10.1 10.1 L10.9 10.9"/>
+        <path d="M10.9 3.1 L10.1 3.9"/>
+        <path d="M3.9 10.1 L3.1 10.9"/>
+      </svg>
+    </div>
+    <span class="submenu-item-label">Settings</span>
+  </div>
+
+  <div class="submenu-sep"></div>
+
+  <div class="submenu-item danger" onclick="closeUserMenu()">
+    <div class="submenu-item-icon">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M5.5 2 L2 2 L2 12 L5.5 12"/>
+        <path d="M9 4.5 L12 7 L9 9.5"/>
+        <path d="M5.5 7 L12 7"/>
+      </svg>
+    </div>
+    <span class="submenu-item-label">Log out</span>
+  </div>
+</div>
+
+<!-- ── Prototype label ─────────────────────────────────────── -->
+<div class="proto-label">SPEC-003 · Task 01 · Sidebar</div>
+
+<script>
+/* ── Desktop sidebar ── */
+function toggleCollapse() {
+  document.getElementById('sidebar').classList.toggle('collapsed');
+}
+
+function setActive(el) {
+  document.querySelectorAll('.sidebar .nav-item.active')
+    .forEach(e => e.classList.remove('active'));
+  el.classList.add('active');
+}
+
+/* ── User submenu ── */
+let menuOpen = false;
+
+function toggleUserMenu(trigger) {
+  if (menuOpen) { closeUserMenu(); return; }
+
+  const menu  = document.getElementById('userSubmenu');
+  const rect  = trigger.getBoundingClientRect();
+  const gap   = 6;
+
+  // Position above the trigger, left-aligned with it
+  const menuHeight = 170; // approx
+  menu.style.left   = rect.left + 'px';
+  menu.style.top    = (rect.top - menuHeight - gap) + 'px';
+  menu.style.width  = Math.max(rect.width, 190) + 'px';
+
+  // Force reflow then open
+  menu.getBoundingClientRect();
+  menu.classList.add('open');
+  menuOpen = true;
+}
+
+function closeUserMenu() {
+  document.getElementById('userSubmenu').classList.remove('open');
+  menuOpen = false;
+}
+
+// Close on outside click
+document.addEventListener('click', e => {
+  if (!menuOpen) return;
+  const menu    = document.getElementById('userSubmenu');
+  const trigger = document.getElementById('userTrigger');
+  const trigger2 = document.getElementById('drawerUserTrigger');
+  if (!menu.contains(e.target) && e.target !== trigger && !trigger.contains(e.target)
+      && e.target !== trigger2 && !trigger2?.contains(e.target)) {
+    closeUserMenu();
+  }
+});
+
+/* ── Mobile drawer ── */
+let drawerOpen = false;
+
+function openDrawer() {
+  const overlay = document.getElementById('drawerOverlay');
+  const drawer  = document.getElementById('mobileDrawer');
+
+  overlay.classList.add('visible');
+  drawer.classList.add('visible');
+
+  // Force reflow before adding open class so transition fires
+  overlay.getBoundingClientRect();
+  drawer.getBoundingClientRect();
+
+  overlay.classList.add('open');
+  drawer.classList.add('open');
+  drawerOpen = true;
+}
+
+function closeDrawer() {
+  closeUserMenu();
+  const overlay = document.getElementById('drawerOverlay');
+  const drawer  = document.getElementById('mobileDrawer');
+
+  overlay.classList.remove('open');
+  drawer.classList.remove('open');
+  drawerOpen = false;
+
+  // Wait for transition to finish before hiding
+  setTimeout(() => {
+    if (!drawerOpen) {
+      overlay.classList.remove('visible');
+      drawer.classList.remove('visible');
+    }
+  }, 230);
+}
+
+function setDrawerActive(el) {
+  document.querySelectorAll('.mobile-drawer .nav-item.active')
+    .forEach(e => e.classList.remove('active'));
+  el.classList.add('active');
+}
+
+/* Keyboard close */
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    if (menuOpen)   closeUserMenu();
+    if (drawerOpen) closeDrawer();
+  }
+});
+</script>
+</body>
+</html>

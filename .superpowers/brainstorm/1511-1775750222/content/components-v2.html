@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Babylon — Components v2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #080808; color: #fff; font-family: 'Inter', sans-serif; padding: 48px; max-width: 960px; }
+  h1 { font-size: 22px; font-weight: 700; letter-spacing: -0.03em; margin-bottom: 6px; }
+  .subtitle { font-size: 13px; color: #333; margin-bottom: 52px; }
+  .section { margin-bottom: 52px; }
+  .section-label { font-size: 10px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: #333; margin-bottom: 20px; }
+  .row { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-start; }
+  .mono { font-family: 'JetBrains Mono', monospace; font-variant-numeric: tabular-nums; }
+
+  /* BUTTONS */
+  .btn { display: inline-flex; align-items: center; gap: 6px; padding: 9px 18px; border-radius: 6px; font-size: 13px; font-weight: 500; border: none; cursor: pointer; font-family: 'Inter', sans-serif; transition: all 150ms; }
+  .btn-primary { background: #7B2FBE; color: #fff; }
+  .btn-primary:hover { background: #9D4EDD; }
+  .btn-ghost { background: rgba(255,255,255,0.05); color: #A3A3A3; }
+  .btn-ghost:hover { background: rgba(255,255,255,0.08); color: #fff; }
+  .btn-danger { background: rgba(244,63,94,0.08); color: #F43F5E; }
+  .btn-sm { padding: 6px 12px; font-size: 12px; }
+  .btn-disabled { opacity: 0.3; cursor: not-allowed; }
+
+  /* BADGES */
+  .badge { display: inline-flex; align-items: center; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; font-family: 'JetBrains Mono', monospace; }
+  .badge-gain { background: rgba(16,185,129,0.1); color: #10B981; }
+  .badge-loss { background: rgba(244,63,94,0.1); color: #F43F5E; }
+  .badge-neutral { background: rgba(255,255,255,0.05); color: #525252; }
+  .badge-balanced { background: rgba(16,185,129,0.08); color: #10B981; }
+  .badge-over { background: rgba(245,158,11,0.08); color: #F59E0B; }
+  .badge-under { background: rgba(129,140,248,0.1); color: #818CF8; }
+
+  /* INPUTS */
+  .input-wrap { display: flex; flex-direction: column; gap: 6px; min-width: 180px; }
+  .input-label { font-size: 11px; font-weight: 500; color: #525252; }
+  .input { background: rgba(255,255,255,0.04); border: none; border-radius: 6px; padding: 10px 14px; font-size: 13px; color: #fff; font-family: 'Inter', sans-serif; outline: none; width: 100%; transition: all 150ms; }
+  .input:focus { background: rgba(255,255,255,0.06); box-shadow: 0 0 0 1.5px #7B2FBE; }
+  .input-error { box-shadow: 0 0 0 1.5px #F43F5E; background: rgba(244,63,94,0.04); }
+  .input-helper { font-size: 11px; color: #333; }
+  .input-helper.err { color: #F43F5E; }
+
+  /* STAT CARDS — no border, background separation only */
+  .stat-card { background: #101010; border-radius: 10px; padding: 20px 22px; min-width: 160px; }
+  .stat-label { font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #333; margin-bottom: 10px; }
+  .stat-value { font-size: 28px; font-weight: 700; color: #fff; letter-spacing: -0.03em; font-family: 'JetBrains Mono', monospace; }
+  .stat-delta { font-size: 12px; font-weight: 500; margin-top: 5px; font-family: 'JetBrains Mono', monospace; }
+  .pos { color: #10B981; }
+  .neg { color: #F43F5E; }
+
+  /* TABLE — no lines, spacing only */
+  .table { background: #101010; border-radius: 10px; overflow: hidden; width: 100%; }
+  .table-head { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 90px; padding: 12px 20px 8px; }
+  .table-head span { font-size: 10px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #2E2E2E; }
+  .table-head span:not(:first-child) { text-align: right; }
+  .table-row { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 90px; padding: 14px 20px; align-items: center; transition: background 150ms; }
+  .table-row:hover { background: rgba(255,255,255,0.025); }
+  .ticker { font-size: 13px; font-weight: 600; color: #fff; }
+  .sec-name { font-size: 11px; color: #333; margin-top: 2px; }
+  .table-row span { font-size: 13px; font-weight: 500; color: #A3A3A3; text-align: right; font-family: 'JetBrains Mono', monospace; }
+  .table-row span.pos { color: #10B981; }
+  .table-row span.neg { color: #F43F5E; }
+
+  /* SIDEBAR */
+  .sidebar { background: #0C0C0C; border-radius: 10px; padding: 18px 14px; width: 190px; display: flex; flex-direction: column; gap: 2px; }
+  .sidebar-logo { display: flex; align-items: center; gap: 9px; padding: 6px 8px; margin-bottom: 16px; }
+  .sidebar-logo .dot { width: 22px; height: 22px; border-radius: 6px; background: #7B2FBE; flex-shrink: 0; }
+  .sidebar-logo span { font-size: 14px; font-weight: 700; color: #fff; letter-spacing: -0.02em; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 6px; font-size: 13px; color: #333; cursor: pointer; transition: all 150ms; }
+  .nav-item:hover { color: #A3A3A3; background: rgba(255,255,255,0.03); }
+  .nav-item.active { color: #fff; background: rgba(123,47,190,0.12); }
+  .nav-icon { width: 15px; height: 15px; border-radius: 3px; background: currentColor; opacity: 0.5; flex-shrink: 0; }
+  .nav-item.active .nav-icon { opacity: 1; background: #9D4EDD; }
+  .nav-spacer { margin-top: auto; padding-top: 16px; }
+  .nav-user { display: flex; align-items: center; gap: 9px; padding: 9px 10px; margin-top: 8px; }
+  .nav-avatar { width: 26px; height: 26px; border-radius: 9999px; background: rgba(123,47,190,0.3); flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600; color: #9D4EDD; }
+  .nav-user-name { font-size: 12px; font-weight: 500; color: #525252; }
+
+  /* INSIGHTS — no border, left accent strip only */
+  .insight { display: flex; gap: 14px; align-items: flex-start; padding: 14px 0; }
+  .insight + .insight { border-top: none; }
+  .insight-strip { width: 2px; border-radius: 2px; flex-shrink: 0; align-self: stretch; min-height: 36px; }
+  .insight.warn .insight-strip { background: rgba(245,158,11,0.5); }
+  .insight.info .insight-strip { background: rgba(129,140,248,0.5); }
+  .insight.pos .insight-strip { background: rgba(16,185,129,0.5); }
+  .insight-text { font-size: 13px; color: #525252; line-height: 1.55; }
+
+  /* ALLOCATION */
+  .alloc-wrap { min-width: 260px; padding: 4px 0; }
+  .alloc-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
+  .alloc-ticker { font-size: 13px; font-weight: 600; color: #fff; }
+  .alloc-pct { font-size: 11px; font-family: 'JetBrains Mono', monospace; color: #333; }
+  .alloc-track { height: 2px; background: rgba(255,255,255,0.06); border-radius: 2px; position: relative; overflow: visible; }
+  .alloc-target { position: absolute; top: -4px; width: 1px; height: 10px; background: rgba(255,255,255,0.2); }
+  .alloc-fill { height: 2px; border-radius: 2px; }
+
+  /* TOASTS */
+  .toast { display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-radius: 8px; font-size: 13px; max-width: 300px; background: #141414; }
+  .toast-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+  .toast-text { color: #A3A3A3; }
+  .toast.success .toast-dot { background: #10B981; }
+  .toast.error .toast-dot { background: #F43F5E; }
+  .toast.info .toast-dot { background: #525252; }
+
+  /* SKELETON */
+  @keyframes shimmer { 0%{background-position:-600px 0} 100%{background-position:600px 0} }
+  .skel { background: linear-gradient(90deg, #111 25%, #181818 50%, #111 75%); background-size: 1200px 100%; animation: shimmer 1.8s infinite; border-radius: 4px; }
+</style>
+</head>
+<body>
+<h1>Babylon — Component Preview</h1>
+<p class="subtitle">Maximum aesthetic minimalism. No grid lines. Space and contrast do all the work.</p>
+
+<!-- BUTTONS -->
+<div class="section">
+  <div class="section-label">Buttons</div>
+  <div class="row">
+    <button class="btn btn-primary">Add Transaction</button>
+    <button class="btn btn-primary btn-sm">Save</button>
+    <button class="btn btn-ghost">Cancel</button>
+    <button class="btn btn-ghost btn-sm">Edit</button>
+    <button class="btn btn-danger">Delete</button>
+    <button class="btn btn-primary btn-disabled" disabled>Processing…</button>
+  </div>
+</div>
+
+<!-- BADGES -->
+<div class="section">
+  <div class="section-label">Badges</div>
+  <div class="row">
+    <span class="badge badge-gain">+12.4%</span>
+    <span class="badge badge-loss">−3.2%</span>
+    <span class="badge badge-neutral">0.00%</span>
+    <span class="badge badge-balanced">Balanced</span>
+    <span class="badge badge-over">Overweight</span>
+    <span class="badge badge-under">Underweight</span>
+  </div>
+</div>
+
+<!-- INPUTS -->
+<div class="section">
+  <div class="section-label">Inputs</div>
+  <div class="row">
+    <div class="input-wrap">
+      <label class="input-label">Ticker</label>
+      <input class="input" value="AAPL">
+      <span class="input-helper">NYSE · Apple Inc.</span>
+    </div>
+    <div class="input-wrap">
+      <label class="input-label">Share Price</label>
+      <input class="input mono" value="192.50">
+    </div>
+    <div class="input-wrap">
+      <label class="input-label">Quantity</label>
+      <input class="input input-error mono" value="abc">
+      <span class="input-helper err">Must be a number</span>
+    </div>
+  </div>
+</div>
+
+<!-- STAT CARDS -->
+<div class="section">
+  <div class="section-label">Stat Cards</div>
+  <div class="row">
+    <div class="stat-card">
+      <div class="stat-label">Portfolio Value</div>
+      <div class="stat-value">$124,830</div>
+      <div class="stat-delta pos">+$2,840 · +2.4%</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Total Invested</div>
+      <div class="stat-value">$98,200</div>
+      <div class="stat-delta pos">+$26,630 return</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Realized P&L</div>
+      <div class="stat-value">$4,120</div>
+      <div class="stat-delta neg">−$380 this month</div>
+    </div>
+  </div>
+</div>
+
+<!-- TABLE — no lines -->
+<div class="section">
+  <div class="section-label">Positions Table</div>
+  <div class="table">
+    <div class="table-head">
+      <span>Security</span>
+      <span>Invested</span>
+      <span>Value</span>
+      <span>Return</span>
+      <span>Status</span>
+    </div>
+    <div class="table-row">
+      <div><div class="ticker">AAPL</div><div class="sec-name">Apple Inc.</div></div>
+      <span>$18,200</span>
+      <span>$21,840</span>
+      <span class="pos">+20.0%</span>
+      <span style="text-align:right"><span class="badge badge-balanced" style="font-size:10px">Balanced</span></span>
+    </div>
+    <div class="table-row">
+      <div><div class="ticker">MSFT</div><div class="sec-name">Microsoft Corp.</div></div>
+      <span>$22,000</span>
+      <span>$28,100</span>
+      <span class="pos">+27.7%</span>
+      <span style="text-align:right"><span class="badge badge-over" style="font-size:10px">Overweight</span></span>
+    </div>
+    <div class="table-row">
+      <div><div class="ticker">NVDA</div><div class="sec-name">NVIDIA Corp.</div></div>
+      <span>$14,000</span>
+      <span>$12,520</span>
+      <span class="neg">−10.6%</span>
+      <span style="text-align:right"><span class="badge badge-under" style="font-size:10px">Underweight</span></span>
+    </div>
+  </div>
+</div>
+
+<!-- NAV + INSIGHTS + ALLOC -->
+<div class="section">
+  <div class="section-label">Navigation · Insights · Allocation</div>
+  <div class="row" style="align-items:flex-start;gap:40px">
+
+    <div class="sidebar">
+      <div class="sidebar-logo">
+        <div class="dot"></div>
+        <span>Babylon</span>
+      </div>
+      <div class="nav-item active"><div class="nav-icon"></div>Portfolio</div>
+      <div class="nav-item"><div class="nav-icon"></div>Transactions</div>
+      <div class="nav-item"><div class="nav-icon"></div>Analytics</div>
+      <div class="nav-item"><div class="nav-icon"></div>Recurring</div>
+      <div class="nav-spacer"></div>
+      <div class="nav-user">
+        <div class="nav-avatar">BL</div>
+        <div class="nav-user-name">Brian Levi</div>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:0;max-width:340px">
+      <div class="insight pos">
+        <div class="insight-strip"></div>
+        <div class="insight-text">Portfolio outperformed S&P 500 by 4.2% this quarter.</div>
+      </div>
+      <div class="insight warn">
+        <div class="insight-strip"></div>
+        <div class="insight-text">MSFT is 8.2% overweight. Consider rebalancing before end of month.</div>
+      </div>
+      <div class="insight info">
+        <div class="insight-strip"></div>
+        <div class="insight-text">Dividend from AAPL expected 15 Feb 2025.</div>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:20px;min-width:240px">
+      <div class="alloc-wrap">
+        <div class="alloc-header">
+          <span class="alloc-ticker">AAPL</span>
+          <span class="alloc-pct">17.5% · target 18%</span>
+        </div>
+        <div class="alloc-track">
+          <div class="alloc-fill" style="width:97%;background:#7B2FBE"></div>
+          <div class="alloc-target" style="left:100%"></div>
+        </div>
+      </div>
+      <div class="alloc-wrap">
+        <div class="alloc-header">
+          <span class="alloc-ticker">MSFT</span>
+          <span class="alloc-pct">22.5% · target 20%</span>
+        </div>
+        <div class="alloc-track">
+          <div class="alloc-fill" style="width:100%;background:#F59E0B"></div>
+          <div class="alloc-target" style="left:89%"></div>
+        </div>
+      </div>
+      <div class="alloc-wrap">
+        <div class="alloc-header">
+          <span class="alloc-ticker">NVDA</span>
+          <span class="alloc-pct">10.0% · target 14%</span>
+        </div>
+        <div class="alloc-track">
+          <div class="alloc-fill" style="width:71%;background:#818CF8"></div>
+          <div class="alloc-target" style="left:100%"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- TOASTS + SKELETON -->
+<div class="section">
+  <div class="section-label">Toasts · Skeleton</div>
+  <div class="row" style="align-items:flex-start">
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <div class="toast success"><div class="toast-dot"></div><span class="toast-text">Transaction added successfully</span></div>
+      <div class="toast error"><div class="toast-dot"></div><span class="toast-text">Failed to load portfolio data</span></div>
+      <div class="toast info"><div class="toast-dot"></div><span class="toast-text">Prices update every 5 minutes</span></div>
+    </div>
+    <div style="background:#101010;border-radius:10px;padding:20px 22px;width:240px;display:flex;flex-direction:column;gap:10px">
+      <div class="skel" style="height:9px;width:55%"></div>
+      <div class="skel" style="height:26px;width:75%"></div>
+      <div class="skel" style="height:8px;width:38%"></div>
+      <div style="height:20px"></div>
+      <div class="skel" style="height:8px;width:100%"></div>
+      <div class="skel" style="height:8px;width:88%"></div>
+      <div class="skel" style="height:8px;width:72%"></div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

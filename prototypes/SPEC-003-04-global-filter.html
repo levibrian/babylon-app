@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SPEC-003 · Task 4 — Global Asset Filter</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,300;0,14..32,400;0,14..32,500;0,14..32,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ── Tokens ───────────────────────────────────────────────────────── */
+:root {
+  --color-bg:             #08080A;
+  --color-surface:        #0E0E12;
+  --color-raised:         #141418;
+  --color-hover:          #17171C;
+  --color-accent:         #7B2FBE;
+  --color-accent-dim:     rgba(123,47,190,0.08);
+  --color-accent-mid:     rgba(123,47,190,0.22);
+  --color-border:         rgba(255,255,255,0.05);
+  --color-border-mid:     rgba(255,255,255,0.09);
+  --color-text:           #EEEEF2;
+  --color-muted:          #52525F;
+  --color-mid:            #8585A0;
+  --color-positive:       #27C97A;
+  --color-negative:       #E8524A;
+
+  --sidebar-w:            220px;
+  --sidebar-collapsed-w:  60px;
+  --topbar-h:             54px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 10px;
+  --radius-pill: 100px;
+
+  --motion: 200ms ease-out;
+  --motion-drawer: 220ms cubic-bezier(0.16,1,0.3,1);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--color-bg);
+  color: var(--color-text);
+  -webkit-font-smoothing: antialiased;
+  display: flex;
+  overflow: hidden;
+}
+
+/* ── Shell ────────────────────────────────────────────────────────── */
+.shell { display: flex; width: 100%; height: 100vh; }
+
+/* ── Sidebar (from Task 1, condensed) ─────────────────────────────── */
+.sidebar {
+  width: var(--sidebar-w);
+  height: 100vh;
+  position: relative;
+  flex-shrink: 0;
+  transition: width var(--motion);
+  overflow: visible;
+  z-index: 10;
+}
+.sidebar.collapsed { width: var(--sidebar-collapsed-w); }
+
+.sidebar-inner {
+  width: 100%;
+  height: 100%;
+  background: var(--color-surface);
+  border-right: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  height: 58px;
+  border-bottom: 1px solid var(--color-border);
+  flex-shrink: 0;
+  overflow: hidden;
+  position: relative;
+}
+.brand-wordmark {
+  font-size: 13px; font-weight: 300; letter-spacing: 0.22em;
+  text-transform: uppercase; color: var(--color-text);
+  white-space: nowrap; opacity: 1; transition: opacity var(--motion);
+}
+.brand-letter {
+  font-size: 13px; font-weight: 300; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--color-text);
+  opacity: 0; position: absolute; transition: opacity var(--motion);
+}
+.sidebar.collapsed .brand-wordmark { opacity: 0; pointer-events: none; }
+.sidebar.collapsed .brand-letter   { opacity: 1; position: static; }
+
+.sidebar-nav {
+  flex: 1; padding: 10px 8px;
+  display: flex; flex-direction: column; gap: 1px; overflow: hidden;
+}
+.nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 0 10px; height: 38px; border-radius: var(--radius-md);
+  cursor: pointer; position: relative; transition: background var(--motion);
+  overflow: hidden; white-space: nowrap; user-select: none; flex-shrink: 0;
+}
+.nav-item:hover { background: var(--color-hover); }
+.nav-item.active { background: var(--color-accent-dim); }
+.nav-item.active::before {
+  content: ''; position: absolute; left: 0; top: 7px; bottom: 7px;
+  width: 2px; background: var(--color-accent); border-radius: 0 2px 2px 0;
+}
+.nav-icon {
+  width: 20px; height: 20px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--color-muted); transition: color var(--motion);
+}
+.nav-item.active .nav-icon { color: var(--color-accent); }
+.nav-item:hover  .nav-icon { color: var(--color-mid); }
+.nav-label {
+  font-size: 13px; font-weight: 450; color: var(--color-muted);
+  letter-spacing: -0.01em; white-space: nowrap;
+  opacity: 1; transition: opacity var(--motion), color var(--motion);
+}
+.nav-item.active .nav-label { color: var(--color-text); font-weight: 500; }
+.nav-item:hover  .nav-label { color: var(--color-mid); }
+.sidebar.collapsed .nav-label { opacity: 0; pointer-events: none; }
+
+.sidebar-divider { height: 1px; background: var(--color-border); margin: 0 8px; flex-shrink: 0; }
+.sidebar-bottom  { padding: 8px 8px 14px; display: flex; flex-direction: column; gap: 1px; flex-shrink: 0; }
+
+.user-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 0 10px; height: 42px; border-radius: var(--radius-md);
+  cursor: pointer; overflow: hidden; white-space: nowrap;
+  transition: background var(--motion); flex-shrink: 0;
+}
+.user-item:hover { background: var(--color-hover); }
+.avatar {
+  width: 26px; height: 26px; border-radius: 50%;
+  background: linear-gradient(140deg,#5A1A9C,#8B3FCC);
+  flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 600; color: rgba(255,255,255,.9); letter-spacing:.01em;
+}
+.user-info {
+  display: flex; flex-direction: column; gap: 1px; min-width: 0;
+  opacity: 1; transition: opacity var(--motion);
+}
+.sidebar.collapsed .user-info { opacity: 0; pointer-events: none; }
+.user-name  { font-size: 12.5px; font-weight: 500; color: var(--color-text); letter-spacing: -0.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.user-email { font-size: 11px; color: var(--color-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.collapse-btn {
+  position: absolute; right: -11px; top: 50%; transform: translateY(-50%);
+  width: 22px; height: 22px; border-radius: 50%;
+  background: var(--color-raised); border: 1px solid var(--color-border);
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  color: var(--color-muted); transition: background var(--motion), color var(--motion);
+  z-index: 20; outline: none;
+}
+.collapse-btn:hover { background: var(--color-hover); color: var(--color-text); border-color: rgba(255,255,255,.12); }
+.collapse-btn svg { transition: transform var(--motion); display: block; }
+.sidebar.collapsed .collapse-btn svg { transform: rotate(180deg); }
+
+/* ── Main ─────────────────────────────────────────────────────────── */
+.main { flex: 1; display: flex; flex-direction: column; min-width: 0; overflow: hidden; }
+
+/* Mobile topbar */
+.main-topbar {
+  display: none; align-items: center; justify-content: space-between;
+  padding: 0 16px; height: var(--topbar-h);
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-bg); flex-shrink: 0; position: relative;
+}
+.hamburger-btn {
+  width: 36px; height: 36px; border-radius: var(--radius-sm);
+  border: none; background: transparent; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--color-muted); transition: background var(--motion), color var(--motion); outline: none;
+}
+.hamburger-btn:hover { background: var(--color-hover); color: var(--color-text); }
+.topbar-wordmark {
+  position: absolute; left: 50%; transform: translateX(-50%);
+  font-size: 13px; font-weight: 300; letter-spacing: 0.22em;
+  text-transform: uppercase; color: var(--color-text); pointer-events: none;
+}
+.topbar-avatar {
+  width: 30px; height: 30px; border-radius: 50%;
+  background: linear-gradient(140deg,#5A1A9C,#8B3FCC);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 600; color: rgba(255,255,255,.9); cursor: pointer;
+}
+
+/* ── GLOBAL ASSET FILTER — inline with hero ───────────────────────── */
+.filter-sep {
+  width: 1px;
+  height: 10px;
+  background: var(--color-border-mid);
+  flex-shrink: 0;
+}
+
+.filter-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.filter-item {
+  font-size: 11px;
+  font-weight: 450;
+  color: var(--color-muted);
+  cursor: pointer;
+  user-select: none;
+  letter-spacing: 0.01em;
+  transition: color var(--motion), background var(--motion), border-color var(--motion);
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+
+.filter-item:hover {
+  color: var(--color-mid);
+}
+
+.filter-item.active {
+  color: rgba(187, 148, 230, 0.9);
+  border-color: rgba(123, 47, 190, 0.3);
+  background: rgba(123, 47, 190, 0.12);
+}
+
+.filter-item:not(.active) {
+  opacity: 0.45;
+}
+
+/* ── Page content ─────────────────────────────────────────────────── */
+.page-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 32px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+/* Hero block */
+.hero-block { display: flex; flex-direction: column; gap: 6px; }
+
+.hero-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--color-muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.hero-value {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 40px;
+  font-weight: 500;
+  letter-spacing: -0.04em;
+  color: var(--color-text);
+  font-variant-numeric: tabular-nums;
+  transition: opacity 200ms ease-out;
+}
+
+.hero-sub {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 2px;
+}
+
+.hero-perf {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+.hero-perf.pos { color: var(--color-positive); }
+.hero-perf.neg { color: var(--color-negative); }
+
+/* Chart placeholder */
+.chart-placeholder {
+  height: 140px;
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  position: relative;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.chart-line-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* Holdings */
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2px;
+}
+.section-title {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--color-muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.holdings-list { display: flex; flex-direction: column; }
+
+.holding-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 13px 0;
+  border-bottom: 1px solid var(--color-border);
+  cursor: pointer;
+  transition: opacity var(--motion);
+}
+.holding-row:last-child { border-bottom: none; }
+.holding-row:hover { opacity: 0.75; }
+
+.holding-row.dimmed {
+  opacity: 0.2;
+  pointer-events: none;
+}
+
+.holding-left { display: flex; flex-direction: column; gap: 2px; }
+.holding-name {
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--color-text);
+  letter-spacing: -0.01em;
+}
+.holding-type {
+  font-size: 11px;
+  color: var(--color-muted);
+  letter-spacing: 0.02em;
+}
+.holding-right { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
+.holding-value {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--color-text);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+.holding-perf {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11.5px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+.holding-perf.pos { color: var(--color-positive); }
+.holding-perf.neg { color: var(--color-negative); }
+
+/* Filter state panel (demo note) */
+.state-panel {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.state-panel-title {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--color-muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.state-panel-value {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: var(--color-mid);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Mobile drawer ────────────────────────────────────────────────── */
+.drawer-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0); z-index: 100;
+  transition: background var(--motion-drawer); cursor: pointer;
+}
+.drawer-overlay.visible { display: block; }
+.drawer-overlay.open    { background: rgba(0,0,0,.65); }
+
+.mobile-drawer {
+  display: none; position: fixed; top: 0; left: 0; bottom: 0; width: 260px;
+  background: var(--color-surface); border-right: 1px solid var(--color-border);
+  z-index: 101; flex-direction: column;
+  transform: translateX(-100%); transition: transform var(--motion-drawer); overflow: hidden;
+}
+.mobile-drawer.visible { display: flex; }
+.mobile-drawer.open    { transform: translateX(0); }
+
+.drawer-brand {
+  display: flex; align-items: center; padding: 0 16px;
+  height: 58px; border-bottom: 1px solid var(--color-border); flex-shrink: 0;
+}
+.drawer-nav {
+  flex: 1; padding: 10px 8px; display: flex; flex-direction: column; gap: 1px; overflow: hidden;
+}
+.drawer-bottom { padding: 8px 8px 24px; display: flex; flex-direction: column; gap: 1px; flex-shrink: 0; }
+
+/* ── Prototype meta ───────────────────────────────────────────────── */
+.proto-label {
+  position: fixed; bottom: 16px; right: 16px;
+  font-size: 10px; color: var(--color-muted);
+  letter-spacing: 0.06em; text-transform: uppercase;
+  pointer-events: none; z-index: 200;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* ── Responsive ───────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .sidebar       { display: none; }
+  .main-topbar   { display: flex; }
+  .page-content  { padding: 24px 16px; }
+}
+</style>
+</head>
+<body>
+
+<div class="shell">
+
+  <!-- ── Sidebar ─────────────────────────────────────────── -->
+  <aside class="sidebar" id="sidebar">
+  <div class="sidebar-inner">
+    <div class="sidebar-brand">
+      <span class="brand-letter">B</span>
+      <span class="brand-wordmark">Babylon</span>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-item active">
+        <div class="nav-icon">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M2 12 L5 8 L8 10 L11 5 L14 7"/><path d="M2 14 L14 14" stroke-width="1.2" opacity="0.5"/>
+          </svg>
+        </div>
+        <span class="nav-label">Portfolio</span>
+      </div>
+      <div class="nav-item" onclick="setActive(this)">
+        <div class="nav-icon">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 5 L13 5"/><path d="M10.5 2.5 L13 5 L10.5 7.5"/>
+            <path d="M13 11 L3 11"/><path d="M5.5 8.5 L3 11 L5.5 13.5"/>
+          </svg>
+        </div>
+        <span class="nav-label">Transactions</span>
+      </div>
+      <div class="nav-item" onclick="setActive(this)">
+        <div class="nav-icon">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M13 3.5 A6 6 0 1 1 5.5 2"/><path d="M5.5 2 L5.5 5.5 L9 5.5"/>
+          </svg>
+        </div>
+        <span class="nav-label">Recurring</span>
+      </div>
+    </nav>
+
+    <div class="sidebar-divider"></div>
+
+    <div class="sidebar-bottom">
+      <div class="user-item">
+        <div class="avatar">BL</div>
+        <div class="user-info">
+          <span class="user-name">Brian Levi</span>
+          <span class="user-email">bra.levi@gmail.com</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <button class="collapse-btn" onclick="toggleCollapse()">
+    <svg width="9" height="9" viewBox="0 0 9 9" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M5.5 1.5 L2.5 4.5 L5.5 7.5"/>
+    </svg>
+  </button>
+  </aside>
+
+  <!-- ── Main ────────────────────────────────────────────── -->
+  <div class="main">
+
+    <!-- Mobile topbar -->
+    <div class="main-topbar">
+      <button class="hamburger-btn" onclick="openDrawer()">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
+          <line x1="2" y1="4.5" x2="14" y2="4.5"/>
+          <line x1="2" y1="8"   x2="14" y2="8"/>
+          <line x1="2" y1="11.5" x2="14" y2="11.5"/>
+        </svg>
+      </button>
+      <span class="topbar-wordmark">Babylon</span>
+      <div class="topbar-avatar">BL</div>
+    </div>
+
+    <!-- ── Page content ─────────────────────────────── -->
+    <div class="page-content">
+
+      <!-- Hero with inline filter -->
+      <div class="hero-block">
+        <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
+          <div class="hero-label" id="heroLabel">Total portfolio</div>
+          <div class="filter-sep"></div>
+          <div class="filter-row">
+            <span class="filter-item active" id="pill-all"    onclick="selectAll()">All</span>
+            <span class="filter-item active" id="pill-stock"  onclick="toggleType('stock')">Stock</span>
+            <span class="filter-item active" id="pill-etf"    onclick="toggleType('etf')">ETF</span>
+            <span class="filter-item active" id="pill-bond"   onclick="toggleType('bond')">Bond</span>
+            <span class="filter-item active" id="pill-crypto" onclick="toggleType('crypto')">Crypto</span>
+          </div>
+        </div>
+        <div class="hero-value" id="heroValue">$48,204.33</div>
+        <div class="hero-sub">
+          <span class="hero-perf pos" id="heroPerf1">+$3,412.18</span>
+          <span class="hero-perf pos" id="heroPerf2">+7.61%</span>
+        </div>
+      </div>
+
+      <!-- Chart placeholder -->
+      <div class="chart-placeholder">
+        <svg class="chart-line-svg" viewBox="0 0 800 140" preserveAspectRatio="none" fill="none">
+          <defs>
+            <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#7B2FBE" stop-opacity="0.15"/>
+              <stop offset="100%" stop-color="#7B2FBE" stop-opacity="0"/>
+            </linearGradient>
+          </defs>
+          <path id="chartPath"
+            d="M0,110 C40,105 80,90 120,88 C160,86 200,92 240,80 C280,68 320,55 360,50 C400,45 440,52 480,42 C520,32 560,28 600,22 C640,16 680,20 720,18 C760,16 780,20 800,18"
+            stroke="#7B2FBE" stroke-width="1.5" stroke-linecap="round"/>
+          <path id="chartFill"
+            d="M0,110 C40,105 80,90 120,88 C160,86 200,92 240,80 C280,68 320,55 360,50 C400,45 440,52 480,42 C520,32 560,28 600,22 C640,16 680,20 720,18 C760,16 780,20 800,18 L800,140 L0,140 Z"
+            fill="url(#chartGrad)"/>
+        </svg>
+      </div>
+
+      <!-- Holdings -->
+      <div>
+        <div class="section-header">
+          <span class="section-title">Holdings</span>
+        </div>
+        <div class="holdings-list" id="holdingsList">
+
+          <div class="holding-row" data-type="stock">
+            <div class="holding-left">
+              <span class="holding-name">Apple</span>
+              <span class="holding-type">Stock</span>
+            </div>
+            <div class="holding-right">
+              <span class="holding-value">$18,420.00</span>
+              <span class="holding-perf pos">+12.4%</span>
+            </div>
+          </div>
+
+          <div class="holding-row" data-type="etf">
+            <div class="holding-left">
+              <span class="holding-name">Vanguard S&P 500</span>
+              <span class="holding-type">ETF</span>
+            </div>
+            <div class="holding-right">
+              <span class="holding-value">$14,310.00</span>
+              <span class="holding-perf pos">+8.1%</span>
+            </div>
+          </div>
+
+          <div class="holding-row" data-type="crypto">
+            <div class="holding-left">
+              <span class="holding-name">Bitcoin</span>
+              <span class="holding-type">Crypto</span>
+            </div>
+            <div class="holding-right">
+              <span class="holding-value">$9,240.00</span>
+              <span class="holding-perf neg">−3.2%</span>
+            </div>
+          </div>
+
+          <div class="holding-row" data-type="stock">
+            <div class="holding-left">
+              <span class="holding-name">Microsoft</span>
+              <span class="holding-type">Stock</span>
+            </div>
+            <div class="holding-right">
+              <span class="holding-value">$6,234.33</span>
+              <span class="holding-perf pos">+5.7%</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- State panel showing filter is working -->
+      <div class="state-panel" id="statePanel">
+        <div class="state-panel-title">Filter state</div>
+        <div class="state-panel-value" id="statePanelValue">All assets · $48,204.33 total</div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Mobile overlay + drawer -->
+<div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
+<div class="mobile-drawer" id="mobileDrawer">
+  <div class="drawer-brand">
+    <span class="brand-wordmark" style="opacity:1">Babylon</span>
+  </div>
+  <nav class="drawer-nav">
+    <div class="nav-item active">
+      <div class="nav-icon">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M2 12 L5 8 L8 10 L11 5 L14 7"/><path d="M2 14 L14 14" stroke-width="1.2" opacity="0.5"/>
+        </svg>
+      </div>
+      <span class="nav-label" style="opacity:1">Portfolio</span>
+    </div>
+    <div class="nav-item" onclick="closeDrawer()">
+      <div class="nav-icon">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 5 L13 5"/><path d="M10.5 2.5 L13 5 L10.5 7.5"/>
+          <path d="M13 11 L3 11"/><path d="M5.5 8.5 L3 11 L5.5 13.5"/>
+        </svg>
+      </div>
+      <span class="nav-label" style="opacity:1">Transactions</span>
+    </div>
+    <div class="nav-item" onclick="closeDrawer()">
+      <div class="nav-icon">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M13 3.5 A6 6 0 1 1 5.5 2"/><path d="M5.5 2 L5.5 5.5 L9 5.5"/>
+        </svg>
+      </div>
+      <span class="nav-label" style="opacity:1">Recurring</span>
+    </div>
+  </nav>
+  <div class="sidebar-divider"></div>
+  <div class="drawer-bottom">
+    <div class="user-item">
+      <div class="avatar">BL</div>
+      <div class="user-info" style="opacity:1">
+        <span class="user-name">Brian Levi</span>
+        <span class="user-email">bra.levi@gmail.com</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="proto-label">SPEC-003 · Task 04 · Global Filter</div>
+
+<script>
+/* ── Per-type data ── */
+const typeData = {
+  stock:  { value: 24654.33, perf: 2100.00,  perfPct: 9.3,  pos: true  },
+  etf:    { value: 14310.00, perf: 940.00,   perfPct: 7.0,  pos: true  },
+  bond:   { value: 0.00,     perf: 0.00,     perfPct: 0.0,  pos: true  },
+  crypto: { value: 9240.00,  perf: -308.00,  perfPct: -3.2, pos: false },
+};
+
+const types = ['stock','etf','bond','crypto'];
+let active = new Set(types); // all on by default
+
+function fmt(n) {
+  const abs = Math.abs(n);
+  const s = abs.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return (n < 0 ? '−$' : '+$') + s;
+}
+
+function toggleType(type) {
+  if (active.has(type)) {
+    active.delete(type);
+  } else {
+    active.add(type);
+  }
+  applyFilter();
+}
+
+function selectAll() {
+  if (active.size === types.length) {
+    active.clear();
+  } else {
+    types.forEach(t => active.add(t));
+  }
+  applyFilter();
+}
+
+function applyFilter() {
+  const allSelected  = active.size === types.length;
+  const noneSelected = active.size === 0;
+
+  /* ── Filter item states ── */
+  document.getElementById('pill-all').classList.toggle('active', allSelected);
+  types.forEach(t => {
+    document.getElementById('pill-' + t).classList.toggle('active', active.has(t));
+  });
+
+  /* ── Aggregate values ── */
+  let totalVal  = 0;
+  let totalPerf = 0;
+  active.forEach(t => {
+    totalVal  += typeData[t].value;
+    totalPerf += typeData[t].perf;
+  });
+  const perfPct = totalVal > 0 ? (totalPerf / (totalVal - totalPerf)) * 100 : 0;
+  const isPos   = totalPerf >= 0;
+
+  /* ── Hero ── */
+  const heroVal = document.getElementById('heroValue');
+  heroVal.style.opacity = '0';
+  setTimeout(() => {
+    heroVal.textContent = noneSelected ? '—' : '$' + totalVal.toLocaleString('en-US', { minimumFractionDigits: 2 });
+    heroVal.style.opacity = '1';
+  }, 100);
+
+  const p1 = document.getElementById('heroPerf1');
+  const p2 = document.getElementById('heroPerf2');
+  p1.textContent = noneSelected ? '—' : fmt(totalPerf);
+  p2.textContent = noneSelected ? '—' : (isPos ? '+' : '−') + Math.abs(perfPct).toFixed(1) + '%';
+  p1.className = 'hero-perf ' + (isPos ? 'pos' : 'neg');
+  p2.className = 'hero-perf ' + (isPos ? 'pos' : 'neg');
+
+  /* ── Holdings ── */
+  document.querySelectorAll('.holding-row').forEach(row => {
+    row.classList.toggle('dimmed', !active.has(row.dataset.type));
+  });
+
+  /* ── State panel ── */
+  const label = allSelected ? 'All assets' : [...active].map(t => t.charAt(0).toUpperCase() + t.slice(1)).join(' · ');
+  document.getElementById('statePanelValue').textContent =
+    label + ' · $' + totalVal.toLocaleString('en-US', { minimumFractionDigits: 2 });
+}
+
+/* ── Sidebar ── */
+function toggleCollapse() {
+  document.getElementById('sidebar').classList.toggle('collapsed');
+}
+function setActive(el) {
+  document.querySelectorAll('.sidebar .nav-item.active').forEach(e => e.classList.remove('active'));
+  el.classList.add('active');
+}
+
+/* ── Mobile drawer ── */
+let drawerOpen = false;
+function openDrawer() {
+  const o = document.getElementById('drawerOverlay');
+  const d = document.getElementById('mobileDrawer');
+  o.classList.add('visible'); d.classList.add('visible');
+  o.getBoundingClientRect(); d.getBoundingClientRect();
+  o.classList.add('open'); d.classList.add('open');
+  drawerOpen = true;
+}
+function closeDrawer() {
+  const o = document.getElementById('drawerOverlay');
+  const d = document.getElementById('mobileDrawer');
+  o.classList.remove('open'); d.classList.remove('open');
+  drawerOpen = false;
+  setTimeout(() => { if (!drawerOpen) { o.classList.remove('visible'); d.classList.remove('visible'); } }, 230);
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && drawerOpen) closeDrawer(); });
+</script>
+</body>
+</html>

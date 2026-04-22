@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Babylon — Component Preview</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #080808; color: #fff; font-family: 'Inter', sans-serif; padding: 40px; }
+  h1 { font-size: 22px; font-weight: 700; letter-spacing: -0.03em; margin-bottom: 6px; }
+  .subtitle { font-size: 13px; color: #525252; margin-bottom: 40px; }
+  .section-label { font-size: 10px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: #525252; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+  .section { margin-bottom: 48px; }
+  .row { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-start; margin-bottom: 12px; }
+  .mono { font-family: 'JetBrains Mono', monospace; font-variant-numeric: tabular-nums; }
+
+  /* BUTTONS */
+  .btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: 500; border: none; cursor: pointer; font-family: 'Inter', sans-serif; }
+  .btn-primary { background: #7B2FBE; color: #fff; }
+  .btn-primary:hover { background: #9D4EDD; }
+  .btn-ghost { background: transparent; color: #A3A3A3; border: 1px solid rgba(255,255,255,0.12); }
+  .btn-ghost:hover { color: #fff; border-color: rgba(255,255,255,0.25); }
+  .btn-danger { background: transparent; color: #F43F5E; border: 1px solid rgba(244,63,94,0.3); }
+  .btn-sm { padding: 5px 10px; font-size: 12px; }
+  .btn-disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* BADGES */
+  .badge { display: inline-flex; align-items: center; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; font-family: 'JetBrains Mono', monospace; }
+  .badge-gain { background: rgba(16,185,129,0.12); color: #10B981; }
+  .badge-loss { background: rgba(244,63,94,0.12); color: #F43F5E; }
+  .badge-neutral { background: rgba(255,255,255,0.06); color: #A3A3A3; }
+  .badge-balanced { background: rgba(16,185,129,0.1); color: #10B981; }
+  .badge-over { background: rgba(245,158,11,0.1); color: #F59E0B; }
+  .badge-under { background: rgba(99,102,241,0.12); color: #818CF8; }
+
+  /* INPUTS */
+  .input-wrap { display: flex; flex-direction: column; gap: 5px; min-width: 180px; }
+  .input-label { font-size: 11px; font-weight: 600; color: #A3A3A3; letter-spacing: 0.02em; }
+  .input { background: #101010; border: 1px solid rgba(255,255,255,0.12); border-radius: 6px; padding: 9px 12px; font-size: 13px; color: #fff; font-family: 'Inter', sans-serif; outline: none; width: 100%; }
+  .input:focus { border-color: #7B2FBE; box-shadow: 0 0 0 2px rgba(123,47,190,0.25); }
+  .input-error { border-color: #F43F5E; }
+  .input-helper { font-size: 11px; color: #525252; }
+  .input-helper.err { color: #F43F5E; }
+
+  /* STAT CARD */
+  .stat-card { background: #101010; border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 18px 20px; min-width: 160px; }
+  .stat-label { font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #525252; margin-bottom: 8px; }
+  .stat-value { font-size: 26px; font-weight: 700; color: #fff; letter-spacing: -0.03em; font-family: 'JetBrains Mono', monospace; }
+  .stat-delta { font-size: 12px; font-weight: 500; margin-top: 4px; font-family: 'JetBrains Mono', monospace; }
+  .stat-delta.pos { color: #10B981; }
+  .stat-delta.neg { color: #F43F5E; }
+
+  /* TABLE ROW */
+  .table { background: #101010; border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; overflow: hidden; width: 100%; }
+  .table-head { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 80px; padding: 10px 16px; border-bottom: 1px solid rgba(255,255,255,0.07); }
+  .table-head span { font-size: 10px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #525252; }
+  .table-head span:not(:first-child) { text-align: right; }
+  .table-row { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 80px; padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,0.05); align-items: center; transition: background 150ms; }
+  .table-row:hover { background: rgba(255,255,255,0.03); }
+  .table-row:last-child { border-bottom: none; }
+  .ticker { font-size: 13px; font-weight: 600; color: #fff; }
+  .sec-name { font-size: 11px; color: #525252; margin-top: 2px; }
+  .table-row span { font-size: 13px; font-weight: 500; color: #fff; text-align: right; font-family: 'JetBrains Mono', monospace; }
+  .table-row span.pos { color: #10B981; }
+  .table-row span.neg { color: #F43F5E; }
+
+  /* NAV */
+  .sidebar { background: #0D0D0D; border: 1px solid rgba(255,255,255,0.07); border-radius: 10px; padding: 16px 12px; width: 180px; display: flex; flex-direction: column; gap: 2px; }
+  .sidebar-logo { display: flex; align-items: center; gap: 8px; padding: 8px; margin-bottom: 12px; }
+  .sidebar-logo .dot { width: 22px; height: 22px; border-radius: 6px; background: #7B2FBE; flex-shrink: 0; }
+  .sidebar-logo span { font-size: 13px; font-weight: 700; color: #fff; letter-spacing: -0.02em; }
+  .nav-item { display: flex; align-items: center; gap: 9px; padding: 8px 10px; border-radius: 6px; font-size: 13px; color: #525252; cursor: pointer; transition: all 150ms; }
+  .nav-item:hover { color: #A3A3A3; background: rgba(255,255,255,0.04); }
+  .nav-item.active { color: #fff; background: rgba(123,47,190,0.15); }
+  .nav-icon { width: 16px; height: 16px; border-radius: 3px; background: currentColor; opacity: 0.6; flex-shrink: 0; }
+  .nav-item.active .nav-icon { opacity: 1; background: #9D4EDD; }
+
+  /* INSIGHT CARD */
+  .insight { display: flex; gap: 12px; align-items: flex-start; background: #101010; border-radius: 8px; padding: 14px 16px; border-left: 3px solid transparent; max-width: 380px; }
+  .insight.warn { border-left-color: #F59E0B; background: rgba(245,158,11,0.06); }
+  .insight.info { border-left-color: #818CF8; background: rgba(129,140,248,0.06); }
+  .insight.pos { border-left-color: #10B981; background: rgba(16,185,129,0.06); }
+  .insight-icon { width: 18px; height: 18px; border-radius: 50%; flex-shrink: 0; margin-top: 1px; }
+  .insight.warn .insight-icon { background: #F59E0B; }
+  .insight.info .insight-icon { background: #818CF8; }
+  .insight.pos .insight-icon { background: #10B981; }
+  .insight-text { font-size: 13px; color: #A3A3A3; line-height: 1.5; }
+
+  /* ALLOCATION BAR */
+  .alloc-wrap { background: #101010; border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 14px 16px; min-width: 280px; }
+  .alloc-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .alloc-ticker { font-size: 13px; font-weight: 600; color: #fff; }
+  .alloc-pct { font-size: 12px; font-family: 'JetBrains Mono', monospace; color: #A3A3A3; }
+  .alloc-track { height: 4px; background: rgba(255,255,255,0.08); border-radius: 2px; position: relative; }
+  .alloc-target { position: absolute; top: -3px; width: 2px; height: 10px; background: rgba(255,255,255,0.3); border-radius: 1px; }
+  .alloc-fill { height: 4px; border-radius: 2px; background: #7B2FBE; }
+  .alloc-labels { display: flex; justify-content: space-between; margin-top: 6px; }
+  .alloc-labels span { font-size: 10px; color: #525252; font-family: 'JetBrains Mono', monospace; }
+
+  /* TOAST */
+  .toast { display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-radius: 8px; font-size: 13px; max-width: 320px; box-shadow: 0 8px 32px rgba(0,0,0,0.6); }
+  .toast.success { background: #101010; border: 1px solid rgba(16,185,129,0.3); color: #10B981; }
+  .toast.error { background: #101010; border: 1px solid rgba(244,63,94,0.3); color: #F43F5E; }
+  .toast.info { background: #101010; border: 1px solid rgba(255,255,255,0.12); color: #A3A3A3; }
+  .toast-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .toast.success .toast-dot { background: #10B981; }
+  .toast.error .toast-dot { background: #F43F5E; }
+  .toast.info .toast-dot { background: #525252; }
+
+  /* SKELETON */
+  @keyframes shimmer { 0%{background-position:-400px 0} 100%{background-position:400px 0} }
+  .skel { background: linear-gradient(90deg, #1A1A1A 25%, #252525 50%, #1A1A1A 75%); background-size: 800px 100%; animation: shimmer 1.5s infinite; border-radius: 4px; }
+</style>
+</head>
+<body>
+<h1>Babylon Design System — Component Preview</h1>
+<p class="subtitle">All components rendered with real tokens. Dark mode. Click around to see states.</p>
+
+<!-- BUTTONS -->
+<div class="section">
+  <div class="section-label">Buttons</div>
+  <div class="row">
+    <button class="btn btn-primary">Add Transaction</button>
+    <button class="btn btn-primary btn-sm">Save</button>
+    <button class="btn btn-ghost">Cancel</button>
+    <button class="btn btn-ghost btn-sm">Edit</button>
+    <button class="btn btn-danger">Delete</button>
+    <button class="btn btn-primary btn-disabled" disabled>Processing…</button>
+  </div>
+</div>
+
+<!-- BADGES -->
+<div class="section">
+  <div class="section-label">Badges</div>
+  <div class="row">
+    <span class="badge badge-gain">+12.4%</span>
+    <span class="badge badge-loss">−3.2%</span>
+    <span class="badge badge-neutral">0.00%</span>
+    <span class="badge badge-balanced">Balanced</span>
+    <span class="badge badge-over">Overweight</span>
+    <span class="badge badge-under">Underweight</span>
+  </div>
+</div>
+
+<!-- INPUTS -->
+<div class="section">
+  <div class="section-label">Inputs</div>
+  <div class="row">
+    <div class="input-wrap">
+      <label class="input-label">Ticker</label>
+      <input class="input" placeholder="AAPL" value="AAPL">
+      <span class="input-helper">NYSE · Apple Inc.</span>
+    </div>
+    <div class="input-wrap">
+      <label class="input-label">Share Price</label>
+      <input class="input mono" placeholder="0.00" value="192.50">
+    </div>
+    <div class="input-wrap">
+      <label class="input-label">Quantity</label>
+      <input class="input input-error mono" placeholder="0" value="abc">
+      <span class="input-helper err">Must be a number</span>
+    </div>
+  </div>
+</div>
+
+<!-- STAT CARDS -->
+<div class="section">
+  <div class="section-label">Stat Cards</div>
+  <div class="row">
+    <div class="stat-card">
+      <div class="stat-label">Portfolio Value</div>
+      <div class="stat-value">$124,830</div>
+      <div class="stat-delta pos">+$2,840 (+2.4%)</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Total Invested</div>
+      <div class="stat-value">$98,200</div>
+      <div class="stat-delta pos">+$26,630 return</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Realized P&L</div>
+      <div class="stat-value">$4,120</div>
+      <div class="stat-delta neg">−$380 this month</div>
+    </div>
+  </div>
+</div>
+
+<!-- TABLE -->
+<div class="section">
+  <div class="section-label">Positions Table</div>
+  <div class="table">
+    <div class="table-head">
+      <span>Security</span>
+      <span>Invested</span>
+      <span>Value</span>
+      <span>Return</span>
+      <span>Status</span>
+    </div>
+    <div class="table-row">
+      <div><div class="ticker">AAPL</div><div class="sec-name">Apple Inc.</div></div>
+      <span>$18,200</span>
+      <span>$21,840</span>
+      <span class="pos">+20.0%</span>
+      <span><span class="badge badge-balanced" style="font-size:10px">Balanced</span></span>
+    </div>
+    <div class="table-row">
+      <div><div class="ticker">MSFT</div><div class="sec-name">Microsoft Corp.</div></div>
+      <span>$22,000</span>
+      <span>$28,100</span>
+      <span class="pos">+27.7%</span>
+      <span><span class="badge badge-over" style="font-size:10px">Overweight</span></span>
+    </div>
+    <div class="table-row">
+      <div><div class="ticker">NVDA</div><div class="sec-name">NVIDIA Corp.</div></div>
+      <span>$14,000</span>
+      <span>$12,520</span>
+      <span class="neg">−10.6%</span>
+      <span><span class="badge badge-under" style="font-size:10px">Underweight</span></span>
+    </div>
+  </div>
+</div>
+
+<!-- NAV + INSIGHT + ALLOC -->
+<div class="section">
+  <div class="section-label">Navigation · Insights · Allocation Bar</div>
+  <div class="row" style="align-items:flex-start">
+
+    <div class="sidebar">
+      <div class="sidebar-logo">
+        <div class="dot"></div>
+        <span>Babylon</span>
+      </div>
+      <div class="nav-item active"><div class="nav-icon"></div>Portfolio</div>
+      <div class="nav-item"><div class="nav-icon"></div>Transactions</div>
+      <div class="nav-item"><div class="nav-icon"></div>Analytics</div>
+      <div class="nav-item"><div class="nav-icon"></div>Recurring</div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div class="insight pos">
+        <div class="insight-icon"></div>
+        <div class="insight-text">Your portfolio outperformed the S&P 500 by 4.2% this quarter.</div>
+      </div>
+      <div class="insight warn">
+        <div class="insight-icon"></div>
+        <div class="insight-text">MSFT is 8.2% overweight. Consider rebalancing before end of month.</div>
+      </div>
+      <div class="insight info">
+        <div class="insight-icon"></div>
+        <div class="insight-text">Dividend payout from AAPL expected on 15 Feb 2025.</div>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <div class="alloc-wrap">
+        <div class="alloc-header">
+          <span class="alloc-ticker">AAPL</span>
+          <span class="alloc-pct">17.5% / 18.0%</span>
+        </div>
+        <div class="alloc-track">
+          <div class="alloc-fill" style="width:97%"></div>
+          <div class="alloc-target" style="left:100%"></div>
+        </div>
+        <div class="alloc-labels"><span>0%</span><span>Target 18%</span></div>
+      </div>
+      <div class="alloc-wrap">
+        <div class="alloc-header">
+          <span class="alloc-ticker">MSFT</span>
+          <span class="alloc-pct">22.5% / 20.0%</span>
+        </div>
+        <div class="alloc-track">
+          <div class="alloc-fill" style="width:112%;background:#F59E0B"></div>
+          <div class="alloc-target" style="left:89%"></div>
+        </div>
+        <div class="alloc-labels"><span>0%</span><span>Target 20%</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TOASTS + SKELETONS -->
+<div class="section">
+  <div class="section-label">Toasts · Skeleton Loading</div>
+  <div class="row" style="align-items:flex-start">
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <div class="toast success"><div class="toast-dot"></div>Transaction added successfully</div>
+      <div class="toast error"><div class="toast-dot"></div>Failed to load portfolio data</div>
+      <div class="toast info"><div class="toast-dot"></div>Prices update every 5 minutes</div>
+    </div>
+    <div style="background:#101010;border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:18px 20px;width:260px;display:flex;flex-direction:column;gap:12px">
+      <div class="skel" style="height:10px;width:60%"></div>
+      <div class="skel" style="height:28px;width:80%"></div>
+      <div class="skel" style="height:8px;width:40%"></div>
+      <div style="height:1px;background:rgba(255,255,255,0.05)"></div>
+      <div class="skel" style="height:8px;width:100%"></div>
+      <div class="skel" style="height:8px;width:90%"></div>
+      <div class="skel" style="height:8px;width:75%"></div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

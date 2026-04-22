@@ -1,0 +1,65 @@
+<h2>Typography — Financial Numbers</h2>
+<p class="subtitle">Inter for all UI text is settled. The question is how to treat financial data (prices, P&L, percentages). Two approaches:</p>
+
+<div class="split">
+
+  <div class="mockup">
+    <div class="mockup-header">A — All Inter (tabular-nums)</div>
+    <div class="mockup-body" style="background:#080808;padding:24px;font-family:'Inter',system-ui,sans-serif">
+      <div style="margin-bottom:24px">
+        <div style="font-size:10px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:rgba(255,255,255,0.3);margin-bottom:6px">Portfolio Value</div>
+        <div style="font-size:40px;font-weight:700;color:#fff;letter-spacing:-0.04em;font-variant-numeric:tabular-nums">$124,830.00</div>
+        <div style="font-size:13px;font-weight:500;color:#10B981;margin-top:4px;font-variant-numeric:tabular-nums">+$2,840.00 (+2.4%)</div>
+      </div>
+      <div style="height:1px;background:rgba(255,255,255,0.07);margin-bottom:20px"></div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:13px;color:rgba(255,255,255,0.5)">AAPL</span>
+          <span style="font-size:13px;font-weight:600;color:#fff;font-variant-numeric:tabular-nums">$18,240.00</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:13px;color:rgba(255,255,255,0.5)">MSFT</span>
+          <span style="font-size:13px;font-weight:600;color:#fff;font-variant-numeric:tabular-nums">$22,100.00</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:13px;color:rgba(255,255,255,0.5)">NVDA</span>
+          <span style="font-size:13px;font-weight:600;color:#F43F5E;font-variant-numeric:tabular-nums">−$1,480.00</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="mockup">
+    <div class="mockup-header">B — Inter UI + JetBrains Mono for numbers</div>
+    <div class="mockup-body" style="background:#080808;padding:24px;font-family:'Inter',system-ui,sans-serif">
+      <div style="margin-bottom:24px">
+        <div style="font-size:10px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:rgba(255,255,255,0.3);margin-bottom:6px">Portfolio Value</div>
+        <div style="font-size:40px;font-weight:700;color:#fff;letter-spacing:-0.02em;font-family:'JetBrains Mono','Courier New',monospace">$124,830.00</div>
+        <div style="font-size:13px;font-weight:500;color:#10B981;margin-top:4px;font-family:'JetBrains Mono','Courier New',monospace">+$2,840.00 (+2.4%)</div>
+      </div>
+      <div style="height:1px;background:rgba(255,255,255,0.07);margin-bottom:20px"></div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:13px;color:rgba(255,255,255,0.5)">AAPL</span>
+          <span style="font-size:13px;font-weight:500;color:#fff;font-family:'JetBrains Mono','Courier New',monospace">$18,240.00</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:13px;color:rgba(255,255,255,0.5)">MSFT</span>
+          <span style="font-size:13px;font-weight:500;color:#fff;font-family:'JetBrains Mono','Courier New',monospace">$22,100.00</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:13px;color:rgba(255,255,255,0.5)">NVDA</span>
+          <span style="font-size:13px;font-weight:500;color:#F43F5E;font-family:'JetBrains Mono','Courier New',monospace">−$1,480.00</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="section" style="margin-top:24px">
+  <p class="subtitle" style="font-size:13px">
+    <strong>A</strong> — Cleaner, more modern. Inter's <code>tabular-nums</code> variant keeps columns aligned. Consistent visual voice throughout the app. What checkout.com does.<br><br>
+    <strong>B</strong> — The terminal/data aesthetic. Numbers feel distinct from labels — adds a "live data feed" quality. More traditional fintech (Bloomberg, trading terminals). You originally wanted this.
+  </p>
+</div>

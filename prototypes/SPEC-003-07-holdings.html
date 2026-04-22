@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SPEC-003 · Task 7 — Holdings Row</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:           #08080A;
+  --surface:      #0E0E12;
+  --raised:       #141418;
+  --hover:        #17171C;
+  --accent:       #7B2FBE;
+  --accent-dim:   rgba(123,47,190,0.12);
+  --accent-bdr:   rgba(123,47,190,0.3);
+  --accent-text:  rgba(187,148,230,0.9);
+  --border:       rgba(255,255,255,0.05);
+  --border-mid:   rgba(255,255,255,0.09);
+  --text:         #EEEEF2;
+  --muted:        #52525F;
+  --mid:          #8585A0;
+  --positive:     #27C97A;
+  --negative:     #E8524A;
+  --sidebar-w:    220px;
+  --sidebar-col:  60px;
+  --topbar-h:     54px;
+  --easing:       200ms ease-out;
+  --drawer-ease:  220ms cubic-bezier(0.16,1,0.3,1);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;display:flex;overflow:hidden}
+
+/* ── Shell ── */
+.shell{display:flex;width:100%;height:100vh}
+
+/* ── Sidebar ── */
+.sidebar{width:var(--sidebar-w);height:100vh;position:relative;flex-shrink:0;transition:width var(--easing);overflow:visible;z-index:10}
+.sidebar.collapsed{width:var(--sidebar-col)}
+.sidebar-inner{width:100%;height:100%;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+.sb-brand{display:flex;align-items:center;padding:0 16px;height:58px;border-bottom:1px solid var(--border);flex-shrink:0;overflow:hidden;position:relative}
+.brand-word{font-size:13px;font-weight:300;letter-spacing:0.22em;text-transform:uppercase;color:var(--text);white-space:nowrap;opacity:1;transition:opacity var(--easing)}
+.brand-b{font-size:13px;font-weight:300;letter-spacing:0.1em;text-transform:uppercase;color:var(--text);opacity:0;position:absolute;transition:opacity var(--easing)}
+.sidebar.collapsed .brand-word{opacity:0;pointer-events:none}
+.sidebar.collapsed .brand-b{opacity:1;position:static}
+.sb-nav{flex:1;padding:10px 8px;display:flex;flex-direction:column;gap:1px;overflow:hidden}
+.nav-i{display:flex;align-items:center;gap:10px;padding:0 10px;height:38px;border-radius:8px;cursor:pointer;position:relative;transition:background var(--easing);overflow:hidden;white-space:nowrap;user-select:none;flex-shrink:0}
+.nav-i:hover{background:var(--hover)}
+.nav-i.active{background:var(--accent-dim)}
+.nav-i.active::before{content:'';position:absolute;left:0;top:7px;bottom:7px;width:2px;background:var(--accent);border-radius:0 2px 2px 0}
+.nav-ico{width:20px;height:20px;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:var(--muted);transition:color var(--easing)}
+.nav-i.active .nav-ico{color:var(--accent)}
+.nav-i:hover .nav-ico{color:var(--mid)}
+.nav-lbl{font-size:13px;font-weight:450;color:var(--muted);letter-spacing:-0.01em;white-space:nowrap;opacity:1;transition:opacity var(--easing),color var(--easing)}
+.nav-i.active .nav-lbl{color:var(--text);font-weight:500}
+.nav-i:hover .nav-lbl{color:var(--mid)}
+.sidebar.collapsed .nav-lbl{opacity:0;pointer-events:none}
+.sb-div{height:1px;background:var(--border);margin:0 8px;flex-shrink:0}
+.sb-bot{padding:8px 8px 14px;display:flex;flex-direction:column;gap:1px;flex-shrink:0}
+.user-i{display:flex;align-items:center;gap:10px;padding:0 10px;height:42px;border-radius:8px;cursor:pointer;overflow:hidden;white-space:nowrap;transition:background var(--easing);flex-shrink:0}
+.user-i:hover{background:var(--hover)}
+.av{width:26px;height:26px;border-radius:50%;background:linear-gradient(140deg,#5A1A9C,#8B3FCC);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;color:rgba(255,255,255,.9)}
+.u-info{display:flex;flex-direction:column;gap:1px;min-width:0;opacity:1;transition:opacity var(--easing)}
+.sidebar.collapsed .u-info{opacity:0;pointer-events:none}
+.u-name{font-size:12.5px;font-weight:500;color:var(--text);letter-spacing:-0.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.u-mail{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.col-btn{position:absolute;right:-11px;top:50%;transform:translateY(-50%);width:22px;height:22px;border-radius:50%;background:var(--raised);border:1px solid var(--border);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--muted);transition:background var(--easing),color var(--easing);z-index:20;outline:none}
+.col-btn:hover{background:var(--hover);color:var(--text);border-color:rgba(255,255,255,.12)}
+.col-btn svg{transition:transform var(--easing);display:block}
+.sidebar.collapsed .col-btn svg{transform:rotate(180deg)}
+
+/* ── Main ── */
+.main{flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden}
+.topbar{display:none;align-items:center;justify-content:space-between;padding:0 16px;height:var(--topbar-h);border-bottom:1px solid var(--border);background:var(--bg);flex-shrink:0;position:relative}
+.hbg{width:36px;height:36px;border-radius:6px;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--muted);transition:background var(--easing),color var(--easing);outline:none}
+.hbg:hover{background:var(--hover);color:var(--text)}
+.tb-word{position:absolute;left:50%;transform:translateX(-50%);font-size:13px;font-weight:300;letter-spacing:0.22em;text-transform:uppercase;color:var(--text);pointer-events:none}
+.tb-av{width:30px;height:30px;border-radius:50%;background:linear-gradient(140deg,#5A1A9C,#8B3FCC);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:rgba(255,255,255,.9);cursor:pointer}
+
+/* ── Page ── */
+.page{flex:1;overflow-y:auto;padding:36px 32px;display:flex;flex-direction:column;gap:28px}
+
+/* ── Hero (condensed — approved) ── */
+.hero-header{display:flex;align-items:center;gap:14px;margin-bottom:14px}
+.hero-lbl{font-size:11px;font-weight:500;color:var(--muted);letter-spacing:0.07em;text-transform:uppercase;white-space:nowrap}
+.f-sep{width:1px;height:10px;background:var(--border-mid);flex-shrink:0}
+.f-row{display:flex;align-items:center;gap:4px}
+.f-pill{font-size:11px;font-weight:450;color:var(--muted);cursor:pointer;user-select:none;letter-spacing:0.01em;transition:color var(--easing),background var(--easing),border-color var(--easing),opacity var(--easing);padding:3px 10px;border-radius:999px;border:1px solid transparent;white-space:nowrap}
+.f-pill:hover{color:var(--mid)}
+.f-pill.active{color:var(--accent-text);border-color:var(--accent-bdr);background:var(--accent-dim)}
+.f-pill:not(.active){opacity:0.45}
+.hero-main{display:flex;align-items:center;gap:16px;margin-bottom:20px}
+.hero-val{font-family:'JetBrains Mono',monospace;font-size:38px;font-weight:500;letter-spacing:-0.04em;color:var(--text);font-variant-numeric:tabular-nums;line-height:1}
+.perf-row{display:flex;align-items:center;gap:0}
+.perf-amt{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:500;font-variant-numeric:tabular-nums;letter-spacing:-0.02em}
+.perf-sep{font-size:13px;color:var(--muted);padding:0 6px;user-select:none}
+.perf-pct{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:400;font-variant-numeric:tabular-nums;letter-spacing:-0.01em}
+.pos{color:var(--positive)}
+.neg{color:var(--negative)}
+.time-row{display:flex;align-items:center;gap:2px}
+.t-item{font-size:11px;font-weight:500;color:var(--muted);cursor:pointer;user-select:none;letter-spacing:0.02em;padding:4px 9px;border-radius:5px;transition:color var(--easing),background var(--easing);white-space:nowrap}
+.t-item:hover{color:var(--mid);background:var(--hover)}
+.t-item.active{color:var(--text);background:var(--raised)}
+
+/* ── Chart (condensed — approved) ── */
+.chart-wrap{position:relative;border-radius:10px;overflow:hidden;background:var(--surface);flex-shrink:0;touch-action:pan-y}
+.chart-svg{display:block;width:100%;cursor:crosshair;user-select:none;position:relative;z-index:2}
+.crosshair-dot{r:2.5;opacity:0;transition:opacity 120ms ease-out;pointer-events:none}
+.chart-tooltip{position:fixed;pointer-events:none;opacity:0;transition:opacity 120ms ease-out;transform:translateX(-50%);z-index:999;text-align:center;background:var(--raised);border:1px solid var(--border-mid);border-radius:7px;padding:6px 10px;white-space:nowrap}
+.chart-tooltip.visible{opacity:1}
+.tooltip-val{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:500;color:var(--text);font-variant-numeric:tabular-nums;letter-spacing:-0.02em}
+.tooltip-date{font-size:10px;color:var(--muted);letter-spacing:0.01em;margin-top:2px}
+
+/* X-axis */
+.chart-axis{position:absolute;bottom:7px;left:12px;right:12px;height:14px;pointer-events:none;z-index:3}
+.axis-label{position:absolute;font-size:10px;color:var(--muted);transform:translateX(-50%);white-space:nowrap;font-weight:400;letter-spacing:0.01em;line-height:1;top:0}
+
+/* ══════════════════════════════════════════
+   HOLDINGS — Task 7
+══════════════════════════════════════════ */
+
+/* Header row: "Holdings" label + toggle */
+.holdings-hdr {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2px;
+}
+.holdings-lbl {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--muted);
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+/* Daily / Absolute toggle */
+.h-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  user-select: none;
+}
+.h-tog-opt {
+  font-size: 11px;
+  font-weight: 450;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 3px 8px;
+  border-radius: 5px;
+  transition: color var(--easing), background var(--easing);
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+.h-tog-opt:hover { color: var(--mid); }
+.h-tog-opt.active {
+  color: var(--text);
+  background: var(--raised);
+  font-weight: 500;
+}
+
+/* Holdings list */
+.holdings-list { display: flex; flex-direction: column; }
+
+.h-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background var(--easing), opacity var(--easing);
+  margin: 0 -10px;
+}
+.h-row:hover { background: var(--hover); }
+.h-row.dimmed { opacity: 0.18; pointer-events: none; }
+
+/* Row tap flash */
+.h-row.tapped { background: var(--raised); }
+
+/* Left: name + type */
+.h-left { display: flex; flex-direction: column; gap: 4px; }
+.h-name-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.h-name { font-size: 13.5px; font-weight: 500; color: var(--text); letter-spacing: -0.01em; }
+.h-type { font-size: 11px; color: var(--muted); letter-spacing: 0.02em; }
+
+/* Allocation dot */
+.alloc-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  cursor: help;
+}
+.alloc-dot.balanced   { background: var(--muted); }
+.alloc-dot.overweight { background: var(--negative); }
+.alloc-dot.underweight { background: var(--accent); }
+
+/* Action pill */
+.alloc-pill {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+  padding: 1px 6px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.alloc-pill.overweight {
+  color: var(--negative);
+  background: rgba(232,82,74,0.1);
+  border: 1px solid rgba(232,82,74,0.18);
+}
+.alloc-pill.underweight {
+  color: var(--positive);
+  background: rgba(39,201,122,0.1);
+  border: 1px solid rgba(39,201,122,0.18);
+}
+
+/* Allocation tooltip */
+.alloc-tip {
+  position: fixed;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 120ms ease-out;
+  z-index: 999;
+  background: var(--raised);
+  border: 1px solid var(--border-mid);
+  border-radius: 6px;
+  padding: 5px 9px;
+  white-space: nowrap;
+  font-size: 11px;
+  color: var(--mid);
+  font-family: 'JetBrains Mono', monospace;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+  transform: translateX(-50%);
+}
+.alloc-tip.visible { opacity: 1; }
+.alloc-tip strong { color: var(--text); font-weight: 500; }
+
+/* Right: value + P&L */
+.h-right { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; }
+.h-val {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  text-align: right;
+}
+.h-pnl {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11.5px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+  text-align: right;
+  transition: opacity 120ms ease-out;
+}
+.h-pnl.pos { color: var(--positive); }
+.h-pnl.neg { color: var(--negative); }
+
+/* Mobile drawer */
+.ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,0);z-index:100;transition:background var(--drawer-ease);cursor:pointer}
+.ov.visible{display:block}
+.ov.open{background:rgba(0,0,0,.65)}
+.drw{display:none;position:fixed;top:0;left:0;bottom:0;width:260px;background:var(--surface);border-right:1px solid var(--border);z-index:101;flex-direction:column;transform:translateX(-100%);transition:transform var(--drawer-ease);overflow:hidden}
+.drw.visible{display:flex}
+.drw.open{transform:translateX(0)}
+
+/* Proto label */
+.proto-lbl{position:fixed;bottom:16px;right:16px;font-size:10px;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;pointer-events:none;z-index:200;font-family:'JetBrains Mono',monospace}
+
+@media(max-width:768px){
+  .sidebar{display:none}
+  .topbar{display:flex}
+  .page{padding:24px 16px}
+  .hero-val{font-size:30px}
+}
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+  <div class="sidebar-inner">
+    <div class="sb-brand">
+      <span class="brand-b">B</span>
+      <span class="brand-word">Babylon</span>
+    </div>
+    <nav class="sb-nav">
+      <div class="nav-i active">
+        <div class="nav-ico"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12L5 8l3 2 3-5 3 2"/><path d="M2 14h12" stroke-width="1.2" opacity="0.5"/></svg></div>
+        <span class="nav-lbl">Portfolio</span>
+      </div>
+      <div class="nav-i">
+        <div class="nav-ico"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5h10M10.5 2.5L13 5l-2.5 2.5M13 11H3M5.5 8.5L3 11l2.5 2.5"/></svg></div>
+        <span class="nav-lbl">Transactions</span>
+      </div>
+      <div class="nav-i">
+        <div class="nav-ico"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 3.5A6 6 0 1 1 5.5 2"/><path d="M5.5 2v3.5H9"/></svg></div>
+        <span class="nav-lbl">Recurring</span>
+      </div>
+    </nav>
+    <div class="sb-div"></div>
+    <div class="sb-bot">
+      <div class="user-i">
+        <div class="av">BL</div>
+        <div class="u-info"><span class="u-name">Brian Levi</span><span class="u-mail">bra.levi@gmail.com</span></div>
+      </div>
+    </div>
+  </div>
+  <button class="col-btn" onclick="toggleCollapse()">
+    <svg width="9" height="9" viewBox="0 0 9 9" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5.5 1.5L2.5 4.5l3 3"/></svg>
+  </button>
+  </aside>
+
+  <!-- Main -->
+  <div class="main">
+    <div class="topbar">
+      <button class="hbg" onclick="openDrawer()"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><line x1="2" y1="4.5" x2="14" y2="4.5"/><line x1="2" y1="8" x2="14" y2="8"/><line x1="2" y1="11.5" x2="14" y2="11.5"/></svg></button>
+      <span class="tb-word">Babylon</span>
+      <div class="tb-av">BL</div>
+    </div>
+
+    <div class="page">
+
+      <!-- Hero -->
+      <div>
+        <div class="hero-header">
+          <span class="hero-lbl">Total portfolio</span>
+          <div class="f-sep"></div>
+          <div class="f-row">
+            <span class="f-pill active" id="fp-all"    onclick="toggleAsset('all')">All</span>
+            <span class="f-pill active" id="fp-stock"  onclick="toggleAsset('stock')">Stock</span>
+            <span class="f-pill active" id="fp-etf"    onclick="toggleAsset('etf')">ETF</span>
+            <span class="f-pill active" id="fp-bond"   onclick="toggleAsset('bond')">Bond</span>
+            <span class="f-pill active" id="fp-crypto" onclick="toggleAsset('crypto')">Crypto</span>
+          </div>
+        </div>
+        <div class="hero-main">
+          <div class="hero-val">€48,204.33</div>
+          <div class="perf-row">
+            <span class="perf-amt pos" id="perfAmt">+€3,412.18</span>
+            <span class="perf-sep">·</span>
+            <span class="perf-pct pos" id="perfPct">+7.61%</span>
+          </div>
+        </div>
+        <div class="time-row">
+          <span class="t-item" onclick="setPeriod(this)" data-p="1D">1D</span>
+          <span class="t-item" onclick="setPeriod(this)" data-p="1W">1W</span>
+          <span class="t-item active" onclick="setPeriod(this)" data-p="1M">1M</span>
+          <span class="t-item" onclick="setPeriod(this)" data-p="6M">6M</span>
+          <span class="t-item" onclick="setPeriod(this)" data-p="1Y">1Y</span>
+          <span class="t-item" onclick="setPeriod(this)" data-p="YTD">YTD</span>
+          <span class="t-item" onclick="setPeriod(this)" data-p="MAX">MAX</span>
+        </div>
+      </div>
+
+      <!-- Chart -->
+      <div class="chart-wrap" id="chartWrap">
+        <svg class="chart-svg" id="chartSvg" viewBox="0 0 800 120" preserveAspectRatio="none"
+             onmousemove="onChartMove(event)" onmouseleave="onChartLeave()"
+             ontouchmove="onChartTouch(event)" ontouchend="onChartLeave()">
+          <defs>
+            <linearGradient id="fillGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop id="fillTop" offset="0%" stop-opacity="0.18"/>
+              <stop id="fillBot" offset="100%" stop-opacity="0"/>
+            </linearGradient>
+          </defs>
+          <path id="chartFill" stroke="none" fill="url(#fillGrad)"/>
+          <path id="chartLine" fill="none" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke" shape-rendering="geometricPrecision"/>
+          <circle id="crossDot" class="crosshair-dot" cx="0" cy="0"/>
+        </svg>
+        <div class="chart-tooltip" id="chartTooltip">
+          <div class="tooltip-val" id="tooltipVal">€48,204.33</div>
+          <div class="tooltip-date" id="tooltipDate">Mar 20</div>
+        </div>
+
+        <!-- X-axis (inside chart card) -->
+        <div class="chart-axis" id="chartAxis"></div>
+      </div>
+
+      <!-- Holdings -->
+      <div>
+        <div class="holdings-hdr">
+          <span class="holdings-lbl">Holdings</span>
+          <div class="h-toggle">
+            <span class="h-tog-opt active" id="tog-daily"    onclick="setToggle('daily')">Daily</span>
+            <span class="h-tog-opt"        id="tog-absolute" onclick="setToggle('absolute')">Absolute</span>
+          </div>
+        </div>
+
+        <div class="holdings-list" id="holdingsList">
+
+          <!-- Apple: 38.2% current, 35% target → overweight, sell $1,542 -->
+          <div class="h-row" data-type="stock" onclick="tapRow(this)">
+            <div class="h-left">
+              <div class="h-name-row">
+                <span class="h-name">Apple</span>
+                <span class="alloc-dot overweight"
+                      onmouseenter="showAllocTip(this,'38.2%','35%','overweight')"
+                      onmouseleave="hideAllocTip()"
+                      ontouchstart="toggleAllocTip(event,this,'38.2%','35%','overweight')"></span>
+                <span class="alloc-pill overweight"
+                      onmouseenter="showAllocTip(this,'38.2%','35%','overweight')"
+                      onmouseleave="hideAllocTip()"
+                      ontouchstart="toggleAllocTip(event,this,'38.2%','35%','overweight')">−€1,542</span>
+              </div>
+              <div class="h-type">12 shares · €1,535.00</div>
+            </div>
+            <div class="h-right">
+              <div class="h-val">€18,420.00</div>
+              <div class="h-pnl pos" data-daily="+0.8%" data-absolute="+€1,820.00 · +10.9%">+0.8%</div>
+            </div>
+          </div>
+
+          <!-- Vanguard: 29.7% current, 30% target → balanced -->
+          <div class="h-row" data-type="etf" onclick="tapRow(this)">
+            <div class="h-left">
+              <div class="h-name-row">
+                <span class="h-name">Vanguard S&amp;P 500</span>
+                <span class="alloc-dot balanced"
+                      onmouseenter="showAllocTip(this,'29.7%','30%','balanced')"
+                      onmouseleave="hideAllocTip()"
+                      ontouchstart="toggleAllocTip(event,this,'29.7%','30%','balanced')"></span>
+              </div>
+              <div class="h-type">8 shares · €1,788.75</div>
+            </div>
+            <div class="h-right">
+              <div class="h-val">€14,310.00</div>
+              <div class="h-pnl pos" data-daily="+0.4%" data-absolute="+€1,068.00 · +8.1%">+0.4%</div>
+            </div>
+          </div>
+
+          <!-- Bitcoin: 19.2% current, 15% target → overweight, sell $2,024 -->
+          <div class="h-row" data-type="crypto" onclick="tapRow(this)">
+            <div class="h-left">
+              <div class="h-name-row">
+                <span class="h-name">Bitcoin</span>
+                <span class="alloc-dot overweight"
+                      onmouseenter="showAllocTip(this,'19.2%','15%','overweight')"
+                      onmouseleave="hideAllocTip()"
+                      ontouchstart="toggleAllocTip(event,this,'19.2%','15%','overweight')"></span>
+                <span class="alloc-pill overweight"
+                      onmouseenter="showAllocTip(this,'19.2%','15%','overweight')"
+                      onmouseleave="hideAllocTip()"
+                      ontouchstart="toggleAllocTip(event,this,'19.2%','15%','overweight')">−€2,024</span>
+              </div>
+              <div class="h-type">0.09 BTC · €102,667</div>
+            </div>
+            <div class="h-right">
+              <div class="h-val">€9,240.00</div>
+              <div class="h-pnl neg" data-daily="−1.2%" data-absolute="−€306.00 · −3.2%">−1.2%</div>
+            </div>
+          </div>
+
+          <!-- Microsoft: 12.9% current, 20% target → underweight, buy $3,422 -->
+          <div class="h-row" data-type="stock" onclick="tapRow(this)">
+            <div class="h-left">
+              <div class="h-name-row">
+                <span class="h-name">Microsoft</span>
+                <span class="alloc-dot underweight"
+                      onmouseenter="showAllocTip(this,'12.9%','20%','underweight')"
+                      onmouseleave="hideAllocTip()"
+                      ontouchstart="toggleAllocTip(event,this,'12.9%','20%','underweight')"></span>
+                <span class="alloc-pill underweight"
+                      onmouseenter="showAllocTip(this,'12.9%','20%','underweight')"
+                      onmouseleave="hideAllocTip()"
+                      ontouchstart="toggleAllocTip(event,this,'12.9%','20%','underweight')">+€3,422</span>
+              </div>
+              <div class="h-type">15 shares · €415.62</div>
+            </div>
+            <div class="h-right">
+              <div class="h-val">€6,234.33</div>
+              <div class="h-pnl pos" data-daily="+0.3%" data-absolute="+€338.00 · +5.7%">+0.3%</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Allocation tooltip -->
+<div class="alloc-tip" id="allocTip"></div>
+
+<!-- Mobile drawer -->
+<div class="ov" id="ov" onclick="closeDrawer()"></div>
+<div class="drw" id="drw">
+  <div class="sb-brand" style="border-bottom:1px solid var(--border);padding:0 16px;height:58px;display:flex;align-items:center">
+    <span class="brand-word" style="opacity:1">Babylon</span>
+  </div>
+  <nav class="sb-nav">
+    <div class="nav-i active"><div class="nav-ico"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12L5 8l3 2 3-5 3 2"/></svg></div><span class="nav-lbl" style="opacity:1">Portfolio</span></div>
+    <div class="nav-i" onclick="closeDrawer()"><div class="nav-ico"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5h10M10.5 2.5L13 5l-2.5 2.5M13 11H3M5.5 8.5L3 11l2.5 2.5"/></svg></div><span class="nav-lbl" style="opacity:1">Transactions</span></div>
+    <div class="nav-i" onclick="closeDrawer()"><div class="nav-ico"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 3.5A6 6 0 1 1 5.5 2"/><path d="M5.5 2v3.5H9"/></svg></div><span class="nav-lbl" style="opacity:1">Recurring</span></div>
+  </nav>
+  <div class="sb-div"></div>
+  <div class="sb-bot"><div class="user-i"><div class="av">BL</div><div class="u-info" style="opacity:1"><span class="u-name">Brian Levi</span><span class="u-mail">bra.levi@gmail.com</span></div></div></div>
+</div>
+
+<div class="proto-lbl">SPEC-003 · Task 07 · Holdings Row</div>
+
+<script>
+/* ══════════════════════════════════════════
+   DATA
+══════════════════════════════════════════ */
+/* User currency — configurable in Settings (future) */
+const CURRENCY = '€';
+
+const DATASETS = {
+  '1D': {
+    values: [48080,48020,48150,48060,48200,48140,48220,48170,48204],
+    dates:  Array(9).fill('Mar 20'),
+    times:  ['09:30','10:00','11:00','12:00','13:00','14:00','15:00','15:30','16:00'],
+    amt: '+€124.50', pct: '+0.26%', pos: true
+  },
+  '1W': {
+    values: [47314,47580,47200,47820,47650,48100,48204],
+    dates:  ['Mar 14','Mar 15','Mar 16','Mar 17','Mar 18','Mar 19','Mar 20'],
+    times:  Array(7).fill('16:00'),
+    amt: '+€890.22', pct: '+1.88%', pos: true
+  },
+  '1M': {
+    values: [44792,44900,45200,44800,45400,45600,45300,45800,46100,45900,46300,46500,46200,46800,47000,46700,47200,47400,47100,47600,47800,47500,47900,48100,47900,48200,48000,48300,48100,48204],
+    dates:  (() => { const a=[]; for(let i=29;i>=0;i--){ const d=new Date(2026,2,20-i); a.push(d.toLocaleDateString('en-US',{month:'short',day:'numeric'})); } return a; })(),
+    times:  Array(30).fill('16:00'),
+    amt: '+€3,412.18', pct: '+7.61%', pos: true
+  },
+  '6M': {
+    values: [40364,41200,40800,42100,41600,43200,42800,44100,43600,45200,44800,46100,45600,47000,46500,47800,47200,48000,47600,48200,47900,48300,48100,48204],
+    dates:  (() => { const a=[]; const n=24; for(let i=0;i<n;i++){ const d=new Date(2025,8,20+Math.round(i*(183/n))); a.push(d.toLocaleDateString('en-US',{month:'short',day:'numeric'})); } return a; })(),
+    times:  Array(24).fill('16:00'),
+    amt: '+€7,840.00', pct: '+19.4%', pos: true
+  },
+  '1Y': {
+    values: [36000,36800,35900,37200,36600,38100,37400,39200,38600,40100,39400,41200,40600,42300,41800,43400,42800,44500,43800,45600,44900,46800,46100,47500,46800,48000,47400,48200,47900,48204],
+    dates:  (() => { const a=[]; const n=30; for(let i=0;i<n;i++){ const d=new Date(2025,2,20+Math.round(i*(365/n))); a.push(d.toLocaleDateString('en-US',{month:'short',day:'numeric'})); } return a; })(),
+    times:  Array(30).fill('16:00'),
+    amt: '+€12,204.33', pct: '+33.9%', pos: true
+  },
+  'YTD': {
+    values: [42104,42800,42200,43600,43100,44500,43900,45400,44800,46200,45600,47100,46500,48000,47400,48204],
+    dates:  (() => { const a=[]; const n=16; for(let i=0;i<n;i++){ const d=new Date(2026,0,1+Math.round(i*(109/n))); a.push(d.toLocaleDateString('en-US',{month:'short',day:'numeric'})); } return a; })(),
+    times:  Array(16).fill('16:00'),
+    amt: '+€6,100.00', pct: '+14.5%', pos: true
+  },
+  'MAX': {
+    values: [5000,6200,5800,7400,8100,7600,9200,10800,11400,13200,14800,16400,15200,17800,19400,21200,20400,23600,25800,28200,27400,31600,34200,37800,36400,40200,43600,46800,45200,48204],
+    dates:  ['Jan 20','Apr 20','Jul 20','Oct 20','Jan 21','Apr 21','Jul 21','Oct 21','Jan 22','Apr 22','Jul 22','Oct 22','Jan 23','Apr 23','Jul 23','Oct 23','Jan 24','Apr 24','Jul 24','Oct 24','Jan 25','Apr 25','Jul 25','Oct 25','Jan 26','Mar 26','May 26','Jul 26','Oct 26','Mar 26'],
+    times:  Array(30).fill('16:00'),
+    amt: '+€28,204.33', pct: '+140.8%', pos: true
+  }
+};
+
+/* ══════════════════════════════════════════
+   CHART ENGINE
+══════════════════════════════════════════ */
+const W = 800, H = 120, PAD_T = 10, PAD_B = 20;
+let currentPts = [];
+
+function mapPts(values) {
+  const min = Math.min(...values) * 0.998;
+  const max = Math.max(...values) * 1.002;
+  const n = values.length;
+  return values.map((v, i) => ({
+    x: (i / (n - 1)) * W,
+    y: PAD_T + (1 - (v - min) / (max - min)) * (H - PAD_T - PAD_B),
+    val: v
+  }));
+}
+
+function smoothPath(pts) {
+  if (pts.length < 2) return '';
+  let d = `M ${pts[0].x.toFixed(2)} ${pts[0].y.toFixed(2)}`;
+  for (let i = 0; i < pts.length - 1; i++) {
+    const p0 = pts[Math.max(i - 1, 0)];
+    const p1 = pts[i];
+    const p2 = pts[i + 1];
+    const p3 = pts[Math.min(i + 2, pts.length - 1)];
+    const t = 0.4;
+    const cp1x = p1.x + (p2.x - p0.x) * t / 2;
+    const cp1y = p1.y + (p2.y - p0.y) * t / 2;
+    const cp2x = p2.x - (p3.x - p1.x) * t / 2;
+    const cp2y = p2.y - (p3.y - p1.y) * t / 2;
+    d += ` C ${cp1x.toFixed(2)} ${cp1y.toFixed(2)}, ${cp2x.toFixed(2)} ${cp2y.toFixed(2)}, ${p2.x.toFixed(2)} ${p2.y.toFixed(2)}`;
+  }
+  return d;
+}
+
+function renderChart(period) {
+  const data = DATASETS[period];
+  currentPts = mapPts(data.values);
+
+  const linePath  = smoothPath(currentPts);
+  const lineColor = data.pos ? 'var(--positive)' : 'var(--negative)';
+  const lineHex   = data.pos ? '#27C97A' : '#E8524A';
+  const dotColor  = data.pos ? '#7EEFC0' : '#F09490';
+  const lastPt    = currentPts[currentPts.length - 1];
+  const firstPt   = currentPts[0];
+  const fillPath  = linePath + ` L ${lastPt.x.toFixed(2)} ${H} L ${firstPt.x.toFixed(2)} ${H} Z`;
+
+  document.getElementById('chartLine').setAttribute('d', linePath);
+  document.getElementById('chartLine').setAttribute('stroke', lineColor);
+  document.getElementById('chartFill').setAttribute('d', fillPath);
+  document.getElementById('fillTop').setAttribute('stop-color', lineHex);
+  document.getElementById('fillBot').setAttribute('stop-color', lineHex);
+  document.getElementById('crossDot').setAttribute('fill', dotColor);
+
+  renderXAxis(period);
+}
+
+/* ══════════════════════════════════════════
+   X-AXIS DATE LABELS
+══════════════════════════════════════════ */
+function evenSpread(n, count) {
+  if (count >= n) return Array.from({length: n}, (_, i) => i);
+  const result = [];
+  for (let i = 0; i < count; i++) result.push(Math.round(i * (n - 1) / (count - 1)));
+  return [...new Set(result)];
+}
+
+const TICK_COUNTS = { '1D': 4, '1W': 4, '1M': 4, '6M': 6, '1Y': 6, 'YTD': 5, 'MAX': 5 };
+
+function renderXAxis(period) {
+  const data      = DATASETS[period];
+  const n         = data.dates.length;
+  const container = document.getElementById('chartAxis');
+  if (!container) return;
+
+  while (container.firstChild) container.removeChild(container.firstChild);
+
+  const indices = evenSpread(n, TICK_COUNTS[period] || 4);
+  indices.forEach((idx, i) => {
+    const pct   = (idx / (n - 1)) * 100;
+    const label = period === '1D' ? data.times[idx] : data.dates[idx];
+
+    const el = document.createElement('span');
+    el.className   = 'axis-label';
+    el.textContent = label;
+
+    if (i === 0) {
+      el.style.left      = '0';
+      el.style.transform = 'none';
+    } else if (i === indices.length - 1) {
+      el.style.right     = '0';
+      el.style.left      = 'auto';
+      el.style.transform = 'none';
+    } else {
+      el.style.left = pct + '%';
+    }
+
+    container.appendChild(el);
+  });
+}
+
+/* ══════════════════════════════════════════
+   HOVER / TOUCH
+══════════════════════════════════════════ */
+let currentPeriod = '1M';
+
+function onChartMove(e) {
+  const svg  = document.getElementById('chartSvg');
+  const rect = svg.getBoundingClientRect();
+  const svgX = ((e.clientX - rect.left) / rect.width) * W;
+  showCrosshair(svgX, currentPeriod);
+}
+
+function onChartTouch(e) {
+  e.preventDefault();
+  const svg  = document.getElementById('chartSvg');
+  const rect = svg.getBoundingClientRect();
+  const svgX = ((e.touches[0].clientX - rect.left) / rect.width) * W;
+  showCrosshair(svgX, currentPeriod);
+}
+
+function showCrosshair(svgX, period) {
+  if (currentPts.length === 0) return;
+  let nearest = currentPts[0], minDist = Infinity;
+  currentPts.forEach(pt => { const d = Math.abs(pt.x - svgX); if (d < minDist) { minDist = d; nearest = pt; } });
+
+  const dot     = document.getElementById('crossDot');
+  const tooltip = document.getElementById('chartTooltip');
+  const svg     = document.getElementById('chartSvg');
+
+  dot.setAttribute('cx', nearest.x);
+  dot.setAttribute('cy', nearest.y);
+  dot.style.opacity = '1';
+
+  const svgRect  = svg.getBoundingClientRect();
+  const vpX      = (nearest.x / W) * svgRect.width + svgRect.left;
+  const vpY      = (nearest.y / H) * svgRect.height + svgRect.top;
+  const tooltipW = 110;
+  const halfW    = tooltipW / 2;
+  const margin   = 8;
+  const clampedX = Math.max(halfW + margin, Math.min(window.innerWidth - halfW - margin, vpX));
+
+  tooltip.style.left = clampedX + 'px';
+  tooltip.style.top  = (vpY - 56) + 'px';
+
+  const data = DATASETS[period];
+  const idx  = currentPts.indexOf(nearest);
+  document.getElementById('tooltipVal').textContent =
+    CURRENCY + nearest.val.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
+  const dateStr = data.dates[idx] || '';
+  const timeStr = data.times ? (data.times[idx] || '16:00') : '';
+  document.getElementById('tooltipDate').textContent = timeStr ? dateStr + ' · ' + timeStr : dateStr;
+
+  tooltip.classList.add('visible');
+}
+
+function onChartLeave() {
+  document.getElementById('crossDot').style.opacity = '0';
+  document.getElementById('chartTooltip').classList.remove('visible');
+}
+
+/* ══════════════════════════════════════════
+   PERIOD CONTROL
+══════════════════════════════════════════ */
+function setPeriod(el) {
+  document.querySelectorAll('.t-item.active').forEach(e => e.classList.remove('active'));
+  el.classList.add('active');
+  currentPeriod = el.dataset.p;
+  const data = DATASETS[currentPeriod];
+
+  const amtEl = document.getElementById('perfAmt');
+  const pctEl = document.getElementById('perfPct');
+  amtEl.textContent = data.amt;
+  pctEl.textContent = data.pct;
+  amtEl.className   = 'perf-amt ' + (data.pos ? 'pos' : 'neg');
+  pctEl.className   = 'perf-pct ' + (data.pos ? 'pos' : 'neg');
+
+  renderChart(currentPeriod);
+}
+
+/* ══════════════════════════════════════════
+   ASSET FILTER
+══════════════════════════════════════════ */
+const assetTypes = ['stock','etf','bond','crypto'];
+let activeAssets = new Set(assetTypes);
+
+function toggleAsset(type) {
+  if (type === 'all') {
+    activeAssets.size === assetTypes.length ? activeAssets.clear() : assetTypes.forEach(t => activeAssets.add(t));
+  } else {
+    activeAssets.has(type) ? activeAssets.delete(type) : activeAssets.add(type);
+  }
+  const allOn = activeAssets.size === assetTypes.length;
+  document.getElementById('fp-all').classList.toggle('active', allOn);
+  assetTypes.forEach(t => document.getElementById('fp-' + t).classList.toggle('active', activeAssets.has(t)));
+  document.querySelectorAll('.h-row').forEach(r => r.classList.toggle('dimmed', !activeAssets.has(r.dataset.type)));
+}
+
+/* ══════════════════════════════════════════
+   HOLDINGS TOGGLE
+══════════════════════════════════════════ */
+let holdingMode = 'daily';
+
+function setToggle(mode) {
+  holdingMode = mode;
+  document.getElementById('tog-daily').classList.toggle('active',    mode === 'daily');
+  document.getElementById('tog-absolute').classList.toggle('active', mode === 'absolute');
+
+  document.querySelectorAll('.h-pnl').forEach(el => {
+    const val = el.dataset[mode];
+    if (!val) return;
+
+    el.style.opacity = '0';
+    setTimeout(() => {
+      el.textContent = val;
+      /* Positive if starts with + */
+      el.className = 'h-pnl ' + (val.startsWith('+') ? 'pos' : 'neg');
+      el.style.opacity = '1';
+    }, 80);
+  });
+}
+
+/* Row tap → navigate to asset detail */
+function tapRow(el) {
+  el.classList.add('tapped');
+  setTimeout(() => {
+    el.classList.remove('tapped');
+    window.location.href = 'SPEC-003-08-asset-detail.html';
+  }, 160);
+}
+
+/* ══════════════════════════════════════════
+   SIDEBAR + DRAWER
+══════════════════════════════════════════ */
+function toggleCollapse() { document.getElementById('sidebar').classList.toggle('collapsed'); }
+
+let drawerOpen = false;
+function openDrawer() {
+  const o = document.getElementById('ov'), d = document.getElementById('drw');
+  o.classList.add('visible'); d.classList.add('visible');
+  o.getBoundingClientRect(); d.getBoundingClientRect();
+  o.classList.add('open'); d.classList.add('open'); drawerOpen = true;
+}
+function closeDrawer() {
+  const o = document.getElementById('ov'), d = document.getElementById('drw');
+  o.classList.remove('open'); d.classList.remove('open'); drawerOpen = false;
+  setTimeout(() => { if (!drawerOpen) { o.classList.remove('visible'); d.classList.remove('visible'); } }, 230);
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && drawerOpen) closeDrawer(); });
+
+/* ══════════════════════════════════════════
+   ALLOCATION TOOLTIP
+══════════════════════════════════════════ */
+function showAllocTip(el, current, target, status) {
+  const tip  = document.getElementById('allocTip');
+  const rect = el.getBoundingClientRect();
+
+  const colors = { overweight: 'var(--negative)', underweight: 'var(--positive)', balanced: 'var(--muted)' };
+
+  tip.textContent = '';
+  const lbl = document.createTextNode('Allocation ');
+  const cur = document.createElement('strong');
+  cur.textContent = current;
+  cur.style.color = colors[status] || 'var(--text)';
+  const arr = document.createTextNode(' → ');
+  const tgt = document.createElement('strong');
+  tgt.textContent = target;
+  tip.appendChild(lbl);
+  tip.appendChild(cur);
+  tip.appendChild(arr);
+  tip.appendChild(tgt);
+
+  tip.style.left = (rect.left + rect.width / 2) + 'px';
+  tip.style.top  = (rect.top - 34) + 'px';
+  tip.classList.add('visible');
+}
+
+function hideAllocTip() {
+  document.getElementById('allocTip').classList.remove('visible');
+}
+
+let tipDismissTimer = null;
+function toggleAllocTip(e, el, current, target, status) {
+  e.stopPropagation();
+  const tip = document.getElementById('allocTip');
+  if (tip.classList.contains('visible')) { hideAllocTip(); return; }
+  showAllocTip(el, current, target, status);
+  clearTimeout(tipDismissTimer);
+  tipDismissTimer = setTimeout(hideAllocTip, 2500);
+}
+document.addEventListener('touchstart', () => hideAllocTip(), { passive: true });
+
+/* ── Init ── */
+window.addEventListener('load', () => { renderChart('1M'); });
+</script>
+</body>
+</html>
