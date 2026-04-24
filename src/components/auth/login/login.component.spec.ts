@@ -4,7 +4,6 @@ import { FormControl, FormGroup } from '@angular/forms';
 import { LoginComponent, passwordMatchValidator } from './login.component';
 import { AuthService } from '../../../services/auth.service';
 import { ActivatedRoute } from '@angular/router';
-import { of } from 'rxjs';
 
 describe('passwordMatchValidator (standalone)', () => {
   it('returns null when passwords match', () => {
@@ -41,7 +40,7 @@ describe('LoginComponent', () => {
       imports: [LoginComponent],
       providers: [
         { provide: AuthService, useValue: authServiceSpy },
-        { provide: ActivatedRoute, useValue: { data: of({ mode: 'login' }) } },
+        { provide: ActivatedRoute, useValue: { snapshot: { data: { mode: 'login' } } } },
       ],
       schemas: [CUSTOM_ELEMENTS_SCHEMA],
     }).compileComponents();
