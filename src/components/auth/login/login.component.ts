@@ -4,7 +4,6 @@ import {
   inject,
   signal,
   computed,
-  OnInit,
   CUSTOM_ELEMENTS_SCHEMA,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -38,12 +37,12 @@ export function passwordMatchValidator(group: AbstractControl): ValidationErrors
   styleUrls: ['./login.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class LoginComponent implements OnInit {
+export class LoginComponent {
   private fb = inject(FormBuilder);
-  protected authService = inject(AuthService);
+  private readonly authService = inject(AuthService);
   private route = inject(ActivatedRoute);
 
-  mode = signal<AuthMode>('login');
+  mode = signal<AuthMode>(this.route.snapshot.data['mode'] ?? 'login');
   isLoginMode = computed(() => this.mode() === 'login');
 
   isLoading = signal(false);
@@ -62,14 +61,6 @@ export class LoginComponent implements OnInit {
     confirmPassword: ['', [Validators.required, Validators.minLength(8)]],
   }, { validators: passwordMatchValidator });
 
-  ngOnInit(): void {
-    this.route.data.subscribe((data) => {
-      if (data['mode'] === 'register') {
-        this.mode.set('register');
-      }
-    });
-  }
-
   setMode(m: AuthMode): void {
     this.mode.set(m);
     this.error.set(null);
@@ -85,10 +76,10 @@ export class LoginComponent implements OnInit {
     try {
       const { emailOrUsername, password } = this.loginForm.value;
       await this.authService.login(emailOrUsername!, password!);
-    } catch (err: any) {
-      this.error.set(
-        err?.error?.message ?? err?.message ?? 'Invalid credentials. Please try again.'
-      );
+    } catch (err: unknown) {
+      const apiMessage = (err as { error?: { message?: string } })?.error?.message;
+      const message = err instanceof Error ? err.message : undefined;
+      this.error.set(apiMessage ?? message ?? 'Invalid credentials. Please try again.');
     } finally {
       this.isLoading.set(false);
     }
@@ -104,10 +95,10 @@ export class LoginComponent implements OnInit {
     try {
       const { username, email, password } = this.registerForm.value;
       await this.authService.register(username!, email!, password!);
-    } catch (err: any) {
-      this.error.set(
-        err?.error?.message ?? err?.message ?? 'Registration failed. Please try again.'
-      );
+    } catch (err: unknown) {
+      const apiMessage = (err as { error?: { message?: string } })?.error?.message;
+      const message = err instanceof Error ? err.message : undefined;
+      this.error.set(apiMessage ?? message ?? 'Registration failed. Please try again.');
     } finally {
       this.isLoading.set(false);
     }
