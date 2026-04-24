@@ -1,9 +1,28 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
-import { LoginComponent } from './login.component';
+import { FormControl, FormGroup } from '@angular/forms';
+import { LoginComponent, passwordMatchValidator } from './login.component';
 import { AuthService } from '../../../services/auth.service';
 import { ActivatedRoute } from '@angular/router';
 import { of } from 'rxjs';
+
+describe('passwordMatchValidator (standalone)', () => {
+  it('returns null when passwords match', () => {
+    const group = new FormGroup({
+      password: new FormControl('secret123'),
+      confirmPassword: new FormControl('secret123'),
+    });
+    expect(passwordMatchValidator(group)).toBeNull();
+  });
+
+  it('returns passwordMismatch error when passwords differ', () => {
+    const group = new FormGroup({
+      password: new FormControl('secret123'),
+      confirmPassword: new FormControl('different'),
+    });
+    expect(passwordMatchValidator(group)).toEqual({ passwordMismatch: true });
+  });
+});
 
 describe('LoginComponent', () => {
   let component: LoginComponent;
@@ -74,6 +93,13 @@ describe('LoginComponent', () => {
     it('calls authService.signInWithGoogle()', () => {
       component.onGoogleSignIn();
       expect(authServiceSpy.signInWithGoogle).toHaveBeenCalled();
+    });
+
+    it('sets error signal on failure', async () => {
+      authServiceSpy.signInWithGoogle.and.returnValue(Promise.reject('Google error'));
+      component.onGoogleSignIn();
+      await fixture.whenStable();
+      expect(component.error()).toBe('Google sign-in failed. Please try again.');
     });
   });
 

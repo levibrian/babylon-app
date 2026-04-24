@@ -20,7 +20,7 @@ import { AuthService } from '../../../services/auth.service';
 
 type AuthMode = 'login' | 'register';
 
-function passwordMatchValidator(group: AbstractControl): ValidationErrors | null {
+export function passwordMatchValidator(group: AbstractControl): ValidationErrors | null {
   const password = group.get('password')?.value;
   const confirm = group.get('confirmPassword')?.value;
   if (confirm && password !== confirm) {
