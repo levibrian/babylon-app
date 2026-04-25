@@ -3,6 +3,7 @@ import { FormControl, FormGroup } from '@angular/forms';
 import { LoginComponent, passwordMatchValidator } from './login.component';
 import { AuthService } from '../../../services/auth.service';
 import { ActivatedRoute } from '@angular/router';
+import { of } from 'rxjs';
 
 describe('passwordMatchValidator (standalone)', () => {
   it('returns null when passwords match', () => {
@@ -39,7 +40,7 @@ describe('LoginComponent', () => {
       imports: [LoginComponent],
       providers: [
         { provide: AuthService, useValue: authServiceSpy },
-        { provide: ActivatedRoute, useValue: { snapshot: { data: { mode: 'login' } } } },
+        { provide: ActivatedRoute, useValue: { data: of({ mode: 'login' }) } },
       ],
     }).compileComponents();
 
@@ -111,5 +112,28 @@ describe('LoginComponent', () => {
       component.setMode('register');
       expect(component.error()).toBeNull();
     });
+  });
+});
+
+describe('LoginComponent (register route)', () => {
+  it('initializes in register mode when route data is register', async () => {
+    const authServiceSpy = jasmine.createSpyObj('AuthService', ['login', 'register', 'signInWithGoogle']);
+    authServiceSpy.login.and.returnValue(Promise.resolve());
+    authServiceSpy.register.and.returnValue(Promise.resolve());
+    authServiceSpy.signInWithGoogle.and.returnValue(Promise.resolve());
+
+    await TestBed.configureTestingModule({
+      imports: [LoginComponent],
+      providers: [
+        { provide: AuthService, useValue: authServiceSpy },
+        { provide: ActivatedRoute, useValue: { data: of({ mode: 'register' }) } },
+      ],
+    }).compileComponents();
+
+    const fixture = TestBed.createComponent(LoginComponent);
+    const component = fixture.componentInstance;
+    fixture.detectChanges();
+
+    expect(component.isLoginMode()).toBeFalse();
   });
 });

@@ -5,7 +5,9 @@ import {
   signal,
   computed,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { map } from 'rxjs';
+import { CommonModule, DOCUMENT } from '@angular/common';
 import {
   ReactiveFormsModule,
   FormBuilder,
@@ -39,9 +41,16 @@ export class LoginComponent {
   private fb = inject(FormBuilder);
   private readonly authService = inject(AuthService);
   private route = inject(ActivatedRoute);
+  private doc = inject(DOCUMENT);
 
-  mode = signal<AuthMode>(this.route.snapshot.data['mode'] ?? 'login');
-  isLoginMode = computed(() => this.mode() === 'login');
+  private routeMode = toSignal(
+    this.route.data.pipe(map(d => (d['mode'] as AuthMode) ?? 'login')),
+    { initialValue: (this.doc.location.pathname.includes('/register') ? 'register' : 'login') as AuthMode }
+  );
+  private modeOverride = signal<AuthMode | null>(null);
+
+  readonly mode = computed(() => this.modeOverride() ?? this.routeMode());
+  readonly isLoginMode = computed(() => this.mode() === 'login');
 
   isLoading = signal(false);
   error = signal<string | null>(null);
@@ -60,7 +69,7 @@ export class LoginComponent {
   }, { validators: passwordMatchValidator });
 
   setMode(m: AuthMode): void {
-    this.mode.set(m);
+    this.modeOverride.set(m);
     this.error.set(null);
   }
 
