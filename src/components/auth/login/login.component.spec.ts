@@ -1,5 +1,4 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { FormControl, FormGroup } from '@angular/forms';
 import { LoginComponent, passwordMatchValidator } from './login.component';
 import { AuthService } from '../../../services/auth.service';
@@ -42,7 +41,6 @@ describe('LoginComponent', () => {
         { provide: AuthService, useValue: authServiceSpy },
         { provide: ActivatedRoute, useValue: { snapshot: { data: { mode: 'login' } } } },
       ],
-      schemas: [CUSTOM_ELEMENTS_SCHEMA],
     }).compileComponents();
 
     fixture = TestBed.createComponent(LoginComponent);

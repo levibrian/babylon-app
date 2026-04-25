@@ -4,7 +4,6 @@ import {
   inject,
   signal,
   computed,
-  CUSTOM_ELEMENTS_SCHEMA,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
@@ -32,7 +31,6 @@ export function passwordMatchValidator(group: AbstractControl): ValidationErrors
   selector: 'app-login',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
-  schemas: [CUSTOM_ELEMENTS_SCHEMA],
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
