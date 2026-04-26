@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SPEC-003 · Task 12 — Login / Register</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<style>
+:root {
+  --bg:           #08080A;
+  --surface:      #0E0E12;
+  --raised:       #141418;
+  --hover:        #17171C;
+  --accent:       #7B2FBE;
+  --accent-dim:   rgba(123,47,190,0.12);
+  --accent-bdr:   rgba(123,47,190,0.3);
+  --accent-hover: #9D4EDD;
+  --border:       rgba(255,255,255,0.05);
+  --border-mid:   rgba(255,255,255,0.09);
+  --border-hi:    rgba(255,255,255,0.14);
+  --text:         #EEEEF2;
+  --muted:        #52525F;
+  --mid:          #8585A0;
+  --negative:     #E8524A;
+  --negative-dim: rgba(232,82,74,0.10);
+  --negative-bdr: rgba(232,82,74,0.18);
+  --easing:       200ms ease-out;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;display:flex;align-items:stretch}
+
+/* ── Full-screen split ── */
+.auth-shell{display:flex;width:100%;height:100vh}
+
+/* ── Left panel — decorative ── */
+.auth-left{flex:1;position:relative;display:flex;flex-direction:column;justify-content:flex-end;padding:48px;overflow:hidden;border-right:1px solid var(--border)}
+.auth-left-bg{position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 40% 60%, rgba(123,47,190,0.13) 0%, transparent 70%)}
+
+/* Orb glow */
+.orb{position:absolute;width:380px;height:380px;top:50%;left:50%;transform:translate(-50%,-56%);border-radius:50%;background:radial-gradient(circle, rgba(123,47,190,0.18) 0%, rgba(123,47,190,0.06) 40%, transparent 70%);pointer-events:none}
+
+/* Chart preview illustration */
+.chart-preview{position:absolute;inset:48px;display:flex;align-items:center;justify-content:center}
+.chart-card{width:100%;max-width:380px;background:rgba(14,14,18,0.7);border:1px solid var(--border-mid);border-radius:16px;padding:28px;backdrop-filter:blur(20px)}
+.cc-label{font-size:10.5px;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);margin-bottom:12px}
+.cc-value{font-family:'Roboto Mono',monospace;font-size:28px;font-weight:500;color:var(--text);font-variant-numeric:tabular-nums;letter-spacing:-0.04em;margin-bottom:4px}
+.cc-change{font-size:13px;color:#27C97A;letter-spacing:-0.01em;margin-bottom:24px}
+.cc-chart{width:100%;height:80px}
+.cc-holdings{display:flex;flex-direction:column;gap:0;margin-top:20px;border-top:1px solid var(--border);padding-top:16px}
+.cc-holding{display:flex;align-items:center;justify-content:space-between;padding:8px 0}
+.ch-left{display:flex;align-items:center;gap:10px}
+.ch-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.ch-name{font-size:12.5px;color:var(--mid);letter-spacing:-0.01em}
+.ch-val{font-family:'Roboto Mono',monospace;font-size:12.5px;color:var(--text);font-variant-numeric:tabular-nums;letter-spacing:-0.03em}
+.ch-pct{font-size:11.5px;color:#27C97A;letter-spacing:-0.01em;margin-left:8px}
+.ch-pct.neg{color:#E8524A}
+
+/* Bottom copy */
+.auth-left-copy{position:relative;z-index:1}
+.alc-tagline{font-size:22px;font-weight:300;color:var(--text);letter-spacing:-0.03em;line-height:1.3;max-width:300px}
+.alc-sub{font-size:13px;color:var(--muted);margin-top:10px;line-height:1.5;max-width:280px;letter-spacing:-0.005em}
+
+/* ── Right panel — form ── */
+.auth-right{width:420px;flex-shrink:0;display:flex;flex-direction:column;justify-content:center;padding:48px 44px;overflow-y:auto}
+
+/* Logo + wordmark */
+.auth-logo{display:flex;align-items:center;gap:10px;margin-bottom:48px}
+.logo-mark{width:28px;height:28px}
+.logo-word{font-size:13px;font-weight:300;letter-spacing:0.22em;text-transform:uppercase;color:var(--text)}
+
+/* Heading */
+.auth-heading{font-size:22px;font-weight:500;color:var(--text);letter-spacing:-0.03em;margin-bottom:6px}
+.auth-subhead{font-size:13px;color:var(--muted);letter-spacing:-0.005em;line-height:1.5;margin-bottom:32px}
+
+/* Mode toggle */
+.mode-toggle{display:flex;background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:3px;margin-bottom:28px}
+.mode-btn{flex:1;height:34px;border:none;border-radius:7px;font-family:'Inter',sans-serif;font-size:13px;font-weight:450;cursor:pointer;transition:color var(--easing),background var(--easing);outline:none;letter-spacing:-0.01em}
+.mode-btn:not(.active){background:transparent;color:var(--muted)}
+.mode-btn:not(.active):hover{color:var(--mid)}
+.mode-btn.active{background:var(--raised);color:var(--text);font-weight:500}
+
+/* Form */
+.auth-form{display:flex;flex-direction:column;gap:14px}
+.f-field{display:flex;flex-direction:column;gap:5px}
+.f-label{font-size:11.5px;font-weight:500;color:var(--muted);letter-spacing:0.04em;text-transform:uppercase}
+.f-input{background:var(--raised);border:1px solid var(--border);border-radius:8px;padding:0 12px;height:42px;font-family:'Inter',sans-serif;font-size:13.5px;color:var(--text);outline:none;transition:border-color var(--easing),background var(--easing);letter-spacing:-0.01em;width:100%}
+.f-input::placeholder{color:var(--muted)}
+.f-input:focus{border-color:var(--accent-bdr);background:var(--surface)}
+.f-input.error{border-color:var(--negative-bdr)}
+.f-err{font-size:11.5px;color:var(--negative);letter-spacing:-0.005em;display:none}
+.f-err.visible{display:block}
+
+/* Forgot */
+.forgot-row{display:flex;justify-content:flex-end;margin-top:-6px}
+.forgot-link{font-size:12px;color:var(--muted);cursor:pointer;transition:color var(--easing);letter-spacing:-0.005em}
+.forgot-link:hover{color:var(--mid)}
+
+/* Submit */
+.auth-submit{width:100%;height:44px;background:var(--accent);border:none;border-radius:9px;font-family:'Inter',sans-serif;font-size:14px;font-weight:500;color:#fff;cursor:pointer;transition:background var(--easing),transform 80ms ease-out;outline:none;letter-spacing:-0.01em;margin-top:6px;position:relative}
+.auth-submit:hover{background:var(--accent-hover)}
+.auth-submit:active{transform:scale(0.98)}
+.auth-submit:disabled{opacity:0.5;cursor:not-allowed;transform:none}
+.submit-spinner{display:none;width:16px;height:16px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin 0.7s linear infinite;position:absolute;top:50%;left:50%;margin:-8px 0 0 -8px}
+.auth-submit.loading .submit-text{opacity:0}
+.auth-submit.loading .submit-spinner{display:block}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Divider */
+.auth-divider{display:flex;align-items:center;gap:12px;margin:18px 0 0}
+.div-line{flex:1;height:1px;background:var(--border)}
+.div-text{font-size:11.5px;color:var(--muted);letter-spacing:0.04em;text-transform:uppercase;white-space:nowrap}
+
+/* Google OAuth */
+.google-btn{width:100%;height:42px;background:transparent;border:1px solid var(--border-mid);border-radius:9px;font-family:'Inter',sans-serif;font-size:13.5px;font-weight:450;color:var(--mid);cursor:pointer;transition:background var(--easing),color var(--easing),border-color var(--easing);display:flex;align-items:center;justify-content:center;gap:10px;margin-top:12px;outline:none;letter-spacing:-0.01em}
+.google-btn:hover{background:var(--hover);color:var(--text);border-color:var(--border-hi)}
+
+/* Terms */
+.auth-terms{font-size:11px;color:var(--muted);text-align:center;line-height:1.6;margin-top:20px;letter-spacing:-0.005em}
+.auth-terms a{color:var(--mid);text-decoration:none}
+.auth-terms a:hover{color:var(--text)}
+
+/* Error banner */
+.error-banner{background:var(--negative-dim);border:1px solid var(--negative-bdr);border-radius:8px;padding:10px 14px;font-size:12.5px;color:var(--negative);display:none;align-items:center;gap:8px;line-height:1.4;letter-spacing:-0.005em}
+.error-banner.visible{display:flex}
+
+/* Scenario bar */
+.scenario-bar{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:300;display:flex;align-items:center;gap:0;background:var(--raised);border:1px solid var(--border-mid);border-radius:10px;padding:4px;box-shadow:0 8px 32px rgba(0,0,0,0.5);white-space:nowrap}
+.sc-btn{font-size:11.5px;font-weight:450;color:var(--muted);cursor:pointer;user-select:none;padding:5px 13px;border-radius:7px;transition:color var(--easing),background var(--easing);white-space:nowrap;border:none;background:transparent;font-family:'Inter',sans-serif;outline:none;letter-spacing:0.01em}
+.sc-btn:hover{color:var(--mid)}
+.sc-btn.active{color:var(--text);background:var(--surface);font-weight:500}
+.sc-sep{width:1px;height:14px;background:var(--border-mid);margin:0 2px;flex-shrink:0}
+
+/* Success overlay */
+.success-overlay{position:fixed;inset:0;background:var(--bg);z-index:500;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;opacity:0;pointer-events:none;transition:opacity 300ms ease-out}
+.success-overlay.show{opacity:1;pointer-events:all}
+.success-icon{width:52px;height:52px;border-radius:50%;background:rgba(39,201,122,0.12);border:1px solid rgba(39,201,122,0.2);display:flex;align-items:center;justify-content:center;color:#27C97A}
+.success-title{font-size:18px;font-weight:500;color:var(--text);letter-spacing:-0.03em}
+.success-sub{font-size:13px;color:var(--muted);letter-spacing:-0.005em}
+
+@media(max-width:768px){
+  .auth-left{display:none}
+  .auth-right{width:100%;padding:36px 24px}
+  .scenario-bar{bottom:16px;left:8px;right:8px;transform:none;justify-content:center;flex-wrap:wrap;gap:2px}
+}
+</style>
+</head>
+<body>
+
+<div class="auth-shell">
+
+  <!-- LEFT — decorative -->
+  <div class="auth-left">
+    <div class="auth-left-bg"></div>
+    <div class="orb"></div>
+
+    <div class="chart-preview">
+      <div class="chart-card">
+        <div class="cc-label">Portfolio value</div>
+        <div class="cc-value">€42,816.40</div>
+        <div class="cc-change">↑ +€4,312 · +11.2% this year</div>
+
+        <!-- Inline SVG chart -->
+        <svg class="cc-chart" viewBox="0 0 340 80" preserveAspectRatio="none" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="rgba(123,47,190,0.18)"/>
+              <stop offset="100%" stop-color="rgba(123,47,190,0)"/>
+            </linearGradient>
+          </defs>
+          <path d="M0,62 C20,60 35,55 55,48 C75,41 90,45 110,38 C130,31 145,34 165,26 C185,18 200,22 220,16 C240,10 255,14 275,8 C295,2 315,6 340,4 L340,80 L0,80 Z" fill="url(#chartGrad)"/>
+          <path d="M0,62 C20,60 35,55 55,48 C75,41 90,45 110,38 C130,31 145,34 165,26 C185,18 200,22 220,16 C240,10 255,14 275,8 C295,2 315,6 340,4" stroke="#7B2FBE" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+
+        <div class="cc-holdings">
+          <div class="cc-holding">
+            <div class="ch-left">
+              <div class="ch-dot" style="background:#27C97A"></div>
+              <div class="ch-name">Vanguard FTSE</div>
+            </div>
+            <div style="display:flex;align-items:center">
+              <div class="ch-val">€20,140</div>
+              <div class="ch-pct">+9.4%</div>
+            </div>
+          </div>
+          <div class="cc-holding">
+            <div class="ch-left">
+              <div class="ch-dot" style="background:#818CF8"></div>
+              <div class="ch-name">Apple</div>
+            </div>
+            <div style="display:flex;align-items:center">
+              <div class="ch-val">€11,820</div>
+              <div class="ch-pct">+14.1%</div>
+            </div>
+          </div>
+          <div class="cc-holding">
+            <div class="ch-left">
+              <div class="ch-dot" style="background:#BB94E6"></div>
+              <div class="ch-name">NVIDIA</div>
+            </div>
+            <div style="display:flex;align-items:center">
+              <div class="ch-val">€6,430</div>
+              <div class="ch-pct neg">-2.8%</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="auth-left-copy">
+      <div class="alc-tagline" id="left-tagline">Understand how to Money</div>
+      <div class="alc-sub" id="left-sub">Track every position, every entry, every gain — with clarity.</div>
+    </div>
+  </div>
+
+  <!-- RIGHT — form -->
+  <div class="auth-right">
+
+    <div class="auth-logo">
+      <!-- Orb mark -->
+      <svg class="logo-mark" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="14" cy="14" r="13" stroke="rgba(123,47,190,0.5)" stroke-width="1"/>
+        <circle cx="14" cy="14" r="7" fill="rgba(123,47,190,0.2)" stroke="#7B2FBE" stroke-width="1"/>
+        <circle cx="14" cy="14" r="3" fill="#7B2FBE"/>
+      </svg>
+      <span class="logo-word">Babylon</span>
+    </div>
+
+    <div class="auth-heading" id="auth-heading">Welcome back</div>
+    <div class="auth-subhead" id="auth-subhead">Sign in to your account to continue.</div>
+
+    <div class="mode-toggle">
+      <button class="mode-btn active" id="mode-login" data-mode="login">Sign in</button>
+      <button class="mode-btn" id="mode-register" data-mode="register">Create account</button>
+    </div>
+
+    <div class="error-banner" id="error-banner">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <span id="error-msg">Incorrect email or password.</span>
+    </div>
+
+    <div class="auth-form" id="auth-form">
+
+      <!-- Name (register only) -->
+      <div class="f-field" id="field-name" style="display:none">
+        <label class="f-label" for="inp-name">Full name</label>
+        <input class="f-input" type="text" id="inp-name" placeholder="Your name" autocomplete="name">
+      </div>
+
+      <!-- Email -->
+      <div class="f-field">
+        <label class="f-label" for="inp-email">Email</label>
+        <input class="f-input" type="email" id="inp-email" placeholder="you@example.com" autocomplete="email">
+        <div class="f-err" id="email-err">Please enter a valid email address.</div>
+      </div>
+
+      <!-- Password -->
+      <div class="f-field">
+        <label class="f-label" for="inp-password">Password</label>
+        <input class="f-input" type="password" id="inp-password" placeholder="Password" autocomplete="current-password">
+        <div class="f-err" id="pw-err">Password must be at least 8 characters.</div>
+      </div>
+
+      <!-- Confirm password (register only) -->
+      <div class="f-field" id="field-confirm" style="display:none">
+        <label class="f-label" for="inp-confirm">Confirm password</label>
+        <input class="f-input" type="password" id="inp-confirm" placeholder="Confirm password" autocomplete="new-password">
+        <div class="f-err" id="confirm-err">Passwords do not match.</div>
+      </div>
+
+      <!-- Forgot password (login only) -->
+      <div class="forgot-row" id="forgot-row">
+        <span class="forgot-link" id="forgot-link">Forgot password?</span>
+      </div>
+
+      <button class="auth-submit" id="auth-submit">
+        <span class="submit-text" id="submit-text">Sign in</span>
+        <div class="submit-spinner"></div>
+      </button>
+    </div>
+
+    <div class="auth-divider">
+      <div class="div-line"></div>
+      <div class="div-text">or</div>
+      <div class="div-line"></div>
+    </div>
+
+    <button class="google-btn" id="google-btn">
+      <!-- Google G mark -->
+      <svg width="16" height="16" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+      </svg>
+      Continue with Google
+    </button>
+
+    <div class="auth-terms" id="auth-terms">
+      By signing in you agree to our <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.
+    </div>
+
+  </div>
+</div>
+
+<!-- Success overlay -->
+<div class="success-overlay" id="success-overlay">
+  <div class="success-icon">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+  </div>
+  <div class="success-title" id="success-title">Signed in</div>
+  <div class="success-sub" id="success-sub">Redirecting to your portfolio…</div>
+</div>
+
+<div id="tweaks-root"></div>
+
+<!-- Scenario bar -->
+<div class="scenario-bar">
+  <button class="sc-btn active" data-sc="login">Login</button>
+  <div class="sc-sep"></div>
+  <button class="sc-btn" data-sc="register">Register</button>
+  <div class="sc-sep"></div>
+  <button class="sc-btn" data-sc="login-error">Login error</button>
+  <div class="sc-sep"></div>
+  <button class="sc-btn" data-sc="success">Success</button>
+</div>
+
+<script>
+let currentMode = 'login';
+
+/* ── Mode switch ── */
+function setMode(mode) {
+  currentMode = mode;
+
+  document.querySelectorAll('.mode-btn').forEach(function(b) {
+    b.classList.toggle('active', b.dataset.mode === mode);
+  });
+
+  const isLogin = mode === 'login';
+
+  document.getElementById('auth-heading').textContent = isLogin ? 'Welcome back' : 'Create account';
+  document.getElementById('auth-subhead').textContent = isLogin
+    ? 'Sign in to your account to continue.'
+    : 'Start tracking your investments today.';
+  document.getElementById('submit-text').textContent = isLogin ? 'Sign in' : 'Create account';
+  document.getElementById('field-name').style.display = isLogin ? 'none' : 'flex';
+  document.getElementById('field-confirm').style.display = isLogin ? 'none' : 'flex';
+  document.getElementById('forgot-row').style.display = isLogin ? 'flex' : 'none';
+  document.getElementById('auth-terms').textContent = '';
+
+  if (!isLogin) {
+    const t = document.getElementById('auth-terms');
+    t.innerHTML = 'By creating an account you agree to our <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.';
+  } else {
+    const t = document.getElementById('auth-terms');
+    t.innerHTML = 'By signing in you agree to our <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.';
+  }
+
+  document.getElementById('inp-password').setAttribute('autocomplete', isLogin ? 'current-password' : 'new-password');
+
+  clearErrors();
+  document.getElementById('error-banner').classList.remove('visible');
+}
+
+/* ── Validation helpers ── */
+function clearErrors() {
+  ['email-err','pw-err','confirm-err'].forEach(function(id) {
+    document.getElementById(id).classList.remove('visible');
+  });
+  ['inp-email','inp-password','inp-confirm'].forEach(function(id) {
+    document.getElementById(id).classList.remove('error');
+  });
+}
+
+function showFieldErr(inputId, errId) {
+  document.getElementById(inputId).classList.add('error');
+  document.getElementById(errId).classList.add('visible');
+}
+
+function validate() {
+  clearErrors();
+  let ok = true;
+  const email = document.getElementById('inp-email').value.trim();
+  const pw = document.getElementById('inp-password').value;
+
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    showFieldErr('inp-email', 'email-err');
+    ok = false;
+  }
+  if (pw.length < 8) {
+    showFieldErr('inp-password', 'pw-err');
+    ok = false;
+  }
+  if (currentMode === 'register') {
+    const conf = document.getElementById('inp-confirm').value;
+    if (conf !== pw) {
+      showFieldErr('inp-confirm', 'confirm-err');
+      ok = false;
+    }
+  }
+  return ok;
+}
+
+/* ── Submit ── */
+function doSubmit() {
+  if (!validate()) return;
+
+  const btn = document.getElementById('auth-submit');
+  btn.classList.add('loading');
+  btn.disabled = true;
+
+  setTimeout(function() {
+    btn.classList.remove('loading');
+    btn.disabled = false;
+    showSuccess();
+  }, 1400);
+}
+
+function showSuccess() {
+  document.getElementById('success-title').textContent = currentMode === 'login' ? 'Signed in' : 'Account created';
+  document.getElementById('success-sub').textContent = 'Redirecting to your portfolio\u2026';
+  document.getElementById('success-overlay').classList.add('show');
+}
+
+/* ── Event wiring ── */
+document.querySelectorAll('.mode-btn').forEach(function(btn) {
+  btn.addEventListener('click', function() { setMode(this.dataset.mode); });
+});
+
+document.getElementById('auth-submit').addEventListener('click', doSubmit);
+
+document.getElementById('auth-form').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') doSubmit();
+});
+
+document.getElementById('google-btn').addEventListener('click', function() {
+  document.getElementById('success-title').textContent = 'Signed in with Google';
+  document.getElementById('success-sub').textContent = 'Redirecting to your portfolio\u2026';
+  document.getElementById('success-overlay').classList.add('show');
+});
+
+/* ── Scenario bar ── */
+document.querySelectorAll('.sc-btn[data-sc]').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    document.querySelectorAll('.sc-btn[data-sc]').forEach(function(b) { b.classList.remove('active'); });
+    this.classList.add('active');
+
+    document.getElementById('success-overlay').classList.remove('show');
+    document.getElementById('error-banner').classList.remove('visible');
+    clearErrors();
+
+    const sc = this.dataset.sc;
+
+    if (sc === 'login') {
+      setMode('login');
+      document.getElementById('inp-email').value = '';
+      document.getElementById('inp-password').value = '';
+    } else if (sc === 'register') {
+      setMode('register');
+      document.getElementById('inp-email').value = '';
+      document.getElementById('inp-password').value = '';
+      document.getElementById('inp-confirm').value = '';
+      document.getElementById('inp-name').value = '';
+    } else if (sc === 'login-error') {
+      setMode('login');
+      document.getElementById('inp-email').value = 'brian@example.com';
+      document.getElementById('inp-password').value = 'wrongpassword';
+      document.getElementById('error-banner').classList.add('visible');
+      document.getElementById('error-msg').textContent = 'Incorrect email or password.';
+      document.getElementById('inp-password').classList.add('error');
+    } else if (sc === 'success') {
+      setMode('login');
+      showSuccess();
+    }
+  });
+});
+</script>
+
+<script type="text/babel" src="../../tweaks-panel.jsx"></script>
+<script type="text/babel">
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "tagline": "Understand how to Money",
+  "sub": "Grow your wealth. Step by step. One day at a time.",
+  "showLeftPanel": true,
+  "accentColor": "#7B2FBE"
+}/*EDITMODE-END*/;
+
+function TweaksRoot() {
+  const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
+
+  React.useEffect(function() {
+    // Tagline
+    const tagEl = document.getElementById('left-tagline');
+    if (tagEl) tagEl.textContent = t.tagline;
+    // Sub
+    const subEl = document.getElementById('left-sub');
+    if (subEl) subEl.textContent = t.sub;
+    // Left panel visibility
+    const leftEl = document.querySelector('.auth-left');
+    if (leftEl) leftEl.style.display = t.showLeftPanel ? '' : 'none';
+    // Accent color
+    document.documentElement.style.setProperty('--accent', t.accentColor);
+    // Recompute accent-dim and accent-hover from the same hue
+    const hex = t.accentColor;
+    const r = parseInt(hex.slice(1,3),16);
+    const g = parseInt(hex.slice(3,5),16);
+    const b = parseInt(hex.slice(5,7),16);
+    document.documentElement.style.setProperty('--accent-dim', 'rgba('+r+','+g+','+b+',0.12)');
+    document.documentElement.style.setProperty('--accent-bdr', 'rgba('+r+','+g+','+b+',0.3)');
+    document.documentElement.style.setProperty('--accent-hover', 'color-mix(in srgb, '+hex+' 80%, white)');
+  }, [t.tagline, t.sub, t.showLeftPanel, t.accentColor]);
+
+  return React.createElement(TweaksPanel, null,
+    React.createElement(TweakSection, {label: 'Left panel'}),
+    React.createElement(TweakText, {
+      label: 'Tagline',
+      value: t.tagline,
+      onChange: function(v) { setTweak('tagline', v); }
+    }),
+    React.createElement(TweakText, {
+      label: 'Caption',
+      value: t.sub,
+      onChange: function(v) { setTweak('sub', v); }
+    }),
+    React.createElement(TweakToggle, {
+      label: 'Show left panel',
+      value: t.showLeftPanel,
+      onChange: function(v) { setTweak('showLeftPanel', v); }
+    }),
+    React.createElement(TweakSection, {label: 'Brand'}),
+    React.createElement(TweakColor, {
+      label: 'Accent color',
+      value: t.accentColor,
+      onChange: function(v) { setTweak('accentColor', v); }
+    })
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('tweaks-root')).render(React.createElement(TweaksRoot));
+</script>
+</body>
+</html>

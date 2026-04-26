@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SPEC-003 · Tasks 9–11 — Transactions</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:           #08080A;
+  --surface:      #0E0E12;
+  --raised:       #141418;
+  --hover:        #17171C;
+  --accent:       #7B2FBE;
+  --accent-dim:   rgba(123,47,190,0.12);
+  --accent-bdr:   rgba(123,47,190,0.3);
+  --accent-text:  rgba(187,148,230,0.9);
+  --border:       rgba(255,255,255,0.05);
+  --border-mid:   rgba(255,255,255,0.09);
+  --border-hi:    rgba(255,255,255,0.14);
+  --text:         #EEEEF2;
+  --muted:        #52525F;
+  --mid:          #8585A0;
+  --positive:     #27C97A;
+  --negative:     #E8524A;
+  --positive-dim: rgba(39,201,122,0.1);
+  --positive-bdr: rgba(39,201,122,0.18);
+  --negative-dim: rgba(232,82,74,0.1);
+  --negative-bdr: rgba(232,82,74,0.18);
+  --sidebar-w:    220px;
+  --sidebar-col:  60px;
+  --topbar-h:     54px;
+  --easing:       200ms ease-out;
+  --drawer-ease:  240ms cubic-bezier(0.16,1,0.3,1);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;display:flex;overflow:hidden}
+.shell{display:flex;width:100%;height:100vh}
+
+/* ── Sidebar ── */
+.sidebar{width:var(--sidebar-w);height:100vh;position:relative;flex-shrink:0;transition:width var(--easing);overflow:visible;z-index:10}
+.sidebar.collapsed{width:var(--sidebar-col)}
+.sidebar-inner{width:100%;height:100%;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+.sb-brand{display:flex;align-items:center;padding:0 16px;height:58px;border-bottom:1px solid var(--border);flex-shrink:0;overflow:hidden;position:relative}
+.brand-word{font-size:13px;font-weight:300;letter-spacing:0.22em;text-transform:uppercase;color:var(--text);white-space:nowrap;opacity:1;transition:opacity var(--easing)}
+.brand-b{font-size:13px;font-weight:300;letter-spacing:0.1em;text-transform:uppercase;color:var(--text);opacity:0;position:absolute;transition:opacity var(--easing)}
+.sidebar.collapsed .brand-word{opacity:0;pointer-events:none}
+.sidebar.collapsed .brand-b{opacity:1;position:static}
+.sb-nav{flex:1;padding:10px 8px;display:flex;flex-direction:column;gap:1px;overflow:hidden}
+.nav-i{display:flex;align-items:center;gap:10px;padding:0 10px;height:38px;border-radius:8px;cursor:pointer;position:relative;transition:background var(--easing);overflow:hidden;white-space:nowrap;user-select:none;flex-shrink:0}
+.nav-i:hover{background:var(--hover)}
+.nav-i.active{background:var(--accent-dim)}
+.nav-i.active::before{content:'';position:absolute;left:0;top:7px;bottom:7px;width:2px;background:var(--accent);border-radius:0 2px 2px 0}
+.nav-ico{width:20px;height:20px;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:var(--muted);transition:color var(--easing)}
+.nav-i.active .nav-ico{color:var(--accent)}
+.nav-i:hover .nav-ico{color:var(--mid)}
+.nav-lbl{font-size:13px;font-weight:450;color:var(--muted);letter-spacing:-0.01em;white-space:nowrap;opacity:1;transition:opacity var(--easing),color var(--easing)}
+.nav-i.active .nav-lbl{color:var(--text);font-weight:500}
+.nav-i:hover .nav-lbl{color:var(--mid)}
+.sidebar.collapsed .nav-lbl{opacity:0;pointer-events:none}
+.sb-div{height:1px;background:var(--border);margin:0 8px;flex-shrink:0}
+.sb-bot{padding:8px 8px 14px;display:flex;flex-direction:column;gap:1px;flex-shrink:0}
+.user-i{display:flex;align-items:center;gap:10px;padding:0 10px;height:42px;border-radius:8px;cursor:pointer;overflow:hidden;white-space:nowrap;transition:background var(--easing);flex-shrink:0}
+.user-i:hover{background:var(--hover)}
+.av{width:26px;height:26px;border-radius:50%;background:linear-gradient(140deg,#5A1A9C,#8B3FCC);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;color:rgba(255,255,255,.9)}
+.u-info{display:flex;flex-direction:column;gap:1px;min-width:0;opacity:1;transition:opacity var(--easing)}
+.sidebar.collapsed .u-info{opacity:0;pointer-events:none}
+.u-name{font-size:12.5px;font-weight:500;color:var(--text);letter-spacing:-0.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.u-mail{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.col-btn{position:absolute;right:-11px;top:50%;transform:translateY(-50%);width:22px;height:22px;border-radius:50%;background:var(--raised);border:1px solid var(--border);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--muted);transition:background var(--easing),color var(--easing);z-index:20;outline:none}
+.col-btn:hover{background:var(--hover);color:var(--text);border-color:rgba(255,255,255,.12)}
+.col-btn svg{transition:transform var(--easing);display:block}
+.sidebar.collapsed .col-btn svg{transform:rotate(180deg)}
+
+/* ── Main ── */
+.main{flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden}
+.topbar{display:none;align-items:center;justify-content:space-between;padding:0 16px;height:var(--topbar-h);border-bottom:1px solid var(--border);background:var(--bg);flex-shrink:0;position:relative}
+.hbg{width:36px;height:36px;border-radius:6px;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--muted);transition:background var(--easing),color var(--easing);outline:none}
+.hbg:hover{background:var(--hover);color:var(--text)}
+.tb-word{position:absolute;left:50%;transform:translateX(-50%);font-size:13px;font-weight:300;letter-spacing:0.22em;text-transform:uppercase;color:var(--text);pointer-events:none}
+.tb-av{width:30px;height:30px;border-radius:50%;background:linear-gradient(140deg,#5A1A9C,#8B3FCC);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:rgba(255,255,255,.9);cursor:pointer}
+
+/* ── Page ── */
+.page{flex:1;overflow-y:auto;padding:36px 32px;display:flex;flex-direction:column;gap:0}
+.page-hdr{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:28px;gap:16px;flex-wrap:wrap}
+.page-title{font-size:18px;font-weight:500;color:var(--text);letter-spacing:-0.02em}
+.page-subtitle{font-size:12px;color:var(--muted);letter-spacing:0.01em;margin-top:4px}
+.hdr-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.filter-bar{display:flex;align-items:center;gap:8px}
+.search-wrap{position:relative}
+.search-ico{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none}
+.search-inp{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:0 12px 0 32px;height:34px;font-family:'Inter',sans-serif;font-size:13px;color:var(--text);outline:none;transition:border-color var(--easing);letter-spacing:-0.01em;width:180px}
+.search-inp::placeholder{color:var(--muted)}
+.search-inp:focus{border-color:var(--border-hi)}
+.type-filter{display:flex;align-items:center;gap:2px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:3px}
+.tf-btn{font-size:11.5px;font-weight:450;color:var(--muted);cursor:pointer;user-select:none;padding:3px 9px;border-radius:5px;transition:color var(--easing),background var(--easing);white-space:nowrap;letter-spacing:0.01em;border:none;background:transparent;font-family:'Inter',sans-serif;outline:none}
+.tf-btn:hover{color:var(--mid)}
+.tf-btn.active{color:var(--text);background:var(--raised);font-weight:500}
+.add-btn{display:flex;align-items:center;gap:6px;padding:0 14px;height:34px;background:var(--accent);border:none;border-radius:8px;font-family:'Inter',sans-serif;font-size:13px;font-weight:500;color:#fff;cursor:pointer;transition:opacity var(--easing),transform 80ms ease-out;white-space:nowrap;flex-shrink:0;outline:none;letter-spacing:-0.01em}
+.add-btn:hover{opacity:0.88}
+.add-btn:active{transform:scale(0.975)}
+
+/* ── Transaction list ── */
+.tx-list{display:flex;flex-direction:column}
+.month-hdr{font-size:10.5px;font-weight:500;color:var(--muted);letter-spacing:0.08em;text-transform:uppercase;padding:20px 0 6px;border-bottom:1px solid var(--border);margin-bottom:2px}
+.month-hdr.first{padding-top:0}
+
+.tx-row{position:relative;border-radius:10px;margin:0 -10px;cursor:pointer;transition:background var(--easing)}
+.tx-row:hover{background:var(--hover)}
+.tx-row.expanded{background:var(--surface)}
+
+.tx-head{display:grid;grid-template-columns:1fr auto auto;align-items:center;gap:16px;padding:12px 10px}
+
+.tx-left{display:flex;align-items:center;gap:10px;min-width:0}
+.tx-icon{width:32px;height:32px;border-radius:8px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600}
+.tx-icon.buy{background:var(--positive-dim);color:var(--positive)}
+.tx-icon.sell{background:var(--negative-dim);color:var(--negative)}
+.tx-icon.dividend{background:var(--accent-dim);color:var(--accent-text)}
+.tx-info{display:flex;flex-direction:column;gap:3px;min-width:0}
+.tx-name{font-size:13.5px;font-weight:500;color:var(--text);letter-spacing:-0.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tx-meta{display:flex;align-items:center;gap:5px}
+.tx-type-tag{font-size:10px;font-weight:500;letter-spacing:0.04em;text-transform:uppercase;padding:1px 5px;border-radius:3px}
+.tx-type-tag.buy{color:var(--positive);background:var(--positive-dim)}
+.tx-type-tag.sell{color:var(--negative);background:var(--negative-dim)}
+.tx-type-tag.dividend{color:var(--accent-text);background:var(--accent-dim)}
+.tx-shares-inline{font-family:'Roboto Mono',monospace;font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums;letter-spacing:-0.02em}
+
+.tx-date{font-size:12px;color:var(--muted);white-space:nowrap;letter-spacing:0.01em;text-align:right;min-width:80px}
+.tx-val{font-family:'Roboto Mono',monospace;font-size:13.5px;font-weight:500;font-variant-numeric:tabular-nums;letter-spacing:-0.03em;white-space:nowrap;text-align:right;min-width:80px}
+.tx-val.buy{color:var(--text)}
+.tx-val.sell{color:var(--positive)}
+.tx-val.dividend{color:var(--accent-text)}
+
+.tx-chev{position:absolute;right:10px;top:50%;transform:translateY(-50%);color:var(--muted);opacity:0;transition:opacity var(--easing),transform var(--easing);pointer-events:none}
+.tx-row:hover .tx-chev{opacity:0.5}
+.tx-row.expanded .tx-chev{opacity:0.7;transform:translateY(-50%) rotate(180deg)}
+
+/* Expand detail */
+.tx-detail{overflow:hidden;max-height:0;transition:max-height 220ms cubic-bezier(0.16,1,0.3,1)}
+.tx-row.expanded .tx-detail{max-height:300px}
+.tx-detail-inner{padding:0 10px 14px}
+.tx-detail-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:12px 0;border-top:1px solid var(--border);margin-bottom:10px}
+.td-cell{display:flex;flex-direction:column;gap:3px}
+.td-lbl{font-size:10.5px;color:var(--muted);letter-spacing:0.04em;text-transform:uppercase;font-weight:500}
+.td-val{font-family:'Roboto Mono',monospace;font-size:13px;font-weight:500;color:var(--text);font-variant-numeric:tabular-nums;letter-spacing:-0.03em}
+.tx-actions{display:flex;align-items:center;gap:6px;justify-content:flex-end}
+.tx-act-btn{display:flex;align-items:center;gap:5px;padding:5px 12px;border-radius:7px;border:1px solid var(--border);background:transparent;font-family:'Inter',sans-serif;font-size:12px;font-weight:450;color:var(--mid);cursor:pointer;transition:background var(--easing),color var(--easing),border-color var(--easing);outline:none;letter-spacing:-0.01em}
+.tx-act-btn:hover{background:var(--hover);color:var(--text);border-color:var(--border-mid)}
+.tx-act-btn.danger:hover{background:var(--negative-dim);color:var(--negative);border-color:var(--negative-bdr)}
+
+/* ── Empty state ── */
+.empty-state{display:none;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:72px 24px;text-align:center}
+.empty-state.visible{display:flex}
+.empty-icon{width:52px;height:52px;border-radius:14px;background:var(--surface);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--muted)}
+.empty-title{font-size:15px;font-weight:500;color:var(--text);letter-spacing:-0.02em}
+.empty-body{font-size:13px;color:var(--muted);line-height:1.55;max-width:240px;letter-spacing:-0.005em}
+.empty-cta{display:flex;align-items:center;gap:6px;padding:0 18px;height:38px;background:var(--accent);border:none;border-radius:8px;font-family:'Inter',sans-serif;font-size:13px;font-weight:500;color:#fff;cursor:pointer;transition:opacity var(--easing);outline:none}
+.empty-cta:hover{opacity:0.88}
+
+/* ── Drawer ── */
+.drawer-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:100;opacity:0;pointer-events:none;transition:opacity var(--drawer-ease)}
+.drawer-overlay.open{opacity:1;pointer-events:all}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:400px;max-width:100vw;background:var(--surface);border-left:1px solid var(--border);z-index:101;display:flex;flex-direction:column;transform:translateX(100%);transition:transform var(--drawer-ease)}
+.drawer.open{transform:translateX(0)}
+.drawer-hdr{display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:58px;border-bottom:1px solid var(--border);flex-shrink:0}
+.drawer-title-el{font-size:14px;font-weight:500;color:var(--text);letter-spacing:-0.02em}
+.drawer-close{width:30px;height:30px;border-radius:6px;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--muted);transition:background var(--easing),color var(--easing);outline:none}
+.drawer-close:hover{background:var(--hover);color:var(--text)}
+.drawer-body{flex:1;overflow-y:auto;padding:24px}
+.drawer-form{display:flex;flex-direction:column;gap:20px}
+.f-field{display:flex;flex-direction:column;gap:6px}
+.f-label{font-size:11.5px;font-weight:500;color:var(--muted);letter-spacing:0.04em;text-transform:uppercase}
+.f-input{background:var(--raised);border:1px solid var(--border);border-radius:8px;padding:0 12px;height:40px;font-family:'Inter',sans-serif;font-size:13.5px;color:var(--text);outline:none;transition:border-color var(--easing);letter-spacing:-0.01em;width:100%}
+.f-input::placeholder{color:var(--muted)}
+.f-input:focus{border-color:var(--accent-bdr)}
+.f-mono{font-family:'Roboto Mono',monospace;font-variant-numeric:tabular-nums;font-size:14px;letter-spacing:-0.02em}
+.f-select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2352525F' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;cursor:pointer}
+option{background:#141418}
+.type-seg{display:grid;grid-template-columns:repeat(3,1fr);gap:0;background:var(--raised);border:1px solid var(--border);border-radius:8px;padding:3px}
+.ts-btn{font-size:12.5px;font-weight:450;color:var(--muted);cursor:pointer;user-select:none;padding:7px 0;border-radius:6px;transition:color var(--easing),background var(--easing);text-align:center;letter-spacing:-0.005em;border:none;background:transparent;font-family:'Inter',sans-serif;outline:none}
+.ts-btn:not(.active){opacity:0.5}
+.ts-btn:not(.active):hover{opacity:0.8}
+.ts-btn.buy.active{color:var(--positive);background:var(--positive-dim)}
+.ts-btn.sell.active{color:var(--negative);background:var(--negative-dim)}
+.ts-btn.dividend.active{color:var(--accent-text);background:var(--accent-dim)}
+.f-grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.f-total{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-top:1px solid var(--border)}
+.f-total-lbl{font-size:12px;color:var(--muted);letter-spacing:0.02em}
+.f-total-val{font-family:'Roboto Mono',monospace;font-size:15px;font-weight:500;color:var(--text);font-variant-numeric:tabular-nums;letter-spacing:-0.03em}
+.drawer-foot{padding:16px 24px;border-top:1px solid var(--border);display:flex;gap:8px;flex-shrink:0}
+.btn-cancel{flex:1;height:40px;background:transparent;border:1px solid var(--border);border-radius:8px;font-family:'Inter',sans-serif;font-size:13px;font-weight:450;color:var(--mid);cursor:pointer;transition:background var(--easing),color var(--easing),border-color var(--easing);outline:none}
+.btn-cancel:hover{background:var(--hover);color:var(--text);border-color:var(--border-mid)}
+.btn-submit{flex:2;height:40px;background:var(--accent);border:none;border-radius:8px;font-family:'Inter',sans-serif;font-size:13px;font-weight:500;color:#fff;cursor:pointer;transition:opacity var(--easing);outline:none;letter-spacing:-0.01em}
+.btn-submit:hover{opacity:0.88}
+
+/* ── Delete confirm ── */
+.confirm-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:200;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity 150ms ease-out}
+.confirm-overlay.open{opacity:1;pointer-events:all}
+.confirm-card{background:var(--surface);border:1px solid var(--border-mid);border-radius:12px;padding:24px;width:320px;display:flex;flex-direction:column;gap:16px;transform:scale(0.95);transition:transform 150ms ease-out}
+.confirm-overlay.open .confirm-card{transform:scale(1)}
+.confirm-icon-wrap{width:40px;height:40px;border-radius:10px;background:var(--negative-dim);border:1px solid var(--negative-bdr);display:flex;align-items:center;justify-content:center;color:var(--negative)}
+.confirm-title{font-size:14.5px;font-weight:500;color:var(--text);letter-spacing:-0.02em}
+.confirm-body{font-size:13px;color:var(--muted);line-height:1.5;letter-spacing:-0.005em}
+.confirm-btns{display:flex;gap:8px}
+.btn-conf-cancel{flex:1;height:38px;background:transparent;border:1px solid var(--border);border-radius:8px;font-family:'Inter',sans-serif;font-size:13px;font-weight:450;color:var(--mid);cursor:pointer;outline:none;transition:background var(--easing),color var(--easing)}
+.btn-conf-cancel:hover{background:var(--hover);color:var(--text)}
+.btn-conf-del{flex:1;height:38px;background:var(--negative-dim);border:1px solid var(--negative-bdr);border-radius:8px;font-family:'Inter',sans-serif;font-size:13px;font-weight:500;color:var(--negative);cursor:pointer;outline:none;transition:background var(--easing)}
+.btn-conf-del:hover{background:rgba(232,82,74,0.18)}
+
+/* ── Mobile nav drawer ── */
+.mob-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:50;opacity:0;pointer-events:none;transition:opacity 200ms ease-out}
+.mob-overlay.open{opacity:1;pointer-events:all}
+.mob-drawer{position:fixed;left:0;top:0;bottom:0;width:260px;background:var(--surface);border-right:1px solid var(--border);z-index:51;display:flex;flex-direction:column;transform:translateX(-100%);transition:transform 240ms cubic-bezier(0.16,1,0.3,1)}
+.mob-drawer.open{transform:translateX(0)}
+.mob-brand{display:flex;align-items:center;padding:0 16px;height:58px;border-bottom:1px solid var(--border)}
+.mob-div{height:1px;background:var(--border);margin:4px 8px}
+
+/* ── Scenario bar ── */
+.scenario-bar{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:300;display:flex;align-items:center;gap:0;background:var(--raised);border:1px solid var(--border-mid);border-radius:10px;padding:4px;box-shadow:0 8px 32px rgba(0,0,0,0.5);white-space:nowrap}
+.sc-btn{font-size:11.5px;font-weight:450;color:var(--muted);cursor:pointer;user-select:none;padding:5px 13px;border-radius:7px;transition:color var(--easing),background var(--easing);white-space:nowrap;border:none;background:transparent;font-family:'Inter',sans-serif;outline:none;letter-spacing:0.01em}
+.sc-btn:hover{color:var(--mid)}
+.sc-btn.active{color:var(--text);background:var(--surface);font-weight:500}
+.sc-sep{width:1px;height:14px;background:var(--border-mid);margin:0 2px;flex-shrink:0}
+
+@media(max-width:768px){
+  .sidebar{display:none}
+  .topbar{display:flex}
+  .page{padding:20px 16px;gap:0}
+  .page-hdr{flex-direction:column;align-items:stretch;gap:12px;margin-bottom:20px}
+  .hdr-right{flex-direction:column;align-items:stretch;gap:8px}
+  .filter-bar{flex-direction:column;align-items:stretch}
+  .search-inp{width:100%}
+  .tx-head{grid-template-columns:1fr auto}
+  .tx-date{display:none}
+  .tx-detail-grid{grid-template-columns:repeat(2,1fr)}
+  .drawer{width:100vw;top:auto;border-left:none;border-top:1px solid var(--border);border-radius:16px 16px 0 0;transform:translateY(100%)}
+  .drawer.open{transform:translateY(0)}
+  .scenario-bar{bottom:16px;left:8px;right:8px;transform:none;justify-content:center;flex-wrap:wrap;gap:2px}
+}
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-inner">
+      <div class="sb-brand">
+        <span class="brand-word">Babylon</span>
+        <span class="brand-b">B</span>
+      </div>
+      <div class="sb-nav">
+        <div class="nav-i">
+          <div class="nav-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg></div>
+          <span class="nav-lbl">Portfolio</span>
+        </div>
+        <div class="nav-i active">
+          <div class="nav-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 7H3M21 12H3M21 17H3"/></svg></div>
+          <span class="nav-lbl">Transactions</span>
+        </div>
+        <div class="nav-i">
+          <div class="nav-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg></div>
+          <span class="nav-lbl">Recurring</span>
+        </div>
+      </div>
+      <div class="sb-div"></div>
+      <div class="sb-bot">
+        <div class="nav-i">
+          <div class="nav-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg></div>
+          <span class="nav-lbl">Settings</span>
+        </div>
+        <div class="user-i">
+          <div class="av">B</div>
+          <div class="u-info">
+            <div class="u-name">Brian</div>
+            <div class="u-mail">bra.levi@gmail.com</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <button class="col-btn" id="col-btn" aria-label="Collapse sidebar">
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+    </button>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topbar">
+      <button class="hbg" id="mob-open-btn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+      <span class="tb-word">Babylon</span>
+      <div class="tb-av">B</div>
+    </div>
+
+    <div class="page">
+      <div class="page-hdr">
+        <div>
+          <div class="page-title">Transactions</div>
+          <div class="page-subtitle" id="tx-count">— transactions</div>
+        </div>
+        <div class="hdr-right">
+          <div class="filter-bar">
+            <div class="search-wrap">
+              <div class="search-ico">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+              </div>
+              <input class="search-inp" type="text" id="search-inp" placeholder="Search…">
+            </div>
+            <div class="type-filter" id="type-filter">
+              <button class="tf-btn active" data-type="all">All</button>
+              <button class="tf-btn" data-type="buy">Buy</button>
+              <button class="tf-btn" data-type="sell">Sell</button>
+              <button class="tf-btn" data-type="dividend">Div</button>
+            </div>
+          </div>
+          <button class="add-btn" id="add-btn">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Add transaction
+          </button>
+        </div>
+      </div>
+
+      <div class="tx-list" id="tx-list"></div>
+      <div class="empty-state" id="empty-state">
+        <div class="empty-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 7H3M21 12H3M21 17H3"/></svg>
+        </div>
+        <div class="empty-title" id="empty-title">No transactions yet</div>
+        <div class="empty-body" id="empty-body">Add your first transaction to start tracking your portfolio performance.</div>
+        <button class="empty-cta" id="empty-cta-btn">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add transaction
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- DRAWER (Add / Edit) -->
+<div class="drawer-overlay" id="drawer-overlay"></div>
+<div class="drawer" id="drawer">
+  <div class="drawer-hdr">
+    <div class="drawer-title-el" id="drawer-title">Add transaction</div>
+    <button class="drawer-close" id="drawer-close-btn">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+  <div class="drawer-body">
+    <div class="drawer-form">
+      <div class="f-field">
+        <label class="f-label">Type</label>
+        <div class="type-seg" id="type-seg">
+          <button class="ts-btn buy active" data-seg="buy">Buy</button>
+          <button class="ts-btn sell" data-seg="sell">Sell</button>
+          <button class="ts-btn dividend" data-seg="dividend">Dividend</button>
+        </div>
+      </div>
+      <div class="f-field">
+        <label class="f-label" for="f-asset">Asset</label>
+        <select class="f-input f-select" id="f-asset">
+          <option value="">Select asset…</option>
+          <option value="AAPL">Apple (AAPL)</option>
+          <option value="MSFT">Microsoft (MSFT)</option>
+          <option value="NVDA">NVIDIA (NVDA)</option>
+          <option value="VWCE">Vanguard FTSE All-World ETF (VWCE)</option>
+          <option value="BTC">Bitcoin (BTC)</option>
+        </select>
+      </div>
+      <div class="f-field">
+        <label class="f-label" for="f-date">Date</label>
+        <input class="f-input" type="date" id="f-date" value="2026-04-24">
+      </div>
+      <div class="f-grid2">
+        <div class="f-field">
+          <label class="f-label" for="f-shares">Shares</label>
+          <input class="f-input f-mono" type="number" id="f-shares" placeholder="0" step="0.001" min="0">
+        </div>
+        <div class="f-field">
+          <label class="f-label" for="f-price">Price / share</label>
+          <input class="f-input f-mono" type="number" id="f-price" placeholder="0.00" step="0.01" min="0">
+        </div>
+      </div>
+      <div class="f-total">
+        <span class="f-total-lbl">Total</span>
+        <span class="f-total-val" id="f-total">€ —</span>
+      </div>
+    </div>
+  </div>
+  <div class="drawer-foot">
+    <button class="btn-cancel" id="drawer-cancel-btn">Cancel</button>
+    <button class="btn-submit" id="drawer-submit-btn">Add transaction</button>
+  </div>
+</div>
+
+<!-- DELETE CONFIRM -->
+<div class="confirm-overlay" id="confirm-overlay">
+  <div class="confirm-card">
+    <div class="confirm-icon-wrap">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+    </div>
+    <div class="confirm-title">Delete transaction?</div>
+    <div class="confirm-body">This will permanently remove the <strong id="confirm-desc"></strong> from your history. This cannot be undone.</div>
+    <div class="confirm-btns">
+      <button class="btn-conf-cancel" id="conf-cancel-btn">Cancel</button>
+      <button class="btn-conf-del" id="conf-del-btn">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- MOBILE NAV DRAWER -->
+<div class="mob-overlay" id="mob-overlay"></div>
+<div class="mob-drawer" id="mob-drawer">
+  <div class="mob-brand">
+    <span style="font-size:13px;font-weight:300;letter-spacing:0.22em;text-transform:uppercase;color:var(--text)">Babylon</span>
+  </div>
+  <div style="padding:10px 8px;display:flex;flex-direction:column;gap:1px;flex:1">
+    <div class="nav-i"><div class="nav-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg></div><span class="nav-lbl" style="opacity:1">Portfolio</span></div>
+    <div class="nav-i active"><div class="nav-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 7H3M21 12H3M21 17H3"/></svg></div><span class="nav-lbl" style="opacity:1">Transactions</span></div>
+    <div class="nav-i"><div class="nav-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg></div><span class="nav-lbl" style="opacity:1">Recurring</span></div>
+  </div>
+  <div class="mob-div"></div>
+  <div style="padding:8px 8px 24px">
+    <div class="nav-i"><div class="nav-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg></div><span class="nav-lbl" style="opacity:1">Settings</span></div>
+    <div class="user-i"><div class="av">B</div><div class="u-info" style="opacity:1"><div class="u-name">Brian</div><div class="u-mail">bra.levi@gmail.com</div></div></div>
+  </div>
+</div>
+
+<!-- SCENARIO BAR -->
+<div class="scenario-bar">
+  <button class="sc-btn active" data-sc="populated">With transactions</button>
+  <div class="sc-sep"></div>
+  <button class="sc-btn" data-sc="no-results">No results</button>
+  <div class="sc-sep"></div>
+  <button class="sc-btn" data-sc="empty">Empty state</button>
+  <div class="sc-sep"></div>
+  <button class="sc-btn" data-sc="add-form">Add form</button>
+  <div class="sc-sep"></div>
+  <button class="sc-btn" data-sc="edit-form">Edit form</button>
+</div>
+
+<script>
+/* ── Data (all hardcoded — prototype only) ── */
+const SEED_DATA = [
+  { id:1,  name:'Apple',        ticker:'AAPL', type:'buy',      date:'2026-04-22', shares:5,    price:192.34, total:961.70   },
+  { id:2,  name:'NVIDIA',       ticker:'NVDA', type:'buy',      date:'2026-04-18', shares:2,    price:876.15, total:1752.30  },
+  { id:3,  name:'Vanguard ETF', ticker:'VWCE', type:'dividend', date:'2026-04-15', shares:null, price:null,   total:43.20    },
+  { id:4,  name:'Microsoft',    ticker:'MSFT', type:'buy',      date:'2026-04-10', shares:3,    price:410.50, total:1231.50  },
+  { id:5,  name:'Apple',        ticker:'AAPL', type:'sell',     date:'2026-03-28', shares:2,    price:218.60, total:437.20   },
+  { id:6,  name:'Bitcoin',      ticker:'BTC',  type:'buy',      date:'2026-03-20', shares:0.05, price:72450,  total:3622.50  },
+  { id:7,  name:'NVIDIA',       ticker:'NVDA', type:'buy',      date:'2026-03-12', shares:1,    price:830.00, total:830.00   },
+  { id:8,  name:'Vanguard ETF', ticker:'VWCE', type:'buy',      date:'2026-03-05', shares:10,   price:112.40, total:1124.00  },
+  { id:9,  name:'Microsoft',    ticker:'MSFT', type:'sell',     date:'2026-02-18', shares:1,    price:395.00, total:395.00   },
+  { id:10, name:'Apple',        ticker:'AAPL', type:'buy',      date:'2026-02-07', shares:8,    price:180.25, total:1442.00  },
+  { id:11, name:'Bitcoin',      ticker:'BTC',  type:'buy',      date:'2026-01-30', shares:0.02, price:68000,  total:1360.00  },
+  { id:12, name:'Vanguard ETF', ticker:'VWCE', type:'dividend', date:'2026-01-15', shares:null, price:null,   total:38.90    },
+];
+
+let transactions = SEED_DATA.map(t => Object.assign({}, t));
+let activeType = 'all';
+let searchQ = '';
+let expandedId = null;
+let pendingDeleteId = null;
+
+/* ── Format helpers ── */
+function esc(s) {
+  return String(s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+function fmtMoney(v) {
+  return '€' + Number(v).toLocaleString('en-EU', {minimumFractionDigits:2, maximumFractionDigits:2});
+}
+function fmtShares(v) {
+  if (v == null) return '';
+  return v < 1 ? Number(v).toFixed(4) : (v % 1 === 0 ? String(Math.round(v)) : Number(v).toFixed(3));
+}
+function fmtDate(d) {
+  const dt = new Date(d + 'T00:00:00');
+  return dt.toLocaleDateString('en-GB', {day:'numeric', month:'short', year:'numeric'});
+}
+function fmtMonth(d) {
+  const dt = new Date(d + 'T00:00:00');
+  return dt.toLocaleDateString('en-GB', {month:'long', year:'numeric'});
+}
+
+/* ── Filter ── */
+function getFiltered() {
+  const q = searchQ.trim().toLowerCase();
+  return transactions.filter(tx => {
+    const typeOk = activeType === 'all' || tx.type === activeType;
+    const searchOk = !q || tx.name.toLowerCase().includes(q) || tx.ticker.toLowerCase().includes(q);
+    return typeOk && searchOk;
+  });
+}
+
+/* ── Render ── */
+function render() {
+  const list = document.getElementById('tx-list');
+  const empty = document.getElementById('empty-state');
+  const countEl = document.getElementById('tx-count');
+  const filtered = getFiltered();
+
+  // Update count
+  countEl.textContent = filtered.length + ' transaction' + (filtered.length !== 1 ? 's' : '');
+
+  if (filtered.length === 0) {
+    list.textContent = '';
+    empty.classList.add('visible');
+    const isFiltered = searchQ.trim() || activeType !== 'all';
+    document.getElementById('empty-title').textContent = isFiltered ? 'No transactions found' : 'No transactions yet';
+    document.getElementById('empty-body').textContent = isFiltered
+      ? 'Try adjusting your search or filter to find what you\'re looking for.'
+      : 'Add your first transaction to start tracking your portfolio performance.';
+    document.getElementById('empty-cta-btn').style.display = isFiltered ? 'none' : 'flex';
+    return;
+  }
+
+  empty.classList.remove('visible');
+
+  // Group by month
+  const groups = new Map();
+  filtered.forEach(tx => {
+    const key = fmtMonth(tx.date);
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(tx);
+  });
+
+  // Build DOM imperatively (no innerHTML with user-derived strings)
+  list.textContent = '';
+  let isFirst = true;
+  groups.forEach((txs, month) => {
+    // Month header
+    const hdr = document.createElement('div');
+    hdr.className = 'month-hdr' + (isFirst ? ' first' : '');
+    hdr.textContent = month;
+    list.appendChild(hdr);
+    isFirst = false;
+
+    txs.forEach(tx => buildTxRow(tx, list));
+  });
+}
+
+function buildTxRow(tx, container) {
+  const isExpanded = expandedId === tx.id;
+
+  const row = document.createElement('div');
+  row.className = 'tx-row' + (isExpanded ? ' expanded' : '');
+  row.dataset.id = tx.id;
+
+  // ── Head ──
+  const head = document.createElement('div');
+  head.className = 'tx-head';
+
+  // Left
+  const left = document.createElement('div');
+  left.className = 'tx-left';
+
+  const icon = document.createElement('div');
+  icon.className = 'tx-icon ' + tx.type;
+  icon.textContent = tx.type === 'buy' ? '+' : tx.type === 'sell' ? '−' : '÷';
+
+  const info = document.createElement('div');
+  info.className = 'tx-info';
+
+  const name = document.createElement('div');
+  name.className = 'tx-name';
+  name.textContent = tx.name;
+
+  const meta = document.createElement('div');
+  meta.className = 'tx-meta';
+
+  const tag = document.createElement('span');
+  tag.className = 'tx-type-tag ' + tx.type;
+  tag.textContent = tx.type;
+  meta.appendChild(tag);
+
+  if (tx.shares) {
+    const sharesLabel = document.createElement('span');
+    sharesLabel.className = 'tx-shares-inline';
+    sharesLabel.textContent = fmtShares(tx.shares) + ' shares';
+    meta.appendChild(sharesLabel);
+  }
+
+  info.appendChild(name);
+  info.appendChild(meta);
+  left.appendChild(icon);
+  left.appendChild(info);
+
+  // Date
+  const date = document.createElement('div');
+  date.className = 'tx-date';
+  date.textContent = fmtDate(tx.date);
+
+  // Value
+  const val = document.createElement('div');
+  val.className = 'tx-val ' + tx.type;
+  val.textContent = fmtMoney(tx.total);
+
+  head.appendChild(left);
+  head.appendChild(date);
+  head.appendChild(val);
+
+  // Chevron
+  const chev = document.createElement('div');
+  chev.className = 'tx-chev';
+  chev.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>';
+
+  // ── Detail panel ──
+  const detail = document.createElement('div');
+  detail.className = 'tx-detail';
+
+  const inner = document.createElement('div');
+  inner.className = 'tx-detail-inner';
+
+  const grid = document.createElement('div');
+  grid.className = 'tx-detail-grid';
+
+  function makeCell(label, value) {
+    const cell = document.createElement('div');
+    cell.className = 'td-cell';
+    const lbl = document.createElement('div');
+    lbl.className = 'td-lbl';
+    lbl.textContent = label;
+    const v = document.createElement('div');
+    v.className = 'td-val';
+    v.textContent = value;
+    cell.appendChild(lbl);
+    cell.appendChild(v);
+    return cell;
+  }
+
+  if (tx.shares) {
+    grid.appendChild(makeCell('Shares', fmtShares(tx.shares)));
+    grid.appendChild(makeCell('Price / share', fmtMoney(tx.price)));
+  }
+  grid.appendChild(makeCell('Total', fmtMoney(tx.total)));
+
+  // Actions
+  const actions = document.createElement('div');
+  actions.className = 'tx-actions';
+
+  const delBtn = document.createElement('button');
+  delBtn.className = 'tx-act-btn danger';
+  delBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>';
+  const delText = document.createTextNode(' Delete');
+  delBtn.appendChild(delText);
+  delBtn.addEventListener('click', function(e) {
+    e.stopPropagation();
+    openConfirm(tx.id, tx.name + ' · ' + fmtDate(tx.date));
+  });
+
+  const editBtn = document.createElement('button');
+  editBtn.className = 'tx-act-btn';
+  editBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>';
+  const editText = document.createTextNode(' Edit');
+  editBtn.appendChild(editText);
+  editBtn.addEventListener('click', function(e) {
+    e.stopPropagation();
+    openDrawer(tx);
+  });
+
+  actions.appendChild(delBtn);
+  actions.appendChild(editBtn);
+
+  inner.appendChild(grid);
+  inner.appendChild(actions);
+  detail.appendChild(inner);
+
+  row.appendChild(head);
+  row.appendChild(detail);
+  row.appendChild(chev);
+
+  row.addEventListener('click', function() {
+    expandedId = expandedId === tx.id ? null : tx.id;
+    render();
+  });
+
+  container.appendChild(row);
+}
+
+/* ── Drawer ── */
+function openDrawer(tx) {
+  const isEdit = tx != null;
+  document.getElementById('drawer-title').textContent = isEdit ? 'Edit transaction' : 'Add transaction';
+  document.getElementById('drawer-submit-btn').textContent = isEdit ? 'Save changes' : 'Add transaction';
+
+  document.querySelectorAll('#type-seg .ts-btn').forEach(b => {
+    const seg = b.dataset.seg;
+    b.classList.toggle('active', isEdit ? seg === tx.type : seg === 'buy');
+  });
+
+  document.getElementById('f-asset').value = isEdit ? tx.ticker : '';
+  document.getElementById('f-date').value = isEdit ? tx.date : '2026-04-24';
+  document.getElementById('f-shares').value = isEdit && tx.shares ? tx.shares : '';
+  document.getElementById('f-price').value = isEdit && tx.price ? tx.price : '';
+  updateTotal();
+
+  document.getElementById('drawer-overlay').classList.add('open');
+  document.getElementById('drawer').classList.add('open');
+}
+
+function closeDrawer() {
+  document.getElementById('drawer-overlay').classList.remove('open');
+  document.getElementById('drawer').classList.remove('open');
+}
+
+function updateTotal() {
+  const shares = parseFloat(document.getElementById('f-shares').value);
+  const price = parseFloat(document.getElementById('f-price').value);
+  const el = document.getElementById('f-total');
+  el.textContent = (!isNaN(shares) && !isNaN(price) && shares > 0 && price > 0)
+    ? fmtMoney(shares * price)
+    : '€ —';
+}
+
+/* ── Delete confirm ── */
+function openConfirm(id, desc) {
+  pendingDeleteId = id;
+  document.getElementById('confirm-desc').textContent = desc;
+  document.getElementById('confirm-overlay').classList.add('open');
+}
+
+function closeConfirm() {
+  pendingDeleteId = null;
+  document.getElementById('confirm-overlay').classList.remove('open');
+}
+
+function doDelete() {
+  if (pendingDeleteId == null) return;
+  const idx = transactions.findIndex(t => t.id === pendingDeleteId);
+  if (idx > -1) transactions.splice(idx, 1);
+  if (expandedId === pendingDeleteId) expandedId = null;
+  closeConfirm();
+  render();
+}
+
+/* ── Sidebar ── */
+document.getElementById('col-btn').addEventListener('click', function() {
+  document.getElementById('sidebar').classList.toggle('collapsed');
+});
+
+/* ── Mobile nav drawer ── */
+document.getElementById('mob-open-btn').addEventListener('click', function() {
+  document.getElementById('mob-overlay').classList.add('open');
+  document.getElementById('mob-drawer').classList.add('open');
+});
+document.getElementById('mob-overlay').addEventListener('click', function() {
+  document.getElementById('mob-overlay').classList.remove('open');
+  document.getElementById('mob-drawer').classList.remove('open');
+});
+
+/* ── Drawer events ── */
+document.getElementById('drawer-overlay').addEventListener('click', closeDrawer);
+document.getElementById('drawer-close-btn').addEventListener('click', closeDrawer);
+document.getElementById('drawer-cancel-btn').addEventListener('click', closeDrawer);
+document.getElementById('drawer-submit-btn').addEventListener('click', closeDrawer);
+document.getElementById('add-btn').addEventListener('click', function() { openDrawer(null); });
+document.getElementById('empty-cta-btn').addEventListener('click', function() { openDrawer(null); });
+
+document.getElementById('f-shares').addEventListener('input', updateTotal);
+document.getElementById('f-price').addEventListener('input', updateTotal);
+
+document.querySelectorAll('#type-seg .ts-btn').forEach(btn => {
+  btn.addEventListener('click', function() {
+    document.querySelectorAll('#type-seg .ts-btn').forEach(b => b.classList.remove('active'));
+    this.classList.add('active');
+  });
+});
+
+/* ── Type filter ── */
+document.getElementById('type-filter').addEventListener('click', function(e) {
+  const btn = e.target.closest('.tf-btn');
+  if (!btn) return;
+  activeType = btn.dataset.type;
+  document.querySelectorAll('.tf-btn').forEach(b => b.classList.toggle('active', b === btn));
+  render();
+});
+
+/* ── Search ── */
+document.getElementById('search-inp').addEventListener('input', function() {
+  searchQ = this.value;
+  render();
+});
+
+/* ── Confirm events ── */
+document.getElementById('conf-cancel-btn').addEventListener('click', closeConfirm);
+document.getElementById('conf-del-btn').addEventListener('click', doDelete);
+
+/* ── Scenario switcher ── */
+document.querySelectorAll('.sc-btn[data-sc]').forEach(btn => {
+  btn.addEventListener('click', function() {
+    const sc = this.dataset.sc;
+    document.querySelectorAll('.sc-btn[data-sc]').forEach(b => b.classList.remove('active'));
+    this.classList.add('active');
+
+    closeDrawer();
+    searchQ = '';
+    activeType = 'all';
+    expandedId = null;
+    document.getElementById('search-inp').value = '';
+    document.querySelectorAll('.tf-btn').forEach((b, i) => b.classList.toggle('active', i === 0));
+
+    if (sc === 'populated') {
+      transactions = SEED_DATA.map(t => Object.assign({}, t));
+      render();
+    } else if (sc === 'no-results') {
+      transactions = SEED_DATA.map(t => Object.assign({}, t));
+      searchQ = 'xrp';
+      document.getElementById('search-inp').value = 'xrp';
+      render();
+    } else if (sc === 'empty') {
+      transactions = [];
+      render();
+    } else if (sc === 'add-form') {
+      transactions = SEED_DATA.map(t => Object.assign({}, t));
+      render();
+      openDrawer(null);
+    } else if (sc === 'edit-form') {
+      transactions = SEED_DATA.map(t => Object.assign({}, t));
+      expandedId = null;
+      render();
+      openDrawer(SEED_DATA[0]);
+    }
+  });
+});
+
+/* ── Init ── */
+render();
+</script>
+</body>
+</html>

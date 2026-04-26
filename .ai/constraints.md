@@ -36,7 +36,7 @@ Each rule follows:
 
 - **DON'T**: Assume any colour, font, spacing, or visual style when building a new component.
 - **Why**: Babylon has a defined brand identity. Arbitrary choices (e.g. using Tailwind `emerald` for chart bars) break visual consistency and cause corrective rework.
-- **Instead**: Always ask the user for colour/style before implementing any visible UI. Babylon design tokens: Primary `#7B248D`, Accent `#2ECC71`, Bg dark `#181818`, Bg light `#FFFFFF`, Alt dark `#262932`, Alt light `#EEEEEE`, Font: JetBrains Mono.
+- **Instead**: Always ask the user for colour/style before implementing any visible UI. Babylon design tokens: Primary `#7B248D`, Accent `#2ECC71`, Bg dark `#181818`, Bg light `#FFFFFF`, Alt dark `#262932`, Alt light `#EEEEEE`, Font: Roboto Mono.
 
 ---
 
@@ -92,7 +92,7 @@ _(empty — add entries as anti-patterns are discovered)_
 
 ---
 
-- **DON'T**: Use JetBrains Mono for UI text (labels, headings, nav, body copy, buttons).
+- **DON'T**: Use Roboto Mono for UI text (labels, headings, nav, body copy, buttons).
 - **Why**: Mono is reserved for financial data — prices, percentages, P&L, dates, transaction IDs.
 - **Instead**: Inter for all UI text. Mono only where the content is a number, date, percentage, or identifier.
 
