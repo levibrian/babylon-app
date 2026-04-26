@@ -1,0 +1,35 @@
+<div class="holdings-section">
+  <div class="holdings-hdr">
+    <span class="holdings-lbl">Holdings</span>
+    <div class="h-toggle">
+      <button class="h-tog-opt" [class.active]="pnlMode() === 'daily'" (click)="setMode('daily')" type="button">Daily</button>
+      <button class="h-tog-opt" [class.active]="pnlMode() === 'absolute'" (click)="setMode('absolute')" type="button">Absolute</button>
+    </div>
+  </div>
+
+  <div class="holdings-list">
+    @for (item of items; track trackByTicker($index, item)) {
+      <div
+        class="h-row"
+        [class.dimmed]="!isVisible(item)"
+        (click)="rowClick.emit(item.ticker)">
+        <div class="h-left">
+          <div class="h-name-row">
+            <span class="h-name">{{ item.companyName }}</span>
+            <span class="alloc-dot" [class]="'alloc-dot ' + allocClass(item)"></span>
+            @if (hasActionPill(item)) {
+              <span class="alloc-pill" [class]="'alloc-pill ' + allocClass(item)">{{ pillLabel(item) }}</span>
+            }
+          </div>
+          <div class="h-type">{{ shareLabel(item) }}</div>
+        </div>
+        <div class="h-right">
+          <div class="h-val">{{ formatValue(item.currentMarketValue) }}</div>
+          <div class="h-pnl" [class.pos]="pnlPositive(item)" [class.neg]="!pnlPositive(item)">
+            {{ pnlLabel(item) }}
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+</div>
