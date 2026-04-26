@@ -1,2 +1,16 @@
 <div class="page">
+  <app-portfolio-hero
+    [totalValue]="portfolioService.totalPortfolioValue()"
+    [pnlAmount]="summary()?.valueChange ?? 0"
+    [pnlPercent]="summary()?.valueChangePercentage ?? 0"
+    [activePeriod]="timePeriod()"
+    (periodChange)="onPeriodChange($event)"/>
+
+  <app-portfolio-chart
+    [snapshots]="filteredSnapshots()"
+    [positive]="positive()"/>
+
+  <app-holdings-list
+    [items]="portfolioService.portfolio()"
+    (rowClick)="navigateToAsset($event)"/>
 </div>
