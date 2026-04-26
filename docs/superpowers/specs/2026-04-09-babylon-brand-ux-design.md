@@ -23,7 +23,7 @@ Babylon is a precision wealth management tool. The UI should feel like the instr
 | Role | Typeface | Usage |
 |------|----------|-------|
 | UI text | **Inter** | Headings, labels, nav, body, buttons — everything that is interface |
-| Financial data | **JetBrains Mono** | Prices, percentages, P&L values, dates, transaction IDs, allocation figures |
+| Financial data | **Roboto Mono** | Prices, percentages, P&L values, dates, transaction IDs, allocation figures |
 
 ### Inter Scale
 
@@ -41,7 +41,7 @@ Babylon is a precision wealth management tool. The UI should feel like the instr
 | `label-ui` | 12px | 500 | 0 | — | Buttons, tabs |
 | `caption` | 11px | 400 | 0 | — | Helper text, timestamps |
 
-### JetBrains Mono Scale
+### Roboto Mono Scale
 
 | Token | Size | Weight | Usage |
 |-------|------|--------|-------|

@@ -216,7 +216,7 @@ git commit -m "feat: add dark and light mode color tokens"
 {
   "font": {
     "sans": { "value": "'Inter', system-ui, -apple-system, sans-serif", "type": "fontFamily" },
-    "mono": { "value": "'JetBrains Mono', 'Courier New', monospace", "type": "fontFamily" }
+    "mono": { "value": "'Roboto Mono', 'Courier New', monospace", "type": "fontFamily" }
   },
   "font-size": {
     "display-1": { "value": "40px", "type": "dimension" },
@@ -445,7 +445,7 @@ const tailwindTokens = {
   },
   fontFamily: {
     sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
-    mono: ['JetBrains Mono', 'Courier New', 'monospace'],
+    mono: ['Roboto Mono', 'Courier New', 'monospace'],
   },
   spacing: {
     '1':  '4px',
@@ -730,7 +730,7 @@ Add the following section to the end of `D:/Repo/babylon-app/.ai/constraints.md`
 
 ---
 
-- **DON'T**: Use JetBrains Mono for UI text (labels, headings, nav, body copy, buttons).
+- **DON'T**: Use Roboto Mono for UI text (labels, headings, nav, body copy, buttons).
 - **Why**: Mono is reserved for financial data — prices, percentages, P&L, dates, transaction IDs. Mixing fonts for non-data text breaks the visual contract.
 - **Instead**: Inter for all UI text. Mono only where the content is a number, date, percentage, or identifier.
 
