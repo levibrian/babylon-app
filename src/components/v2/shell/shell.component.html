@@ -1,0 +1,10 @@
+<div class="shell">
+  <app-sidebar (openDrawer)="drawerOpen.set(true)" />
+  <div class="shell-main">
+    <app-mobile-topbar (openMenu)="drawerOpen.set(true)" />
+    <div class="shell-content">
+      <router-outlet />
+    </div>
+  </div>
+  <app-mobile-drawer [open]="drawerOpen()" (close)="drawerOpen.set(false)" />
+</div>
