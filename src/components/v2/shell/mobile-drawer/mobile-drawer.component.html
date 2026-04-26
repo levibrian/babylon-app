@@ -1,0 +1,68 @@
+@if (visible()) {
+  <div class="drawer-overlay" [class.open]="animating()" (click)="closeDrawer()"></div>
+
+  <nav class="mobile-drawer" [class.open]="animating()">
+
+    <div class="drawer-brand">
+      <span class="brand-wordmark">Babylon</span>
+    </div>
+
+    <div class="drawer-nav">
+
+      <a class="nav-item" routerLink="/v2/portfolio" routerLinkActive="active"
+         [routerLinkActiveOptions]="{exact:true}" (click)="closeDrawer()">
+        <span class="nav-icon">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M2 12 L5 8 L8 10 L11 5 L14 7"/>
+            <path d="M2 14 L14 14" stroke-width="1.2" opacity="0.5"/>
+          </svg>
+        </span>
+        <span class="nav-label">Portfolio</span>
+      </a>
+
+      <a class="nav-item" routerLink="/v2/transactions" routerLinkActive="active" (click)="closeDrawer()">
+        <span class="nav-icon">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 5 L13 5"/>
+            <path d="M10.5 2.5 L13 5 L10.5 7.5"/>
+            <path d="M13 11 L3 11"/>
+            <path d="M5.5 8.5 L3 11 L5.5 13.5"/>
+          </svg>
+        </span>
+        <span class="nav-label">Transactions</span>
+      </a>
+
+      <a class="nav-item" routerLink="/v2/recurring" routerLinkActive="active" (click)="closeDrawer()">
+        <span class="nav-icon">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M13 3.5 A6 6 0 1 1 5.5 2"/>
+            <path d="M5.5 2 L5.5 5.5 L9 5.5" stroke-width="1.5"/>
+          </svg>
+        </span>
+        <span class="nav-label">Recurring</span>
+      </a>
+
+    </div>
+
+    <div class="sidebar-divider"></div>
+
+    <div class="drawer-bottom">
+      <div class="user-item">
+        <div class="avatar">{{ initials }}</div>
+        <div class="user-info">
+          <span class="user-name">{{ user()?.username ?? user()?.email }}</span>
+          <span class="user-email">{{ user()?.email }}</span>
+        </div>
+      </div>
+
+      <a class="submenu-item" routerLink="/v2/settings" (click)="closeDrawer()">
+        <span class="submenu-item-label">Settings</span>
+      </a>
+
+      <button class="submenu-item danger" type="button" (click)="logout()">
+        <span class="submenu-item-label">Log out</span>
+      </button>
+    </div>
+
+  </nav>
+}
