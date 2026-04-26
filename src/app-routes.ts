@@ -5,6 +5,7 @@ import { WealthPageComponent } from './components/wealth-page/wealth-page.compon
 import { PortfolioDesignDemoComponent } from './components/portfolio-design-demo/portfolio-design-demo.component';
 import { LoginComponent } from './components/auth/login/login.component';
 import { authGuard, publicGuard } from './guards/auth.guard';
+import { ShellComponent } from './components/v2/shell/shell.component';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'wealth', pathMatch: 'full' },
@@ -34,4 +35,43 @@ export const routes: Routes = [
     canActivate: [authGuard],
   },
   { path: 'portfolio-design-demo', component: PortfolioDesignDemoComponent, canActivate: [authGuard] },
+  // ── SPEC-003 redesign — live alongside old routes until full rollout ──
+  {
+    path: 'v2',
+    component: ShellComponent,
+    canActivate: [authGuard],
+    children: [
+      { path: '', redirectTo: 'portfolio', pathMatch: 'full' },
+      {
+        path: 'portfolio',
+        loadComponent: () =>
+          import('./components/v2/placeholder/placeholder.component').then(m => m.PlaceholderComponent),
+        data: { label: 'Portfolio — coming in Plan B' },
+      },
+      {
+        path: 'transactions',
+        loadComponent: () =>
+          import('./components/v2/placeholder/placeholder.component').then(m => m.PlaceholderComponent),
+        data: { label: 'Transactions — coming in Plan D' },
+      },
+      {
+        path: 'recurring',
+        loadComponent: () =>
+          import('./components/v2/placeholder/placeholder.component').then(m => m.PlaceholderComponent),
+        data: { label: 'Recurring Investments — coming in Plan E' },
+      },
+      {
+        path: 'settings',
+        loadComponent: () =>
+          import('./components/v2/placeholder/placeholder.component').then(m => m.PlaceholderComponent),
+        data: { label: 'Settings — coming in Plan E' },
+      },
+      {
+        path: 'asset/:ticker',
+        loadComponent: () =>
+          import('./components/v2/placeholder/placeholder.component').then(m => m.PlaceholderComponent),
+        data: { label: 'Asset Detail — coming in Plan C' },
+      },
+    ],
+  },
 ];

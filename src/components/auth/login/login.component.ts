@@ -4,69 +4,75 @@ import {
   inject,
   signal,
   computed,
-  OnInit,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { map } from 'rxjs';
+import { CommonModule, DOCUMENT } from '@angular/common';
 import {
   ReactiveFormsModule,
   FormBuilder,
   Validators,
+  AbstractControl,
+  ValidationErrors,
 } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
-import { GoogleSigninButtonModule } from '@abacritt/angularx-social-login';
 import { AuthService } from '../../../services/auth.service';
 
 type AuthMode = 'login' | 'register';
 
+export function passwordMatchValidator(group: AbstractControl): ValidationErrors | null {
+  const password = group.get('password')?.value;
+  const confirm = group.get('confirmPassword')?.value;
+  if (confirm && password !== confirm) {
+    return { passwordMismatch: true };
+  }
+  return null;
+}
+
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, GoogleSigninButtonModule],
+  imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class LoginComponent implements OnInit {
+export class LoginComponent {
   private fb = inject(FormBuilder);
-  private authService = inject(AuthService);
+  private readonly authService = inject(AuthService);
   private route = inject(ActivatedRoute);
+  private doc = inject(DOCUMENT);
 
-  // ── Mode toggle (login ↔ register) ───────────────────────────────────────
-  mode = signal<AuthMode>('login');
-  isLoginMode = computed(() => this.mode() === 'login');
+  private routeMode = toSignal(
+    this.route.data.pipe(map(d => (d['mode'] as AuthMode) ?? 'login')),
+    { initialValue: (this.doc.location.pathname.includes('/register') ? 'register' : 'login') as AuthMode }
+  );
+  private modeOverride = signal<AuthMode | null>(null);
 
-  // ── Shared loading / error state ─────────────────────────────────────────
+  readonly mode = computed(() => this.modeOverride() ?? this.routeMode());
+  readonly isLoginMode = computed(() => this.mode() === 'login');
+
   isLoading = signal(false);
   error = signal<string | null>(null);
 
-  // ── Login form (Flow 5) ───────────────────────────────────────────────────
   loginForm = this.fb.group({
     emailOrUsername: ['', Validators.required],
     password: ['', Validators.required],
   });
 
-  // ── Register form (Flows 3 & 4) ───────────────────────────────────────────
   registerForm = this.fb.group({
+    fullName: ['', Validators.required],
     username: ['', [Validators.required, Validators.minLength(3)]],
     email: ['', [Validators.required, Validators.email]],
     password: ['', [Validators.required, Validators.minLength(8)]],
-  });
-
-  ngOnInit(): void {
-    // Allow /register route to pre-set register mode
-    this.route.data.subscribe((data) => {
-      if (data['mode'] === 'register') {
-        this.mode.set('register');
-      }
-    });
-  }
+    confirmPassword: ['', [Validators.required, Validators.minLength(8)]],
+  }, { validators: passwordMatchValidator });
 
   setMode(m: AuthMode): void {
-    this.mode.set(m);
+    this.modeOverride.set(m);
     this.error.set(null);
   }
 
-  // ── Flow 5: Local Login ───────────────────────────────────────────────────
   async onLogin(): Promise<void> {
     if (this.loginForm.invalid) {
       this.loginForm.markAllAsTouched();
@@ -77,16 +83,15 @@ export class LoginComponent implements OnInit {
     try {
       const { emailOrUsername, password } = this.loginForm.value;
       await this.authService.login(emailOrUsername!, password!);
-    } catch (err: any) {
-      this.error.set(
-        err?.error?.message ?? err?.message ?? 'Invalid credentials. Please try again.'
-      );
+    } catch (err: unknown) {
+      const apiMessage = (err as { error?: { message?: string } })?.error?.message;
+      const message = err instanceof Error ? err.message : undefined;
+      this.error.set(apiMessage ?? message ?? 'Invalid credentials. Please try again.');
     } finally {
       this.isLoading.set(false);
     }
   }
 
-  // ── Flows 3 & 4: Register ─────────────────────────────────────────────────
   async onRegister(): Promise<void> {
     if (this.registerForm.invalid) {
       this.registerForm.markAllAsTouched();
@@ -97,22 +102,33 @@ export class LoginComponent implements OnInit {
     try {
       const { username, email, password } = this.registerForm.value;
       await this.authService.register(username!, email!, password!);
-      // If email belongs to an existing Google user, the backend links them (Flow 4)
-      // and returns a success AuthResponse — no special handling needed here.
-    } catch (err: any) {
-      this.error.set(
-        err?.error?.message ?? err?.message ?? 'Registration failed. Please try again.'
-      );
+    } catch (err: unknown) {
+      const apiMessage = (err as { error?: { message?: string } })?.error?.message;
+      const message = err instanceof Error ? err.message : undefined;
+      this.error.set(apiMessage ?? message ?? 'Registration failed. Please try again.');
     } finally {
       this.isLoading.set(false);
     }
   }
 
-  // ── Form field helpers ────────────────────────────────────────────────────
+  onGoogleSignIn(): void {
+    this.authService.signInWithGoogle().catch(() => {
+      this.error.set('Google sign-in failed. Please try again.');
+    });
+  }
+
   invalid(form: 'login' | 'register', field: string): boolean {
     const ctrl = form === 'login'
       ? this.loginForm.get(field)
       : this.registerForm.get(field);
+    return !!ctrl?.invalid && !!ctrl?.touched;
+  }
+
+  invalidRegister(field: string): boolean {
+    const ctrl = this.registerForm.get(field);
+    if (field === 'confirmPassword') {
+      return !!ctrl?.touched && (!!ctrl?.invalid || this.registerForm.hasError('passwordMismatch'));
+    }
     return !!ctrl?.invalid && !!ctrl?.touched;
   }
 }

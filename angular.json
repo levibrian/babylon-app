@@ -46,6 +46,15 @@
           },
           "defaultConfiguration": "production"
         },
+        "test": {
+          "builder": "@angular/build:karma",
+          "options": {
+            "polyfills": ["zone.js", "zone.js/testing"],
+            "tsConfig": "tsconfig.spec.json",
+            "karmaConfig": "karma.conf.cjs",
+            "browsers": "ChromeHeadlessNoSandbox"
+          }
+        },
         "serve": {
           "builder": "@angular/build:dev-server",
           "options": {

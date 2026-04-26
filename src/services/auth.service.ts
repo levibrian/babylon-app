@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable, from, lastValueFrom } from 'rxjs';
 import { tap, map } from 'rxjs/operators';
-import { SocialAuthService } from '@abacritt/angularx-social-login';
+import { SocialAuthService, GoogleLoginProvider } from '@abacritt/angularx-social-login';
 import { environment } from '../environments/environment';
 import {
   BackendAuthResponse,
@@ -50,6 +50,11 @@ export class AuthService {
       console.error('[AuthService] Google login failed:', error);
       throw error;
     }
+  }
+
+  async signInWithGoogle(): Promise<void> {
+    await this.socialAuthService.signIn(GoogleLoginProvider.PROVIDER_ID);
+    // The authState subscription in the constructor handles the response.
   }
 
   // ─── Flow 3 & 4: Register — POST /auth/register ─────────────────────────

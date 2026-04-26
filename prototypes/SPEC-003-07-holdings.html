@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SPEC-003 · Task 7 — Holdings Row</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root {
   --bg:           #08080A;
@@ -92,11 +92,11 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);-webk
 .f-pill.active{color:var(--accent-text);border-color:var(--accent-bdr);background:var(--accent-dim)}
 .f-pill:not(.active){opacity:0.45}
 .hero-main{display:flex;align-items:center;gap:16px;margin-bottom:20px}
-.hero-val{font-family:'JetBrains Mono',monospace;font-size:38px;font-weight:500;letter-spacing:-0.04em;color:var(--text);font-variant-numeric:tabular-nums;line-height:1}
+.hero-val{font-family:'Roboto Mono',monospace;font-size:38px;font-weight:500;letter-spacing:-0.04em;color:var(--text);font-variant-numeric:tabular-nums;line-height:1}
 .perf-row{display:flex;align-items:center;gap:0}
-.perf-amt{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:500;font-variant-numeric:tabular-nums;letter-spacing:-0.02em}
+.perf-amt{font-family:'Roboto Mono',monospace;font-size:13px;font-weight:500;font-variant-numeric:tabular-nums;letter-spacing:-0.02em}
 .perf-sep{font-size:13px;color:var(--muted);padding:0 6px;user-select:none}
-.perf-pct{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:400;font-variant-numeric:tabular-nums;letter-spacing:-0.01em}
+.perf-pct{font-family:'Roboto Mono',monospace;font-size:13px;font-weight:400;font-variant-numeric:tabular-nums;letter-spacing:-0.01em}
 .pos{color:var(--positive)}
 .neg{color:var(--negative)}
 .time-row{display:flex;align-items:center;gap:2px}
@@ -110,7 +110,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);-webk
 .crosshair-dot{r:2.5;opacity:0;transition:opacity 120ms ease-out;pointer-events:none}
 .chart-tooltip{position:fixed;pointer-events:none;opacity:0;transition:opacity 120ms ease-out;transform:translateX(-50%);z-index:999;text-align:center;background:var(--raised);border:1px solid var(--border-mid);border-radius:7px;padding:6px 10px;white-space:nowrap}
 .chart-tooltip.visible{opacity:1}
-.tooltip-val{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:500;color:var(--text);font-variant-numeric:tabular-nums;letter-spacing:-0.02em}
+.tooltip-val{font-family:'Roboto Mono',monospace;font-size:12px;font-weight:500;color:var(--text);font-variant-numeric:tabular-nums;letter-spacing:-0.02em}
 .tooltip-date{font-size:10px;color:var(--muted);letter-spacing:0.01em;margin-top:2px}
 
 /* X-axis */
@@ -204,7 +204,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);-webk
 
 /* Action pill */
 .alloc-pill {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: 'Roboto Mono', monospace;
   font-size: 10px;
   font-weight: 500;
   font-variant-numeric: tabular-nums;
@@ -238,7 +238,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);-webk
   white-space: nowrap;
   font-size: 11px;
   color: var(--mid);
-  font-family: 'JetBrains Mono', monospace;
+  font-family: 'Roboto Mono', monospace;
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.01em;
   transform: translateX(-50%);
@@ -249,7 +249,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);-webk
 /* Right: value + P&L */
 .h-right { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; }
 .h-val {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: 'Roboto Mono', monospace;
   font-size: 13.5px;
   font-weight: 500;
   color: var(--text);
@@ -258,7 +258,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);-webk
   text-align: right;
 }
 .h-pnl {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: 'Roboto Mono', monospace;
   font-size: 11.5px;
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.01em;
@@ -277,7 +277,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);-webk
 .drw.open{transform:translateX(0)}
 
 /* Proto label */
-.proto-lbl{position:fixed;bottom:16px;right:16px;font-size:10px;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;pointer-events:none;z-index:200;font-family:'JetBrains Mono',monospace}
+.proto-lbl{position:fixed;bottom:16px;right:16px;font-size:10px;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;pointer-events:none;z-index:200;font-family:'Roboto Mono',monospace}
 
 @media(max-width:768px){
   .sidebar{display:none}

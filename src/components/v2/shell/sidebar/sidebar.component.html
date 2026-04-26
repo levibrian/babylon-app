@@ -1,0 +1,117 @@
+<aside class="sidebar" [class.collapsed]="collapsed()">
+  <div class="sidebar-inner">
+
+    <!-- Brand -->
+    <div class="sidebar-brand">
+      <span class="brand-letter">B</span>
+      <span class="brand-wordmark">Babylon</span>
+    </div>
+
+    <!-- Primary nav -->
+    <nav class="sidebar-nav">
+
+      <a class="nav-item" routerLink="/v2/portfolio" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}">
+        <span class="nav-icon">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M2 12 L5 8 L8 10 L11 5 L14 7"/>
+            <path d="M2 14 L14 14" stroke-width="1.2" opacity="0.5"/>
+          </svg>
+        </span>
+        <span class="nav-label">Portfolio</span>
+        <span class="tooltip">Portfolio</span>
+      </a>
+
+      <a class="nav-item" routerLink="/v2/transactions" routerLinkActive="active">
+        <span class="nav-icon">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 5 L13 5"/>
+            <path d="M10.5 2.5 L13 5 L10.5 7.5"/>
+            <path d="M13 11 L3 11"/>
+            <path d="M5.5 8.5 L3 11 L5.5 13.5"/>
+          </svg>
+        </span>
+        <span class="nav-label">Transactions</span>
+        <span class="tooltip">Transactions</span>
+      </a>
+
+      <a class="nav-item" routerLink="/v2/recurring" routerLinkActive="active">
+        <span class="nav-icon">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M13 3.5 A6 6 0 1 1 5.5 2"/>
+            <path d="M5.5 2 L5.5 5.5 L9 5.5" stroke-width="1.5"/>
+          </svg>
+        </span>
+        <span class="nav-label">Recurring</span>
+        <span class="tooltip">Recurring</span>
+      </a>
+
+    </nav>
+
+    <div class="sidebar-divider"></div>
+
+    <!-- User profile -->
+    <div class="sidebar-bottom">
+      <div class="user-item" (click)="toggleSubmenu()">
+        <div class="avatar">{{ initials }}</div>
+        <div class="user-info">
+          <span class="user-name">{{ user()?.username ?? user()?.email }}</span>
+          <span class="user-email">{{ user()?.email }}</span>
+        </div>
+      </div>
+
+      @if (submenuOpen()) {
+        <div class="user-submenu">
+          <div class="submenu-header">
+            <div class="submenu-header-name">{{ user()?.username ?? user()?.email }}</div>
+            <div class="submenu-header-email">{{ user()?.email }}</div>
+          </div>
+
+          <a class="submenu-item" routerLink="/v2/settings" (click)="closeSubmenu()">
+            <span class="submenu-item-icon">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="7" cy="4.5" r="2.5"/>
+                <path d="M1.5 12.5 C1.5 10 4 8.5 7 8.5 C10 8.5 12.5 10 12.5 12.5"/>
+              </svg>
+            </span>
+            <span class="submenu-item-label">Profile</span>
+          </a>
+
+          <a class="submenu-item" routerLink="/v2/settings" (click)="closeSubmenu()">
+            <span class="submenu-item-icon">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="7" cy="7" r="1.8"/>
+                <path d="M7 1.5 L7 2.6"/><path d="M7 11.4 L7 12.5"/>
+                <path d="M1.5 7 L2.6 7"/><path d="M11.4 7 L12.5 7"/>
+                <path d="M3.1 3.1 L3.9 3.9"/><path d="M10.1 10.1 L10.9 10.9"/>
+                <path d="M10.9 3.1 L10.1 3.9"/><path d="M3.9 10.1 L3.1 10.9"/>
+              </svg>
+            </span>
+            <span class="submenu-item-label">Settings</span>
+          </a>
+
+          <div class="submenu-sep"></div>
+
+          <button class="submenu-item danger" type="button" (click)="logout()">
+            <span class="submenu-item-icon">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M5.5 2 L2 2 L2 12 L5.5 12"/>
+                <path d="M9 4.5 L12 7 L9 9.5"/>
+                <path d="M5.5 7 L12 7"/>
+              </svg>
+            </span>
+            <span class="submenu-item-label">Log out</span>
+          </button>
+        </div>
+      }
+    </div>
+
+  </div>
+
+  <!-- Collapse toggle — outside inner so it's not clipped -->
+  <button class="collapse-btn" (click)="toggleCollapse()" [title]="collapsed() ? 'Expand sidebar' : 'Collapse sidebar'">
+    <svg width="9" height="9" viewBox="0 0 9 9" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M5.5 1.5 L2.5 4.5 L5.5 7.5"/>
+    </svg>
+  </button>
+
+</aside>
