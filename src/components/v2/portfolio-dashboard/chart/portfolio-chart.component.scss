@@ -1,0 +1,117 @@
+.chart-wrap {
+  position: relative;
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--surface);
+  flex-shrink: 0;
+  touch-action: pan-y;
+  height: 160px;
+}
+
+.chart-shimmer {
+  position: absolute;
+  inset: 0;
+  border-radius: 10px;
+  overflow: hidden;
+  transition: opacity 400ms ease-out;
+  pointer-events: none;
+  z-index: 4;
+
+  &.hidden { display: none; }
+}
+
+.shimmer-inner {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    var(--surface) 0%,
+    var(--surface) 30%,
+    rgba(255,255,255,0.04) 50%,
+    var(--surface) 70%,
+    var(--surface) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.6s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.chart-svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  cursor: crosshair;
+  user-select: none;
+  position: relative;
+  z-index: 2;
+}
+
+.crosshair-dot {
+  opacity: 0;
+  transition: opacity 120ms ease-out;
+  pointer-events: none;
+}
+
+.chart-svg.crosshair-visible .crosshair-dot {
+  opacity: 1;
+}
+
+.chart-tooltip {
+  position: fixed;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 120ms ease-out;
+  transform: translateX(-50%);
+  z-index: 999;
+  text-align: center;
+  background: var(--raised);
+  border: 1px solid var(--border-mid);
+  border-radius: 7px;
+  padding: 6px 10px;
+  white-space: nowrap;
+
+  &.visible { opacity: 1; }
+}
+
+.tooltip-val {
+  font-family: 'Roboto Mono', monospace;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+.tooltip-date {
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 0.01em;
+  margin-top: 2px;
+}
+
+.chart-axis {
+  position: absolute;
+  bottom: 7px;
+  left: 12px;
+  right: 12px;
+  height: 14px;
+  pointer-events: none;
+  z-index: 3;
+}
+
+:host ::ng-deep .axis-label {
+  position: absolute;
+  font-size: 10px;
+  color: var(--muted);
+  transform: translateX(-50%);
+  white-space: nowrap;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  line-height: 1;
+  top: 0;
+  font-family: 'Inter', sans-serif;
+}
