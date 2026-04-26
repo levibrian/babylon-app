@@ -1,5 +1,4 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output, inject, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { PortfolioItem } from '../../../../models/portfolio.model';
 import { FilterStore, AssetClass } from '../../../../stores/filter.store';
 
@@ -8,7 +7,7 @@ type PnlMode = 'daily' | 'absolute';
 @Component({
   selector: 'app-holdings-list',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   templateUrl: './holdings-list.component.html',
   styleUrl: './holdings-list.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

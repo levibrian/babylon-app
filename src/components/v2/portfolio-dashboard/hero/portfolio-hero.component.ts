@@ -1,5 +1,4 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { FilterStore, ALL_ASSET_CLASSES, AssetClass } from '../../../../stores/filter.store';
 import { Timeframe } from '../../../../models/portfolio-history.model';
 
@@ -8,7 +7,7 @@ const TIME_PERIODS: Timeframe[] = ['1D', '1W', '1M', '6M', '1Y', 'YTD', 'Max'];
 @Component({
   selector: 'app-portfolio-hero',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   templateUrl: './portfolio-hero.component.html',
   styleUrl: './portfolio-hero.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
