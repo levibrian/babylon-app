@@ -27,7 +27,7 @@ bootstrapApplication(AppComponent, {
             provider: new GoogleLoginProvider(
               environment.googleClientId,
               {
-                oneTapEnabled: true
+                oneTapEnabled: false
               }
             )
           }
