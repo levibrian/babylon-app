@@ -1,1 +1,8 @@
 @import './src/styles/tokens.css';
+
+:root {
+  --accent-text:   rgba(187,148,230,0.9);
+  --accent-border: rgba(123,47,190,0.3);
+  --accent-dim:    rgba(123,47,190,0.12);
+  --border-mid:    rgba(255,255,255,0.09);
+}

@@ -1,0 +1,46 @@
+<div class="hero">
+  <!-- Row 1: label + separator + asset filter -->
+  <div class="hero-header">
+    <span class="hero-label">Total portfolio</span>
+    <div class="filter-sep"></div>
+    <div class="filter-row">
+      <button
+        class="filter-pill"
+        [class.active]="filterStore.allActive()"
+        (click)="toggleAll()"
+        type="button">All</button>
+      @for (cls of assetClasses; track cls) {
+        <button
+          class="filter-pill"
+          [class.active]="filterStore.isActive(cls)"
+          (click)="toggleAsset(cls)"
+          type="button">{{ cls }}</button>
+      }
+    </div>
+  </div>
+
+  <!-- Row 2: value + P&L -->
+  <div class="hero-value-row">
+    <div class="hero-value">{{ formatValue(totalValue) }}</div>
+    <div class="hero-perf-row">
+      <span class="hero-perf-amount" [class.pos]="pnlAmount >= 0" [class.neg]="pnlAmount < 0">
+        {{ formatPnlAmount(pnlAmount) }}
+      </span>
+      <span class="hero-perf-sep">·</span>
+      <span class="hero-perf-pct" [class.pos]="pnlPercent >= 0" [class.neg]="pnlPercent < 0">
+        {{ formatPnlPercent(pnlPercent) }}
+      </span>
+    </div>
+  </div>
+
+  <!-- Row 3: time filter -->
+  <div class="time-filter">
+    @for (p of timePeriods; track p) {
+      <button
+        class="time-item"
+        [class.active]="activePeriod === p"
+        (click)="selectPeriod(p)"
+        type="button">{{ p }}</button>
+    }
+  </div>
+</div>
