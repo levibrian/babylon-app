@@ -45,8 +45,7 @@ export const routes: Routes = [
       {
         path: 'portfolio',
         loadComponent: () =>
-          import('./components/v2/placeholder/placeholder.component').then(m => m.PlaceholderComponent),
-        data: { label: 'Portfolio — coming in Plan B' },
+          import('./components/v2/portfolio-dashboard/portfolio-dashboard.component').then(m => m.PortfolioDashboardV2Component),
       },
       {
         path: 'transactions',

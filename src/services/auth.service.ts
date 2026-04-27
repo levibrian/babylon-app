@@ -3,7 +3,6 @@ import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable, from, lastValueFrom } from 'rxjs';
 import { tap, map } from 'rxjs/operators';
-import { SocialAuthService, GoogleLoginProvider } from '@abacritt/angularx-social-login';
 import { environment } from '../environments/environment';
 import {
   BackendAuthResponse,
@@ -19,7 +18,6 @@ import { UserStore } from './user.store';
 export class AuthService {
   private http = inject(HttpClient);
   private router = inject(Router);
-  private socialAuthService = inject(SocialAuthService);
   private store = inject(UserStore);
 
   private readonly apiUrl = `${environment.apiUrl}/api/v1/auth`;
@@ -27,15 +25,6 @@ export class AuthService {
   // ─── Re-export store signals for backward compatibility ─────────────────
   readonly currentUser = this.store.currentUser;
   readonly isAuthenticated = this.store.isAuthenticated;
-
-  constructor() {
-    // Flows 1 & 2: Google SSO — triggered by the asl-google-signin-button
-    this.socialAuthService.authState.subscribe((socialUser) => {
-      if (socialUser?.idToken) {
-        this.loginWithGoogle(socialUser.idToken);
-      }
-    });
-  }
 
   // ─── Flow 1 & 2: Social — POST /auth/google ─────────────────────────────
   async loginWithGoogle(idToken: string): Promise<void> {
@@ -52,9 +41,20 @@ export class AuthService {
     }
   }
 
-  async signInWithGoogle(): Promise<void> {
-    await this.socialAuthService.signIn(GoogleLoginProvider.PROVIDER_ID);
-    // The authState subscription in the constructor handles the response.
+  signInWithGoogle(): void {
+    const nonce = Array.from(crypto.getRandomValues(new Uint8Array(16)))
+      .map(b => b.toString(16).padStart(2, '0')).join('');
+    sessionStorage.setItem('google_nonce', nonce);
+
+    const params = new URLSearchParams({
+      client_id: environment.googleClientId,
+      redirect_uri: window.location.origin,
+      response_type: 'id_token',
+      scope: 'openid email profile',
+      nonce,
+    });
+
+    window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?${params}`;
   }
 
   // ─── Flow 3 & 4: Register — POST /auth/register ─────────────────────────
@@ -102,7 +102,7 @@ export class AuthService {
   }
 
   // ─── Logout — POST /auth/logout ──────────────────────────────────────────
-  async logout(manual = false): Promise<void> {
+  async logout(): Promise<void> {
     const refreshToken = localStorage.getItem('refreshToken');
     if (refreshToken) {
       try {
@@ -115,12 +115,6 @@ export class AuthService {
     }
 
     this.clearSession();
-
-    // Only sign out of Google when the user explicitly clicks "Log out".
-    // Calling signOut() on a 401/session-expiry can crash the GIS library.
-    if (manual) {
-      this.socialAuthService.signOut().catch(() => {});
-    }
 
     this.router.navigate(['/login']);
   }

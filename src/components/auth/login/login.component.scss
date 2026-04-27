@@ -1,23 +1,23 @@
 // ─── Design tokens (scoped to this component) ─────────────────────────────────
 :host {
-  --bg:           #08080A;
-  --surface:      #0E0E12;
-  --raised:       #141418;
-  --hover:        #17171C;
-  --accent:       #7B2FBE;
-  --accent-dim:   rgba(123,47,190,0.12);
-  --accent-bdr:   rgba(123,47,190,0.3);
+  --bg: #08080A;
+  --surface: #0E0E12;
+  --raised: #141418;
+  --hover: #17171C;
+  --accent: #7B2FBE;
+  --accent-dim: rgba(123, 47, 190, 0.12);
+  --accent-bdr: rgba(123, 47, 190, 0.3);
   --accent-hover: #9D4EDD;
-  --border:       rgba(255,255,255,0.05);
-  --border-mid:   rgba(255,255,255,0.09);
-  --border-hi:    rgba(255,255,255,0.14);
-  --text:         #EEEEF2;
-  --muted:        #52525F;
-  --mid:          #8585A0;
-  --negative:     #E8524A;
-  --negative-dim: rgba(232,82,74,0.10);
-  --negative-bdr: rgba(232,82,74,0.18);
-  --easing:       200ms ease-out;
+  --border: rgba(255, 255, 255, 0.05);
+  --border-mid: rgba(255, 255, 255, 0.09);
+  --border-hi: rgba(255, 255, 255, 0.14);
+  --text: #EEEEF2;
+  --muted: #52525F;
+  --mid: #8585A0;
+  --negative: #E8524A;
+  --negative-dim: rgba(232, 82, 74, 0.10);
+  --negative-bdr: rgba(232, 82, 74, 0.18);
+  --easing: 200ms ease-out;
 
   display: block;
   height: 100vh;
@@ -28,7 +28,9 @@
   color: var(--text);
 }
 
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
@@ -56,7 +58,7 @@
 .auth-left-bg {
   position: absolute;
   inset: 0;
-  background: radial-gradient(ellipse 80% 60% at 40% 60%, rgba(123,47,190,0.13) 0%, transparent 70%);
+  background: radial-gradient(ellipse 80% 60% at 40% 60%, rgba(123, 47, 190, 0.13) 0%, transparent 70%);
 }
 
 .orb {
@@ -67,7 +69,7 @@
   left: 50%;
   transform: translate(-50%, -56%);
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(123,47,190,0.18) 0%, rgba(123,47,190,0.06) 40%, transparent 70%);
+  background: radial-gradient(circle, rgba(123, 47, 190, 0.18) 0%, rgba(123, 47, 190, 0.06) 40%, transparent 70%);
   pointer-events: none;
 }
 
@@ -82,7 +84,7 @@
 .chart-card {
   width: 100%;
   max-width: 380px;
-  background: rgba(14,14,18,0.7);
+  background: rgba(14, 14, 18, 0.7);
   border: 1px solid var(--border-mid);
   border-radius: 16px;
   padding: 28px;
@@ -110,6 +112,7 @@
 
 .cc-change {
   font-size: 13px;
+  font-family: 'Roboto Mono', monospace;
   color: #27C97A;
   letter-spacing: -0.01em;
   margin-bottom: 24px;
@@ -170,10 +173,13 @@
 .ch-pct {
   font-size: 11.5px;
   color: #27C97A;
+  font-family: 'Roboto Mono', monospace;
   letter-spacing: -0.01em;
   margin-left: 8px;
 
-  &.neg { color: #E8524A; }
+  &.neg {
+    color: #E8524A;
+  }
 }
 
 .auth-left-copy {
@@ -271,7 +277,9 @@
   background: transparent;
   color: var(--muted);
 
-  &:not(.active):hover { color: var(--mid); }
+  &:not(.active):hover {
+    color: var(--mid);
+  }
 
   &.active {
     background: var(--raised);
@@ -331,9 +339,18 @@
   letter-spacing: -0.01em;
   width: 100%;
 
-  &::placeholder { color: var(--muted); }
-  &:focus { border-color: var(--accent-bdr); background: var(--surface); }
-  &.error { border-color: var(--negative-bdr); }
+  &::placeholder {
+    color: var(--muted);
+  }
+
+  &:focus {
+    border-color: var(--accent-bdr);
+    background: var(--surface);
+  }
+
+  &.error {
+    border-color: var(--negative-bdr);
+  }
 }
 
 .f-err {
@@ -356,7 +373,9 @@
   letter-spacing: -0.005em;
   text-decoration: none;
 
-  &:hover { color: var(--mid); }
+  &:hover {
+    color: var(--mid);
+  }
 }
 
 // ─── Submit button ────────────────────────────────────────────────────────────
@@ -377,13 +396,28 @@
   margin-top: 6px;
   position: relative;
 
-  &:hover:not(:disabled) { background: var(--accent-hover); }
-  &:active:not(:disabled) { transform: scale(0.98); }
-  &:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+  &:hover:not(:disabled) {
+    background: var(--accent-hover);
+  }
+
+  &:active:not(:disabled) {
+    transform: scale(0.98);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+  }
 
   &.loading {
-    .submit-text { opacity: 0; }
-    .submit-spinner { display: block; }
+    .submit-text {
+      opacity: 0;
+    }
+
+    .submit-spinner {
+      display: block;
+    }
   }
 }
 
@@ -395,7 +429,7 @@
   display: none;
   width: 16px;
   height: 16px;
-  border: 2px solid rgba(255,255,255,0.3);
+  border: 2px solid rgba(255, 255, 255, 0.3);
   border-top-color: #fff;
   border-radius: 50%;
   position: absolute;
@@ -405,7 +439,11 @@
   animation: spin 0.7s linear infinite;
 }
 
-@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
 
 // ─── Divider ──────────────────────────────────────────────────────────────────
 .auth-divider {
@@ -430,6 +468,26 @@
 }
 
 // ─── Google button ────────────────────────────────────────────────────────────
+.google-btn-wrap {
+  position: relative;
+  margin-top: 12px;
+}
+
+.google-btn-gsi {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+  overflow: hidden;
+
+  // Stretch the GIS iframe/div to fill the wrapper
+  ::ng-deep>div,
+  ::ng-deep iframe {
+    width: 100% !important;
+    height: 100% !important;
+  }
+}
+
 .google-btn {
   width: 100%;
   height: 42px;
@@ -446,7 +504,6 @@
   align-items: center;
   justify-content: center;
   gap: 10px;
-  margin-top: 12px;
   outline: none;
   letter-spacing: -0.01em;
 
@@ -469,12 +526,21 @@
   a {
     color: var(--mid);
     text-decoration: none;
-    &:hover { color: var(--text); }
+
+    &:hover {
+      color: var(--text);
+    }
   }
 }
 
 // ─── Mobile ───────────────────────────────────────────────────────────────────
 @media (max-width: 768px) {
-  .auth-left { display: none; }
-  .auth-right { width: 100%; padding: 36px 24px; }
+  .auth-left {
+    display: none;
+  }
+
+  .auth-right {
+    width: 100%;
+    padding: 36px 24px;
+  }
 }

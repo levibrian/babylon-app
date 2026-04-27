@@ -1,0 +1,20 @@
+<div class="page">
+  <app-portfolio-hero
+    [totalValue]="heroTotalValue()"
+    [pnlAmount]="heroPnlAmount()"
+    [pnlPercent]="heroPnlPercent()"
+    [activePeriod]="timePeriod()"
+    [loading]="loading()"
+    (periodChange)="onPeriodChange($event)"/>
+
+  <app-portfolio-chart
+    [snapshots]="filteredSnapshots()"
+    [positive]="positive()"
+    [timeframe]="timePeriod()"
+    [filtered]="!filterStore.allActive()"/>
+
+  <app-holdings-list
+    [items]="portfolioService.portfolio()"
+    [loading]="loading()"
+    (rowClick)="navigateToAsset($event)"/>
+</div>

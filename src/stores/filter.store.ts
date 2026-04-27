@@ -25,6 +25,10 @@ export class FilterStore {
     this._active.set(new Set(ALL_ASSET_CLASSES));
   }
 
+  selectNone(): void {
+    this._active.set(new Set());
+  }
+
   isActive(cls: AssetClass): boolean {
     return this._active().has(cls);
   }
