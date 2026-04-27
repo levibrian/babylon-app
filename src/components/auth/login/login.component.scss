@@ -430,6 +430,26 @@
 }
 
 // ─── Google button ────────────────────────────────────────────────────────────
+.google-btn-wrap {
+  position: relative;
+  margin-top: 12px;
+}
+
+.google-btn-gsi {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+  overflow: hidden;
+
+  // Stretch the GIS iframe/div to fill the wrapper
+  ::ng-deep > div,
+  ::ng-deep iframe {
+    width: 100% !important;
+    height: 100% !important;
+  }
+}
+
 .google-btn {
   width: 100%;
   height: 42px;
@@ -446,7 +466,6 @@
   align-items: center;
   justify-content: center;
   gap: 10px;
-  margin-top: 12px;
   outline: none;
   letter-spacing: -0.01em;
 

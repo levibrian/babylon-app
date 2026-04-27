@@ -17,6 +17,7 @@ import {
 } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { AuthService } from '../../../services/auth.service';
+import { GoogleSigninButtonModule } from '@abacritt/angularx-social-login';
 
 type AuthMode = 'login' | 'register';
 
@@ -32,7 +33,7 @@ export function passwordMatchValidator(group: AbstractControl): ValidationErrors
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, GoogleSigninButtonModule],
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
