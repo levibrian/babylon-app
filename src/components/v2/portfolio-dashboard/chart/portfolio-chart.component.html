@@ -45,4 +45,9 @@
 
   <!-- X-axis -->
   <div #chartAxis class="chart-axis"></div>
+
+  <!-- Filtered state notice -->
+  @if (filtered) {
+    <div class="chart-filter-notice">Full portfolio · no per-class history</div>
+  }
 </div>

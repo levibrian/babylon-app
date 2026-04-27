@@ -8,6 +8,20 @@
   </div>
 
   <div class="holdings-list">
+    @if (loading) {
+      @for (n of skeletonRows; track n) {
+        <div class="h-row h-row-skel">
+          <div class="h-left">
+            <span class="skeleton h-skel-name"></span>
+            <span class="skeleton h-skel-type"></span>
+          </div>
+          <div class="h-right">
+            <span class="skeleton h-skel-val"></span>
+            <span class="skeleton h-skel-pnl"></span>
+          </div>
+        </div>
+      }
+    }
     @for (item of items; track trackByTicker($index, item)) {
       <div
         class="h-row"
@@ -16,10 +30,14 @@
         <div class="h-left">
           <div class="h-name-row">
             <span class="h-name">{{ item.companyName }}</span>
-            <span class="alloc-dot" [class]="'alloc-dot ' + allocClass(item)"></span>
-            @if (hasActionPill(item)) {
-              <span class="alloc-pill" [class]="'alloc-pill ' + allocClass(item)">{{ pillLabel(item) }}</span>
-            }
+            <span class="alloc-trigger"
+                  (mouseenter)="showTip($event, item)"
+                  (mouseleave)="hideTip()">
+              <span class="alloc-dot" [class]="'alloc-dot ' + allocClass(item)"></span>
+              @if (hasActionPill(item)) {
+                <span class="alloc-pill" [class]="'alloc-pill ' + allocClass(item)">{{ pillLabel(item) }}</span>
+              }
+            </span>
           </div>
           <div class="h-type">{{ shareLabel(item) }}</div>
         </div>
@@ -32,4 +50,11 @@
       </div>
     }
   </div>
+</div>
+
+<div class="alloc-tip" [class.visible]="tipVisible()" [style.left.px]="tipX()" [style.top.px]="tipY()">
+  <span class="tip-label">Allocation </span>
+  <strong class="tip-current" [class]="'tip-current ' + tipStatus()">{{ tipCurrent() }}</strong>
+  <span class="tip-arrow"> → </span>
+  <strong class="tip-target">{{ tipTarget() }}</strong>
 </div>

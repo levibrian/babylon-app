@@ -5,7 +5,19 @@
   background: var(--surface);
   flex-shrink: 0;
   touch-action: pan-y;
-  height: 160px;
+  height: 220px;
+}
+
+.chart-filter-notice {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  font-size: 10px;
+  font-weight: 450;
+  color: var(--muted);
+  letter-spacing: 0.02em;
+  pointer-events: none;
+  z-index: 5;
 }
 
 .chart-shimmer {

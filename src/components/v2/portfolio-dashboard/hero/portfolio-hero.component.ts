@@ -17,6 +17,7 @@ export class PortfolioHeroComponent {
   @Input() pnlAmount = 0;
   @Input() pnlPercent = 0;
   @Input() activePeriod: Timeframe = '1M';
+  @Input() loading = false;
   @Output() periodChange = new EventEmitter<Timeframe>();
 
   protected filterStore = inject(FilterStore);
@@ -24,12 +25,12 @@ export class PortfolioHeroComponent {
   protected readonly timePeriods = TIME_PERIODS;
 
   protected formatValue(n: number): string {
-    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2 }).format(n);
+    return new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR', minimumFractionDigits: 2 }).format(n);
   }
 
   protected formatPnlAmount(n: number): string {
     const sign = n >= 0 ? '+' : '';
-    return sign + new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2 }).format(n);
+    return sign + new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR', minimumFractionDigits: 2 }).format(n);
   }
 
   protected formatPnlPercent(n: number): string {
@@ -52,7 +53,10 @@ export class PortfolioHeroComponent {
   }
 
   protected toggleAll(): void {
-    if (this.filterStore.allActive()) return;
-    this.filterStore.selectAll();
+    if (this.filterStore.allActive()) {
+      this.filterStore.selectNone();
+    } else {
+      this.filterStore.selectAll();
+    }
   }
 }

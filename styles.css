@@ -1,8 +1,52 @@
 @import './src/styles/tokens.css';
 
 :root {
-  --accent-text:   rgba(187,148,230,0.9);
-  --accent-border: rgba(123,47,190,0.3);
-  --accent-dim:    rgba(123,47,190,0.12);
-  --border-mid:    rgba(255,255,255,0.09);
+  /* Babylon v2 design tokens — short names used by all v2 components */
+  --bg:             #08080A;
+  --surface:        #0E0E12;
+  --raised:         #141418;
+  --hover:          #17171C;
+
+  --accent:         #7B2FBE;
+  --accent-hover:   #9D4EDD;
+  --accent-dim:     rgba(123,47,190,0.12);
+  --accent-bdr:     rgba(123,47,190,0.3);
+  --accent-border:  rgba(123,47,190,0.3);
+  --accent-text:    rgba(187,148,230,0.9);
+
+  --border:         rgba(255,255,255,0.05);
+  --border-mid:     rgba(255,255,255,0.09);
+  --border-hi:      rgba(255,255,255,0.14);
+
+  --text:           #EEEEF2;
+  --muted:          #52525F;
+  --mid:            #8585A0;
+
+  --positive:       #27C97A;
+  --negative:       #E8524A;
+  --negative-dim:   rgba(232,82,74,0.10);
+  --negative-bdr:   rgba(232,82,74,0.18);
+
+  --easing:         200ms ease-out;
+}
+
+/* ── Global skeleton / ghost loading ── */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--raised)  0%,
+    var(--raised) 30%,
+    var(--hover)  50%,
+    var(--raised) 70%,
+    var(--raised) 100%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-sweep 1.6s ease-in-out infinite;
+  border-radius: 4px;
+  display: block;
+}
+
+@keyframes skeleton-sweep {
+  0%   { background-position:  200% 0; }
+  100% { background-position: -200% 0; }
 }

@@ -3,9 +3,9 @@ import {
   SimpleChanges, ViewChild, AfterViewInit, OnDestroy,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { PortfolioSnapshotDto } from '../../../../models/portfolio-history.model';
+import { PortfolioSnapshotDto, Timeframe } from '../../../../models/portfolio-history.model';
 
-interface ChartPoint { x: number; y: number; value: number; date: Date; }
+interface ChartPoint { x: number; y: number; value: number; pct: number; date: Date; }
 
 @Component({
   selector: 'app-portfolio-chart',
@@ -18,6 +18,13 @@ interface ChartPoint { x: number; y: number; value: number; date: Date; }
 export class PortfolioChartComponent implements OnChanges, AfterViewInit, OnDestroy {
   @Input() snapshots: PortfolioSnapshotDto[] = [];
   @Input() positive = true;
+  @Input() timeframe: Timeframe = '1M';
+  @Input() filtered = false;
+
+  private static readonly MAX_POINTS: Record<Timeframe, number> = {
+    '1D': 0, '1W': 0, '1M': 0,
+    '6M': 90, '1Y': 52, 'YTD': 52, 'Max': 60,
+  };
 
   @ViewChild('chartSvg')     chartSvgEl!:     ElementRef<SVGSVGElement>;
   @ViewChild('chartLine')    chartLineEl!:    ElementRef<SVGPathElement>;
@@ -45,7 +52,7 @@ export class PortfolioChartComponent implements OnChanges, AfterViewInit, OnDest
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['snapshots'] && this.chartLineEl) {
+    if ((changes['snapshots'] || changes['positive'] || changes['timeframe']) && this.chartLineEl) {
       this.showShimmer = this.snapshots.length === 0;
       if (this.snapshots.length > 0) this.renderChart();
     }
@@ -71,20 +78,39 @@ export class PortfolioChartComponent implements OnChanges, AfterViewInit, OnDest
     this.animateLineIn(this.chartLineEl.nativeElement);
   }
 
+  private downsample(snaps: PortfolioSnapshotDto[]): PortfolioSnapshotDto[] {
+    const max = PortfolioChartComponent.MAX_POINTS[this.timeframe];
+    if (!max || snaps.length <= max) return snaps;
+    const result: PortfolioSnapshotDto[] = [];
+    for (let i = 0; i < max; i++) {
+      result.push(snaps[Math.round((i / (max - 1)) * (snaps.length - 1))]);
+    }
+    return result;
+  }
+
   private buildPoints(): ChartPoint[] {
-    const snaps = this.snapshots;
-    const values = snaps.map(s => s.totalMarketValue);
-    const min = Math.min(...values);
-    const max = Math.max(...values);
-    const range = max - min || 1;
+    const snaps = this.downsample(this.snapshots);
+    const values = snaps.map(s => s.unrealizedPnL + s.realizedPnL);
+    const rawMin = Math.min(...values);
+    const rawMax = Math.max(...values);
+    const range = rawMax - rawMin || 1;
+    // Tight 1% range padding — mirrors prototype approach, keeps line filling the chart
+    const pad = range * 0.01;
+    const paddedMin = rawMin - pad;
+    const paddedRange = range + pad * 2;
     const usableH = this.H - this.PADDING_TOP - this.PADDING_BOTTOM;
 
-    return snaps.map((s, i) => ({
-      x: snaps.length === 1 ? this.W / 2 : (i / (snaps.length - 1)) * this.W,
-      y: this.PADDING_TOP + usableH - ((s.totalMarketValue - min) / range) * usableH,
-      value: s.totalMarketValue,
-      date: new Date(s.timestamp * 1000),
-    }));
+    return snaps.map((s, i) => {
+      const pnl = s.unrealizedPnL + s.realizedPnL;
+      const pct = s.totalInvested > 0 ? (pnl / s.totalInvested) * 100 : 0;
+      return {
+        x: snaps.length === 1 ? this.W / 2 : (i / (snaps.length - 1)) * this.W,
+        y: this.PADDING_TOP + usableH - ((pnl - paddedMin) / paddedRange) * usableH,
+        value: pnl,
+        pct,
+        date: new Date(s.timestamp * 1000),
+      };
+    });
   }
 
   private smoothPath(pts: ChartPoint[]): string {
@@ -151,6 +177,15 @@ export class PortfolioChartComponent implements OnChanges, AfterViewInit, OnDest
     return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   }
 
+  private formatTooltipDate(d: Date): string {
+    const date = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    if (this.timeframe === '1D' || this.timeframe === '1W') {
+      const time = d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+      return `${date} · ${time}`;
+    }
+    return date;
+  }
+
   protected onMouseMove(event: MouseEvent): void {
     this.updateCrosshair(event.clientX, event.currentTarget as SVGSVGElement);
   }
@@ -186,12 +221,10 @@ export class PortfolioChartComponent implements OnChanges, AfterViewInit, OnDest
     this.crossDotEl.nativeElement.setAttribute('fill', this.lineColor);
     svgEl.classList.add('crosshair-visible');
 
-    this.tooltipValEl.nativeElement.textContent = new Intl.NumberFormat('en-US', {
-      style: 'currency', currency: 'USD', minimumFractionDigits: 2,
-    }).format(nearest.value);
-    this.tooltipDateEl.nativeElement.textContent = nearest.date.toLocaleDateString('en-US', {
-      month: 'short', day: 'numeric',
-    });
+    const sign = nearest.value >= 0 ? '+' : '';
+    const formatted = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR', minimumFractionDigits: 2 }).format(nearest.value);
+    this.tooltipValEl.nativeElement.textContent = `${sign}${formatted} · ${sign}${nearest.pct.toFixed(2)}%`;
+    this.tooltipDateEl.nativeElement.textContent = this.formatTooltipDate(nearest.date);
 
     const dotScreenX = rect.left + (nearest.x / this.W) * rect.width;
     this.tooltipEl.nativeElement.style.left = `${dotScreenX}px`;

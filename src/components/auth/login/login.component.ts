@@ -113,9 +113,7 @@ export class LoginComponent {
   }
 
   onGoogleSignIn(): void {
-    this.authService.signInWithGoogle().catch(() => {
-      this.error.set('Google sign-in failed. Please try again.');
-    });
+    this.authService.signInWithGoogle();
   }
 
   invalid(form: 'login' | 'register', field: string): boolean {

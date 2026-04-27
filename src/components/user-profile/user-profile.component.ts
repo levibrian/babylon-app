@@ -23,7 +23,7 @@ export class UserProfileComponent {
   }
 
   logout() {
-    this.authService.logout(true);
+    this.authService.logout();
     this.isOpen.set(false);
   }
 
