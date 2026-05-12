@@ -165,9 +165,10 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);-webk
 .holdings-list { display: flex; flex-direction: column; }
 
 .h-row {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 24px;
   align-items: center;
-  justify-content: space-between;
   padding: 14px 10px;
   border-radius: 8px;
   cursor: pointer;
@@ -188,7 +189,9 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);-webk
   gap: 7px;
 }
 .h-name { font-size: 13.5px; font-weight: 500; color: var(--text); letter-spacing: -0.01em; }
-.h-type { font-size: 11px; color: var(--muted); letter-spacing: 0.02em; }
+.h-type { font-size: 11.5px; font-weight: 450; color: var(--mid); letter-spacing: 0.01em; }
+.h-type-mkt { color: var(--text); font-family: 'Roboto Mono', monospace; font-variant-numeric: tabular-nums; font-weight: 500; letter-spacing: -0.01em; }
+.h-type-sep { color: var(--muted); margin: 0 6px; }
 
 /* Allocation dot */
 .alloc-dot {
@@ -315,7 +318,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);-webk
     <div class="sb-bot">
       <div class="user-i">
         <div class="av">BL</div>
-        <div class="u-info"><span class="u-name">Brian Levi</span><span class="u-mail">bra.levi@gmail.com</span></div>
+        <div class="u-info"><span class="u-name">Brian Levi</span><span class="u-mail"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="3c5e4e5d1250594a557c5b515d5550125f5351">[email&#160;protected]</a></span></div>
       </div>
     </div>
   </div>
@@ -395,8 +398,8 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);-webk
         <div class="holdings-hdr">
           <span class="holdings-lbl">Holdings</span>
           <div class="h-toggle">
-            <span class="h-tog-opt active" id="tog-daily"    onclick="setToggle('daily')">Daily</span>
-            <span class="h-tog-opt"        id="tog-absolute" onclick="setToggle('absolute')">Absolute</span>
+            <span class="h-tog-opt active" id="tog-absolute" onclick="setToggle('absolute')">Absolute</span>
+            <span class="h-tog-opt"        id="tog-relative" onclick="setToggle('relative')">Relative</span>
           </div>
         </div>
 
@@ -416,11 +419,11 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);-webk
                       onmouseleave="hideAllocTip()"
                       ontouchstart="toggleAllocTip(event,this,'38.2%','35%','overweight')">−€1,542</span>
               </div>
-              <div class="h-type">12 shares · €1,535.00</div>
+              <div class="h-type"><span>12 shares</span><span class="h-type-sep">·</span><span class="h-type-mkt">€1,535.00</span><span class="h-type-sep">·</span><span>avg €1,383.33</span></div>
             </div>
             <div class="h-right">
               <div class="h-val">€18,420.00</div>
-              <div class="h-pnl pos" data-daily="+0.8%" data-absolute="+€1,820.00 · +10.9%">+0.8%</div>
+              <div class="h-pnl pos" data-holding="apple">+5.4%</div>
             </div>
           </div>
 
@@ -434,11 +437,11 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);-webk
                       onmouseleave="hideAllocTip()"
                       ontouchstart="toggleAllocTip(event,this,'29.7%','30%','balanced')"></span>
               </div>
-              <div class="h-type">8 shares · €1,788.75</div>
+              <div class="h-type"><span>8 shares</span><span class="h-type-sep">·</span><span class="h-type-mkt">€1,788.75</span><span class="h-type-sep">·</span><span>avg €1,655.25</span></div>
             </div>
             <div class="h-right">
               <div class="h-val">€14,310.00</div>
-              <div class="h-pnl pos" data-daily="+0.4%" data-absolute="+€1,068.00 · +8.1%">+0.4%</div>
+              <div class="h-pnl pos" data-holding="vanguard">+3.4%</div>
             </div>
           </div>
 
@@ -456,11 +459,11 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);-webk
                       onmouseleave="hideAllocTip()"
                       ontouchstart="toggleAllocTip(event,this,'19.2%','15%','overweight')">−€2,024</span>
               </div>
-              <div class="h-type">0.09 BTC · €102,667</div>
+              <div class="h-type"><span>0.09 BTC</span><span class="h-type-sep">·</span><span class="h-type-mkt">€102,667</span><span class="h-type-sep">·</span><span>avg €106,067</span></div>
             </div>
             <div class="h-right">
               <div class="h-val">€9,240.00</div>
-              <div class="h-pnl neg" data-daily="−1.2%" data-absolute="−€306.00 · −3.2%">−1.2%</div>
+              <div class="h-pnl neg" data-holding="bitcoin">−1.5%</div>
             </div>
           </div>
 
@@ -478,11 +481,11 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);-webk
                       onmouseleave="hideAllocTip()"
                       ontouchstart="toggleAllocTip(event,this,'12.9%','20%','underweight')">+€3,422</span>
               </div>
-              <div class="h-type">15 shares · €415.62</div>
+              <div class="h-type"><span>15 shares</span><span class="h-type-sep">·</span><span class="h-type-mkt">€415.62</span><span class="h-type-sep">·</span><span>avg €393.10</span></div>
             </div>
             <div class="h-right">
               <div class="h-val">€6,234.33</div>
-              <div class="h-pnl pos" data-daily="+0.3%" data-absolute="+€338.00 · +5.7%">+0.3%</div>
+              <div class="h-pnl pos" data-holding="microsoft">+2.4%</div>
             </div>
           </div>
 
@@ -508,12 +511,12 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);-webk
     <div class="nav-i" onclick="closeDrawer()"><div class="nav-ico"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 3.5A6 6 0 1 1 5.5 2"/><path d="M5.5 2v3.5H9"/></svg></div><span class="nav-lbl" style="opacity:1">Recurring</span></div>
   </nav>
   <div class="sb-div"></div>
-  <div class="sb-bot"><div class="user-i"><div class="av">BL</div><div class="u-info" style="opacity:1"><span class="u-name">Brian Levi</span><span class="u-mail">bra.levi@gmail.com</span></div></div></div>
+  <div class="sb-bot"><div class="user-i"><div class="av">BL</div><div class="u-info" style="opacity:1"><span class="u-name">Brian Levi</span><span class="u-mail"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="422030236c2e27342b02252f232b2e6c212d2f">[email&#160;protected]</a></span></div></div></div>
 </div>
 
 <div class="proto-lbl">SPEC-003 · Task 07 · Holdings Row</div>
 
-<script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
@@ -743,6 +746,7 @@ function setPeriod(el) {
   pctEl.className   = 'perf-pct ' + (data.pos ? 'pos' : 'neg');
 
   renderChart(currentPeriod);
+  renderHoldingPnL(true);
 }
 
 /* ══════════════════════════════════════════
@@ -766,25 +770,77 @@ function toggleAsset(type) {
 /* ══════════════════════════════════════════
    HOLDINGS TOGGLE
 ══════════════════════════════════════════ */
-let holdingMode = 'daily';
+/* Per-holding performance by period.
+   abs = percentage change, rel = € change for that period. */
+const HOLDING_PERF = {
+  apple: {
+    '1D':  { abs: '+0.8%',  rel: '+€146.20'   },
+    '1W':  { abs: '+2.1%',  rel: '+€378.94'   },
+    '1M':  { abs: '+5.4%',  rel: '+€941.30'   },
+    '6M':  { abs: '+8.7%',  rel: '+€1,475.20' },
+    '1Y':  { abs: '+9.6%',  rel: '+€1,612.00' },
+    'YTD': { abs: '+7.2%',  rel: '+€1,236.40' },
+    'MAX': { abs: '+10.9%', rel: '+€1,820.00' }
+  },
+  vanguard: {
+    '1D':  { abs: '+0.4%',  rel: '+€57.24'    },
+    '1W':  { abs: '+1.5%',  rel: '+€214.65'   },
+    '1M':  { abs: '+3.4%',  rel: '+€486.54'   },
+    '6M':  { abs: '+5.8%',  rel: '+€829.98'   },
+    '1Y':  { abs: '+7.1%',  rel: '+€1,016.01' },
+    'YTD': { abs: '+4.3%',  rel: '+€615.33'   },
+    'MAX': { abs: '+8.1%',  rel: '+€1,068.00' }
+  },
+  bitcoin: {
+    '1D':  { abs: '−1.2%',  rel: '−€112.20'   },
+    '1W':  { abs: '−2.8%',  rel: '−€266.10'   },
+    '1M':  { abs: '−1.5%',  rel: '−€140.70'   },
+    '6M':  { abs: '+4.2%',  rel: '+€372.40'   },
+    '1Y':  { abs: '−2.1%',  rel: '−€198.20'   },
+    'YTD': { abs: '+1.8%',  rel: '+€163.40'   },
+    'MAX': { abs: '−3.2%',  rel: '−€306.00'   }
+  },
+  microsoft: {
+    '1D':  { abs: '+0.3%',  rel: '+€18.72'    },
+    '1W':  { abs: '+1.1%',  rel: '+€68.58'    },
+    '1M':  { abs: '+2.4%',  rel: '+€149.62'   },
+    '6M':  { abs: '+3.9%',  rel: '+€243.14'   },
+    '1Y':  { abs: '+4.6%',  rel: '+€286.78'   },
+    'YTD': { abs: '+2.8%',  rel: '+€174.56'   },
+    'MAX': { abs: '+5.7%',  rel: '+€338.00'   }
+  }
+};
+
+/* absolute = percentage · relative = € value */
+let holdingMode = 'absolute';
+
+function renderHoldingPnL(animate) {
+  document.querySelectorAll('.h-pnl').forEach(el => {
+    const holding = el.dataset.holding;
+    if (!holding || !HOLDING_PERF[holding]) return;
+    const period = HOLDING_PERF[holding][currentPeriod] || HOLDING_PERF[holding]['MAX'];
+    const val    = holdingMode === 'absolute' ? period.abs : period.rel;
+    const cls    = 'h-pnl ' + (val.startsWith('+') ? 'pos' : 'neg');
+
+    if (animate) {
+      el.style.opacity = '0';
+      setTimeout(() => {
+        el.textContent = val;
+        el.className   = cls;
+        el.style.opacity = '1';
+      }, 80);
+    } else {
+      el.textContent = val;
+      el.className   = cls;
+    }
+  });
+}
 
 function setToggle(mode) {
   holdingMode = mode;
-  document.getElementById('tog-daily').classList.toggle('active',    mode === 'daily');
   document.getElementById('tog-absolute').classList.toggle('active', mode === 'absolute');
-
-  document.querySelectorAll('.h-pnl').forEach(el => {
-    const val = el.dataset[mode];
-    if (!val) return;
-
-    el.style.opacity = '0';
-    setTimeout(() => {
-      el.textContent = val;
-      /* Positive if starts with + */
-      el.className = 'h-pnl ' + (val.startsWith('+') ? 'pos' : 'neg');
-      el.style.opacity = '1';
-    }, 80);
-  });
+  document.getElementById('tog-relative').classList.toggle('active', mode === 'relative');
+  renderHoldingPnL(true);
 }
 
 /* Row tap → navigate to asset detail */
@@ -858,7 +914,7 @@ function toggleAllocTip(e, el, current, target, status) {
 document.addEventListener('touchstart', () => hideAllocTip(), { passive: true });
 
 /* ── Init ── */
-window.addEventListener('load', () => { renderChart('1M'); });
+window.addEventListener('load', () => { renderChart('1M'); renderHoldingPnL(false); });
 </script>
 </body>
 </html>
