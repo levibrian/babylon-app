@@ -1,6 +1,6 @@
-import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output, inject, signal, computed } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, EventEmitter, Input, Output, inject, signal, computed } from '@angular/core';
 
-type PnlMode = 'daily' | 'absolute';
+type PnlMode = 'absolute' | 'relative';
 import { PortfolioItem } from '../../../../models/portfolio.model';
 import { FilterStore, AssetClass } from '../../../../stores/filter.store';
 
@@ -21,9 +21,24 @@ export class HoldingsListComponent {
   protected readonly skeletonRows = [1, 2, 3, 4, 5];
 
   protected filterStore = inject(FilterStore);
-  protected pnlMode = signal<PnlMode>('daily');
+  private destroyRef = inject(DestroyRef);
+  protected pnlMode = signal<PnlMode>('absolute');
 
   protected setMode(m: PnlMode): void { this.pnlMode.set(m); }
+  protected togglePnlMode(): void {
+    this.pnlMode.set(this.pnlMode() === 'absolute' ? 'relative' : 'absolute');
+  }
+
+  protected tappedTicker = signal<string | null>(null);
+
+  protected onRowClick(ticker: string): void {
+    this.tappedTicker.set(ticker);
+    const id = setTimeout(() => {
+      this.tappedTicker.set(null);
+      this.rowClick.emit(ticker);
+    }, 160);
+    this.destroyRef.onDestroy(() => clearTimeout(id));
+  }
 
   private tipItem = signal<PortfolioItem | null>(null);
   private tipPos  = signal<{ x: number; y: number }>({ x: 0, y: 0 });
@@ -82,22 +97,25 @@ export class HoldingsListComponent {
   }
 
   protected pnlLabel(item: PortfolioItem): string {
-    const amt = item.unrealizedPnL;
-    const pct = item.unrealizedPnLPercentage;
-    if (amt === null || pct === null) return '—';
-    const sign = amt >= 0 ? '+' : '';
-    if (this.pnlMode() === 'daily') {
-      return `${sign}${this.formatValue(amt)} · ${sign}${pct.toFixed(1)}%`;
+    if (this.pnlMode() === 'relative') {
+      const amt = item.unrealizedPnL;
+      if (amt === null) return '—';
+      const sign = amt >= 0 ? '+' : '';
+      return `${sign}${this.formatValue(amt)}`;
     }
-    return `${sign}${this.formatValue(amt)} · ${sign}${pct.toFixed(1)}%`;
+    const pct = item.unrealizedPnLPercentage;
+    if (pct === null) return '—';
+    const sign = pct >= 0 ? '+' : '';
+    return `${sign}${pct.toFixed(1)}%`;
   }
 
   protected pnlPositive(item: PortfolioItem): boolean {
     return (item.unrealizedPnL ?? 0) >= 0;
   }
 
-  protected shareLabel(item: PortfolioItem): string {
-    return `${item.totalShares} shares · ${this.formatValue(item.averageSharePrice)}`;
+  protected pricePerShare(item: PortfolioItem): number | null {
+    if (item.currentMarketValue == null || item.totalShares === 0) return null;
+    return item.currentMarketValue / item.totalShares;
   }
 
   protected trackByTicker(_: number, item: PortfolioItem): string { return item.ticker; }

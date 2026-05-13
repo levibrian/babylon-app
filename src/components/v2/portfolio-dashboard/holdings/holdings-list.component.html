@@ -2,7 +2,7 @@
   <div class="holdings-hdr">
     <span class="holdings-lbl">Holdings</span>
     <div class="h-toggle">
-      <button class="h-tog-opt" [class.active]="pnlMode() === 'daily'" (click)="setMode('daily')" type="button">Daily</button>
+      <button class="h-tog-opt" [class.active]="pnlMode() === 'relative'" (click)="setMode('relative')" type="button">Relative</button>
       <button class="h-tog-opt" [class.active]="pnlMode() === 'absolute'" (click)="setMode('absolute')" type="button">Absolute</button>
     </div>
   </div>
@@ -26,7 +26,8 @@
       <div
         class="h-row"
         [class.dimmed]="!isVisible(item)"
-        (click)="rowClick.emit(item.ticker)">
+        [class.tapped]="tappedTicker() === item.ticker"
+        (click)="onRowClick(item.ticker)">
         <div class="h-left">
           <div class="h-name-row">
             <span class="h-name">{{ item.companyName }}</span>
@@ -39,11 +40,18 @@
               }
             </span>
           </div>
-          <div class="h-type">{{ shareLabel(item) }}</div>
+          <div class="h-type">
+            <span>{{ item.totalShares }} shares @ avg {{ formatValue(item.averageSharePrice) }}</span>
+            @if (pricePerShare(item) !== null) {
+              <span class="h-type-sep">-</span>
+              <span class="h-type-mkt">{{ formatValue(pricePerShare(item)) }}</span>
+            }
+          </div>
         </div>
         <div class="h-right">
           <div class="h-val">{{ formatValue(item.currentMarketValue) }}</div>
-          <div class="h-pnl" [class.pos]="pnlPositive(item)" [class.neg]="!pnlPositive(item)">
+          <div class="h-pnl" [class.pos]="pnlPositive(item)" [class.neg]="!pnlPositive(item)"
+               (click)="$event.stopPropagation(); togglePnlMode()">
             {{ pnlLabel(item) }}
           </div>
         </div>

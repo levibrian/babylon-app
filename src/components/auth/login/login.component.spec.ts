@@ -34,7 +34,7 @@ describe('LoginComponent', () => {
     ]);
     authServiceSpy.login.and.returnValue(Promise.resolve());
     authServiceSpy.register.and.returnValue(Promise.resolve());
-    authServiceSpy.signInWithGoogle.and.returnValue(Promise.resolve());
+    authServiceSpy.signInWithGoogle.and.returnValue(Promise.resolve() as unknown as void);
 
     await TestBed.configureTestingModule({
       imports: [LoginComponent],
@@ -94,7 +94,7 @@ describe('LoginComponent', () => {
     });
 
     it('sets error signal on failure', async () => {
-      authServiceSpy.signInWithGoogle.and.returnValue(Promise.reject('Google error'));
+      authServiceSpy.signInWithGoogle.and.returnValue(Promise.reject('Google error') as unknown as void);
       component.onGoogleSignIn();
       await fixture.whenStable();
       expect(component.error()).toBe('Google sign-in failed. Please try again.');
@@ -120,7 +120,7 @@ describe('LoginComponent (register route)', () => {
     const authServiceSpy = jasmine.createSpyObj('AuthService', ['login', 'register', 'signInWithGoogle']);
     authServiceSpy.login.and.returnValue(Promise.resolve());
     authServiceSpy.register.and.returnValue(Promise.resolve());
-    authServiceSpy.signInWithGoogle.and.returnValue(Promise.resolve());
+    authServiceSpy.signInWithGoogle.and.returnValue(Promise.resolve() as unknown as void);
 
     await TestBed.configureTestingModule({
       imports: [LoginComponent],
