@@ -1,0 +1,77 @@
+<div class="drawer-overlay" [class.open]="open" (click)="onCancel()"></div>
+
+<div class="drawer" [class.open]="open">
+  <div class="drawer-hdr">
+    <div class="drawer-title-el">{{ title() }}</div>
+    <button class="drawer-close" type="button" (click)="onCancel()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+  </div>
+
+  <div class="drawer-body">
+    <form class="drawer-form" [formGroup]="form" (ngSubmit)="onSubmit()">
+
+      <div class="f-field">
+        <label class="f-label">Type</label>
+        <div class="type-seg">
+          @for (t of types; track t) {
+            <button type="button"
+                    [attr.data-type]="t"
+                    [class]="'ts-btn ' + t + (selectedType() === t ? ' active' : '')"
+                    (click)="setType(t)">
+              {{ t === 'dividend' ? 'Dividend' : t === 'buy' ? 'Buy' : 'Sell' }}
+            </button>
+          }
+        </div>
+      </div>
+
+      <div class="f-field">
+        <label class="f-label" for="f-asset">Asset</label>
+        <select class="f-input f-select" id="f-asset" formControlName="ticker">
+          <option value="">Select asset…</option>
+          @for (s of securities; track s.ticker) {
+            <option [value]="s.ticker">{{ s.name }} ({{ s.ticker }})</option>
+          }
+        </select>
+      </div>
+
+      <div class="f-field">
+        <label class="f-label" for="f-date">Date</label>
+        <input class="f-input" type="date" id="f-date" formControlName="date">
+      </div>
+
+      @if (selectedType() !== 'dividend') {
+        <div class="f-grid2">
+          <div class="f-field">
+            <label class="f-label" for="f-shares">Shares</label>
+            <input class="f-input f-mono" type="number" id="f-shares" formControlName="shares"
+                   placeholder="0" step="0.001" min="0">
+          </div>
+          <div class="f-field">
+            <label class="f-label" for="f-price">Price / share</label>
+            <input class="f-input f-mono" type="number" id="f-price" formControlName="sharePrice"
+                   placeholder="0.00" step="0.01" min="0">
+          </div>
+        </div>
+        <div class="f-total">
+          <span class="f-total-lbl">Total</span>
+          <span class="f-total-val">{{ formatTotal() }}</span>
+        </div>
+      } @else {
+        <div class="f-field">
+          <label class="f-label" for="f-div-total">Amount received</label>
+          <input class="f-input f-mono" type="number" id="f-div-total" formControlName="sharePrice"
+                 placeholder="0.00" step="0.01" min="0">
+        </div>
+      }
+
+    </form>
+  </div>
+
+  <div class="drawer-foot">
+    <button class="btn-cancel" type="button" (click)="onCancel()">Cancel</button>
+    <button class="btn-submit" type="button" (click)="onSubmit()">{{ submitLabel() }}</button>
+  </div>
+</div>

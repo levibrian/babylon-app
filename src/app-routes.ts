@@ -50,8 +50,7 @@ export const routes: Routes = [
       {
         path: 'transactions',
         loadComponent: () =>
-          import('./components/v2/placeholder/placeholder.component').then(m => m.PlaceholderComponent),
-        data: { label: 'Transactions — coming in Plan D' },
+          import('./components/v2/transactions/transactions-v2.component').then(m => m.TransactionsV2Component),
       },
       {
         path: 'recurring',

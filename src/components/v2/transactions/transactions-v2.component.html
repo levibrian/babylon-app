@@ -1,0 +1,91 @@
+<div class="page">
+
+  <!-- Header -->
+  <div class="page-hdr">
+    <div>
+      <div class="page-title">Transactions</div>
+      <div class="page-subtitle">{{ txCount() }} {{ txCount() === 1 ? 'transaction' : 'transactions' }}</div>
+    </div>
+    <div class="hdr-right">
+      <!-- Inline stats -->
+      <div class="stats-inline">
+        <div class="si-group"><span class="si-lbl">Invested</span><span class="si-val">{{ formatValue(statsInvested()) }}</span></div>
+        <span class="si-sep">•</span>
+        <div class="si-group"><span class="si-lbl">Cash</span><span class="si-val muted">{{ formatValue(cashBalance()) }}</span></div>
+        <span class="si-sep">•</span>
+        <div class="si-group">
+          <span class="si-lbl">Closed</span>
+          @if (statsClosed() !== null) {
+            <span class="si-val" [class.gain]="(statsClosed() ?? 0) >= 0" [class.loss]="(statsClosed() ?? 0) < 0">{{ formatSigned(statsClosed()!) }}</span>
+          } @else {
+            <span class="si-val muted">—</span>
+          }
+        </div>
+      </div>
+      <div class="filter-bar">
+        <div class="search-wrap">
+          <div class="search-ico">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          </div>
+          <input class="search-inp" type="text" placeholder="Search…"
+                 [value]="searchQuery()"
+                 (input)="searchQuery.set($any($event.target).value)">
+        </div>
+        <div class="type-filter">
+          @for (t of types; track t) {
+            <button type="button" class="tf-btn" [class.active]="typeFilter() === t"
+                    (click)="typeFilter.set(t)">
+              {{ typeLabels[t] }}
+            </button>
+          }
+        </div>
+      </div>
+      <button class="add-btn" type="button" (click)="openDrawer()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Add transaction
+      </button>
+    </div>
+  </div>
+
+  <!-- Transaction list -->
+  @if (loading()) {
+    <app-transaction-list-v2 [groups]="[]" [loading]="true" />
+  } @else if (error()) {
+    <div class="error-msg">{{ error() }}</div>
+  } @else if (filteredTransactions().length === 0) {
+    <div class="empty-state visible">
+      <div class="empty-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 7H3M21 12H3M21 17H3"/></svg>
+      </div>
+      <div class="empty-title">
+        {{ searchQuery() || typeFilter() !== 'all' ? 'No transactions found' : 'No transactions yet' }}
+      </div>
+      <div class="empty-body">
+        {{ searchQuery() || typeFilter() !== 'all'
+          ? 'Try adjusting your search or filter.'
+          : 'Add your first transaction to start tracking your portfolio.' }}
+      </div>
+      @if (!searchQuery() && typeFilter() === 'all') {
+        <button class="empty-cta" type="button" (click)="openDrawer()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add transaction
+        </button>
+      }
+    </div>
+  } @else {
+    <app-transaction-list-v2
+      [groups]="groupedTransactions()"
+      [loading]="false"
+      (editClick)="openDrawer($event)"
+      (deleteClick)="deleteTransaction($event)" />
+  }
+
+</div>
+
+<!-- Drawer -->
+<app-transaction-drawer
+  [open]="drawerOpen()"
+  [transaction]="drawerTx()"
+  [securities]="securities()"
+  (save)="saveTransaction($event)"
+  (cancel)="closeDrawer()" />
