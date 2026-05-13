@@ -102,22 +102,77 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);-webk
 .add-btn:hover{opacity:0.88}
 .add-btn:active{transform:scale(0.975)}
 
+/* ── Stats variants ──
+   Three positions controllable via data-stats-mode on .main:
+   • top    — the original strip below the page header
+   • footer — sticky summary bar at the bottom of the list area
+   • inline — a single compact mono line near the title row
+*/
+.stats-strip,
+.stats-footer,
+.stats-inline{display:none}
+.main[data-stats-mode="top"] .stats-strip{display:flex}
+.main[data-stats-mode="footer"] .stats-footer{display:flex}
+.main[data-stats-mode="inline"] .stats-inline{display:flex}
+
+/* ─ Top variant (original) ─ */
+.stats-strip{align-items:center;gap:32px;padding:14px 0 22px;margin-bottom:2px;flex-wrap:wrap}
+.stat-cell{display:flex;align-items:center;gap:10px;min-height:30px;position:relative}
+.stat-lbl{font-size:10.5px;font-weight:500;color:var(--muted);letter-spacing:0.08em;text-transform:uppercase;white-space:nowrap}
+.stat-val{font-family:'Roboto Mono',monospace;font-size:14px;font-weight:500;font-variant-numeric:tabular-nums;letter-spacing:-0.03em;color:var(--text);white-space:nowrap}
+.stat-val.gain{color:var(--positive)}
+.stat-val.loss{color:var(--negative)}
+.stat-val.muted{color:var(--mid)}
+.stat-val .pct{color:inherit;opacity:0.78;margin-left:6px;font-size:12.5px}
+.stat-info{width:13px;height:13px;border-radius:50%;border:1px solid var(--border-mid);display:inline-flex;align-items:center;justify-content:center;color:var(--muted);font-size:9px;cursor:help;font-family:'Inter',sans-serif;font-weight:600}
+.stat-info:hover{color:var(--mid);border-color:var(--border-hi)}
+
+/* ─ Footer variant ─ */
+.stats-footer{align-items:center;height:54px;padding:0 32px;background:var(--surface);flex-shrink:0;gap:24px}
+.sf-cell{display:flex;align-items:center;gap:10px}
+.sf-cell:last-child{margin-left:auto}
+.sf-lbl{font-size:10.5px;font-weight:500;color:var(--muted);letter-spacing:0.08em;text-transform:uppercase;white-space:nowrap}
+.sf-val{font-family:'Roboto Mono',monospace;font-size:13.5px;font-weight:500;font-variant-numeric:tabular-nums;letter-spacing:-0.03em;color:var(--text);white-space:nowrap}
+.sf-val.gain{color:var(--positive)}
+.sf-val.loss{color:var(--negative)}
+.sf-val.muted{color:var(--mid)}
+.sf-val .pct{color:inherit;opacity:0.78;margin-left:6px;font-size:12px}
+.sf-count{font-size:11.5px;color:var(--mid);letter-spacing:-0.01em}
+
+/* ─ Inline variant ─ inline-with-toolbar; sits beside the search/filter row */
+.stats-inline{align-items:center;flex-wrap:wrap;gap:4px 14px;font-family:'Roboto Mono',monospace;font-size:12.5px;font-variant-numeric:tabular-nums;letter-spacing:-0.02em;color:var(--mid);margin-right:auto}
+.si-group{display:inline-flex;align-items:baseline;gap:6px}
+.si-lbl{font-family:'Inter',sans-serif;font-size:10px;font-weight:500;color:var(--muted);letter-spacing:0.08em;text-transform:uppercase}
+.si-val{color:var(--text);font-weight:500}
+.si-val.gain{color:var(--positive)}
+.si-val.loss{color:var(--negative)}
+.si-val.muted{color:var(--mid)}
+.si-val .pct{opacity:0.78;margin-left:3px}
+.si-sep{color:var(--muted);opacity:0.4;margin:0 2px}
+
 /* ── Transaction list ── */
-.tx-list{display:flex;flex-direction:column}
-.month-hdr{font-size:10.5px;font-weight:500;color:var(--muted);letter-spacing:0.08em;text-transform:uppercase;padding:20px 0 6px;border-bottom:1px solid var(--border);margin-bottom:2px}
+.tx-list{display:flex;flex-direction:column;position:relative}
+/* Transactions are grouped per month — each group gets its own "thread" rail. */
+.tx-group{position:relative}
+.tx-group::before{content:'';position:absolute;left:14px;top:14px;bottom:14px;width:1px;background:linear-gradient(to bottom,transparent 0,var(--border-mid) 14px,var(--border-mid) calc(100% - 14px),transparent 100%);pointer-events:none;z-index:0}
+.month-hdr{font-size:10.5px;font-weight:500;color:var(--muted);letter-spacing:0.08em;text-transform:uppercase;padding:22px 0 8px 0;margin-bottom:2px;position:relative;z-index:1}
 .month-hdr.first{padding-top:0}
 
-.tx-row{position:relative;border-radius:10px;margin:0 -10px;cursor:pointer;transition:background var(--easing)}
+.tx-row{position:relative;border-radius:10px;margin:0 -10px;cursor:pointer;transition:background var(--easing);z-index:1}
 .tx-row:hover{background:var(--hover)}
 .tx-row.expanded{background:var(--surface)}
 
-.tx-head{display:grid;grid-template-columns:1fr auto auto;align-items:center;gap:16px;padding:12px 10px}
+.tx-head{display:grid;grid-template-columns:1fr auto auto;align-items:center;gap:16px;padding:10px 10px 10px 50px}
 
-.tx-left{display:flex;align-items:center;gap:10px;min-width:0}
-.tx-icon{width:32px;height:32px;border-radius:8px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600}
-.tx-icon.buy{background:var(--positive-dim);color:var(--positive)}
-.tx-icon.sell{background:var(--negative-dim);color:var(--negative)}
-.tx-icon.dividend{background:var(--accent-dim);color:var(--accent-text)}
+.tx-left{display:flex;align-items:center;min-width:0}
+
+/* Tiny node dot on the thread, one per transaction. Color-coded by type. */
+.tx-dot{position:absolute;left:21px;top:23px;width:7px;height:7px;border-radius:50%;z-index:2;box-shadow:0 0 0 3px var(--bg);transition:box-shadow var(--easing),transform var(--easing)}
+.tx-row:hover .tx-dot{box-shadow:0 0 0 3px var(--hover);transform:scale(1.15)}
+.tx-row.expanded .tx-dot{box-shadow:0 0 0 3px var(--surface)}
+.tx-dot.buy{background:var(--positive)}
+.tx-dot.sell{background:var(--negative)}
+.tx-dot.dividend{background:var(--accent)}
 .tx-info{display:flex;flex-direction:column;gap:3px;min-width:0}
 .tx-name{font-size:13.5px;font-weight:500;color:var(--text);letter-spacing:-0.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tx-meta{display:flex;align-items:center;gap:5px}
@@ -126,6 +181,11 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);-webk
 .tx-type-tag.sell{color:var(--negative);background:var(--negative-dim)}
 .tx-type-tag.dividend{color:var(--accent-text);background:var(--accent-dim)}
 .tx-shares-inline{font-family:'Roboto Mono',monospace;font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums;letter-spacing:-0.02em}
+.tx-meta-dot{font-size:11px;color:var(--muted);opacity:0.55;padding:0 1px;user-select:none}
+.tx-perf-lbl{font-size:11px;color:var(--muted);letter-spacing:-0.01em}
+.tx-perf-val{font-family:'Roboto Mono',monospace;font-size:11px;font-weight:500;font-variant-numeric:tabular-nums;letter-spacing:-0.02em}
+.tx-perf-val.gain{color:var(--positive)}
+.tx-perf-val.loss{color:var(--negative)}
 
 .tx-date{font-size:12px;color:var(--muted);white-space:nowrap;letter-spacing:0.01em;text-align:right;min-width:80px}
 .tx-val{font-family:'Roboto Mono',monospace;font-size:13.5px;font-weight:500;font-variant-numeric:tabular-nums;letter-spacing:-0.03em;white-space:nowrap;text-align:right;min-width:80px}
@@ -141,7 +201,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);-webk
 .tx-detail{overflow:hidden;max-height:0;transition:max-height 220ms cubic-bezier(0.16,1,0.3,1)}
 .tx-row.expanded .tx-detail{max-height:300px}
 .tx-detail-inner{padding:0 10px 14px}
-.tx-detail-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:12px 0;border-top:1px solid var(--border);margin-bottom:10px}
+.tx-detail-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:6px 0 12px;margin-bottom:10px}
 .td-cell{display:flex;flex-direction:column;gap:3px}
 .td-lbl{font-size:10.5px;color:var(--muted);letter-spacing:0.04em;text-transform:uppercase;font-weight:500}
 .td-val{font-family:'Roboto Mono',monospace;font-size:13px;font-weight:500;color:var(--text);font-variant-numeric:tabular-nums;letter-spacing:-0.03em}
@@ -186,7 +246,7 @@ option{background:#141418}
 .ts-btn.sell.active{color:var(--negative);background:var(--negative-dim)}
 .ts-btn.dividend.active{color:var(--accent-text);background:var(--accent-dim)}
 .f-grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.f-total{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-top:1px solid var(--border)}
+.f-total{display:flex;align-items:center;justify-content:space-between;padding:12px 0 0}
 .f-total-lbl{font-size:12px;color:var(--muted);letter-spacing:0.02em}
 .f-total-val{font-family:'Roboto Mono',monospace;font-size:15px;font-weight:500;color:var(--text);font-variant-numeric:tabular-nums;letter-spacing:-0.03em}
 .drawer-foot{padding:16px 24px;border-top:1px solid var(--border);display:flex;gap:8px;flex-shrink:0}
@@ -219,6 +279,8 @@ option{background:#141418}
 
 /* ── Scenario bar ── */
 .scenario-bar{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:300;display:flex;align-items:center;gap:0;background:var(--raised);border:1px solid var(--border-mid);border-radius:10px;padding:4px;box-shadow:0 8px 32px rgba(0,0,0,0.5);white-space:nowrap}
+.scenario-bar.upper{bottom:64px}
+.sc-grouplbl{font-size:10px;font-weight:500;color:var(--muted);letter-spacing:0.08em;text-transform:uppercase;padding:0 10px 0 6px;white-space:nowrap}
 .sc-btn{font-size:11.5px;font-weight:450;color:var(--muted);cursor:pointer;user-select:none;padding:5px 13px;border-radius:7px;transition:color var(--easing),background var(--easing);white-space:nowrap;border:none;background:transparent;font-family:'Inter',sans-serif;outline:none;letter-spacing:0.01em}
 .sc-btn:hover{color:var(--mid)}
 .sc-btn.active{color:var(--text);background:var(--surface);font-weight:500}
@@ -232,12 +294,14 @@ option{background:#141418}
   .hdr-right{flex-direction:column;align-items:stretch;gap:8px}
   .filter-bar{flex-direction:column;align-items:stretch}
   .search-inp{width:100%}
-  .tx-head{grid-template-columns:1fr auto}
+  .tx-head{grid-template-columns:1fr auto;padding-left:46px}
   .tx-date{display:none}
+  .month-hdr{padding-left:0}
   .tx-detail-grid{grid-template-columns:repeat(2,1fr)}
   .drawer{width:100vw;top:auto;border-left:none;border-top:1px solid var(--border);border-radius:16px 16px 0 0;transform:translateY(100%)}
   .drawer.open{transform:translateY(0)}
   .scenario-bar{bottom:16px;left:8px;right:8px;transform:none;justify-content:center;flex-wrap:wrap;gap:2px}
+  .scenario-bar.upper{bottom:auto;top:8px;left:8px;right:8px}
 }
 </style>
 </head>
@@ -275,7 +339,7 @@ option{background:#141418}
           <div class="av">B</div>
           <div class="u-info">
             <div class="u-name">Brian</div>
-            <div class="u-mail">bra.levi@gmail.com</div>
+            <div class="u-mail"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="a8cadac986c4cddec1e8cfc5c9c1c486cbc7c5">[email&#160;protected]</a></div>
           </div>
         </div>
       </div>
@@ -286,7 +350,7 @@ option{background:#141418}
   </div>
 
   <!-- MAIN -->
-  <div class="main">
+  <div class="main" data-stats-mode="top" id="main">
     <div class="topbar">
       <button class="hbg" id="mob-open-btn">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
@@ -302,6 +366,14 @@ option{background:#141418}
           <div class="page-subtitle" id="tx-count">— transactions</div>
         </div>
         <div class="hdr-right">
+          <!-- Inline variant (stats live on the same row as search/filter when active) -->
+          <div class="stats-inline" id="stats-inline">
+            <div class="si-group"><span class="si-lbl">Invested</span><span class="si-val" id="si-invested">—</span></div>
+            <span class="si-sep">•</span>
+            <div class="si-group"><span class="si-lbl">Cash</span><span class="si-val muted" id="si-cash">€0.00</span></div>
+            <span class="si-sep">•</span>
+            <div class="si-group"><span class="si-lbl">Closed</span><span class="si-val" id="si-closed">—</span></div>
+          </div>
           <div class="filter-bar">
             <div class="search-wrap">
               <div class="search-ico">
@@ -323,6 +395,25 @@ option{background:#141418}
         </div>
       </div>
 
+      <div class="stats-strip" id="stats-strip">
+        <div class="stat-cell">
+          <span class="stat-lbl">Total Invested</span>
+          <span class="stat-val" id="stat-invested">—</span>
+        </div>
+        <div class="stat-cell">
+          <span class="stat-lbl">Cash</span>
+          <span class="stat-info" title="Uninvested cash balance">i</span>
+          <span class="stat-val muted" id="stat-cash">€0.00</span>
+        </div>
+        <div class="stat-cell">
+          <span class="stat-lbl">Total Closed</span>
+          <span class="stat-info" title="Realized P/L from sells in the current view">i</span>
+          <span class="stat-val" id="stat-closed">—</span>
+        </div>
+      </div>
+
+      <!-- Inline variant moved into the page header (hdr-right) so it sits inline with the search bar -->
+
       <div class="tx-list" id="tx-list"></div>
       <div class="empty-state" id="empty-state">
         <div class="empty-icon">
@@ -334,6 +425,22 @@ option{background:#141418}
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           Add transaction
         </button>
+      </div>
+    </div>
+
+    <!-- Footer variant: sticky summary bar pinned below the scroll area -->
+    <div class="stats-footer" id="stats-footer">
+      <div class="sf-cell">
+        <span class="sf-lbl">Invested</span>
+        <span class="sf-val" id="sf-invested">—</span>
+      </div>
+      <div class="sf-cell">
+        <span class="sf-lbl">Cash</span>
+        <span class="sf-val muted" id="sf-cash">€0.00</span>
+      </div>
+      <div class="sf-cell">
+        <span class="sf-lbl">Closed</span>
+        <span class="sf-val" id="sf-closed">—</span>
       </div>
     </div>
   </div>
@@ -424,11 +531,21 @@ option{background:#141418}
   <div class="mob-div"></div>
   <div style="padding:8px 8px 24px">
     <div class="nav-i"><div class="nav-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg></div><span class="nav-lbl" style="opacity:1">Settings</span></div>
-    <div class="user-i"><div class="av">B</div><div class="u-info" style="opacity:1"><div class="u-name">Brian</div><div class="u-mail">bra.levi@gmail.com</div></div></div>
+    <div class="user-i"><div class="av">B</div><div class="u-info" style="opacity:1"><div class="u-name">Brian</div><div class="u-mail"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="26445447084a43504f66414b474f4a0845494b">[email&#160;protected]</a></div></div></div>
   </div>
 </div>
 
 <!-- SCENARIO BAR -->
+<div class="scenario-bar upper">
+  <span class="sc-grouplbl">Stats position</span>
+  <button class="sc-btn active" data-stats="top">Top</button>
+  <div class="sc-sep"></div>
+  <button class="sc-btn" data-stats="footer">Footer</button>
+  <div class="sc-sep"></div>
+  <button class="sc-btn" data-stats="inline">Inline</button>
+  <div class="sc-sep"></div>
+  <button class="sc-btn" data-stats="off">Off</button>
+</div>
 <div class="scenario-bar">
   <button class="sc-btn active" data-sc="populated">With transactions</button>
   <div class="sc-sep"></div>
@@ -441,18 +558,18 @@ option{background:#141418}
   <button class="sc-btn" data-sc="edit-form">Edit form</button>
 </div>
 
-<script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 /* ── Data (all hardcoded — prototype only) ── */
 const SEED_DATA = [
   { id:1,  name:'Apple',        ticker:'AAPL', type:'buy',      date:'2026-04-22', shares:5,    price:192.34, total:961.70   },
   { id:2,  name:'NVIDIA',       ticker:'NVDA', type:'buy',      date:'2026-04-18', shares:2,    price:876.15, total:1752.30  },
   { id:3,  name:'Vanguard ETF', ticker:'VWCE', type:'dividend', date:'2026-04-15', shares:null, price:null,   total:43.20    },
   { id:4,  name:'Microsoft',    ticker:'MSFT', type:'buy',      date:'2026-04-10', shares:3,    price:410.50, total:1231.50  },
-  { id:5,  name:'Apple',        ticker:'AAPL', type:'sell',     date:'2026-03-28', shares:2,    price:218.60, total:437.20   },
+  { id:5,  name:'Apple',        ticker:'AAPL', type:'sell',     date:'2026-03-28', shares:2,    price:218.60, total:437.20,  costBasis:185.50 },
   { id:6,  name:'Bitcoin',      ticker:'BTC',  type:'buy',      date:'2026-03-20', shares:0.05, price:72450,  total:3622.50  },
   { id:7,  name:'NVIDIA',       ticker:'NVDA', type:'buy',      date:'2026-03-12', shares:1,    price:830.00, total:830.00   },
   { id:8,  name:'Vanguard ETF', ticker:'VWCE', type:'buy',      date:'2026-03-05', shares:10,   price:112.40, total:1124.00  },
-  { id:9,  name:'Microsoft',    ticker:'MSFT', type:'sell',     date:'2026-02-18', shares:1,    price:395.00, total:395.00   },
+  { id:9,  name:'Microsoft',    ticker:'MSFT', type:'sell',     date:'2026-02-18', shares:1,    price:395.00, total:395.00,  costBasis:410.50 },
   { id:10, name:'Apple',        ticker:'AAPL', type:'buy',      date:'2026-02-07', shares:8,    price:180.25, total:1442.00  },
   { id:11, name:'Bitcoin',      ticker:'BTC',  type:'buy',      date:'2026-01-30', shares:0.02, price:68000,  total:1360.00  },
   { id:12, name:'Vanguard ETF', ticker:'VWCE', type:'dividend', date:'2026-01-15', shares:null, price:null,   total:38.90    },
@@ -473,6 +590,21 @@ function esc(s) {
 function fmtMoney(v) {
   return '€' + Number(v).toLocaleString('en-EU', {minimumFractionDigits:2, maximumFractionDigits:2});
 }
+function fmtSignedMoney(v) {
+  const sign = v > 0 ? '+' : v < 0 ? '−' : '';
+  return sign + '€' + Math.abs(v).toLocaleString('en-EU', {minimumFractionDigits:2, maximumFractionDigits:2});
+}
+function fmtSignedPct(v) {
+  const sign = v > 0 ? '+' : v < 0 ? '−' : '';
+  return sign + Math.abs(v).toFixed(2) + '%';
+}
+function perfFor(tx) {
+  if (tx.type !== 'sell' || tx.costBasis == null || !tx.shares) return null;
+  const cost = tx.costBasis * tx.shares;
+  const pl = tx.total - cost;
+  const pct = cost > 0 ? (pl / cost) * 100 : 0;
+  return { pl: pl, pct: pct };
+}
 function fmtShares(v) {
   if (v == null) return '';
   return v < 1 ? Number(v).toFixed(4) : (v % 1 === 0 ? String(Math.round(v)) : Number(v).toFixed(3));
@@ -484,6 +616,61 @@ function fmtDate(d) {
 function fmtMonth(d) {
   const dt = new Date(d + 'T00:00:00');
   return dt.toLocaleDateString('en-GB', {month:'long', year:'numeric'});
+}
+
+/* ── Stats ── */
+function updateStats(filtered) {
+  let invested = 0;
+  let closedPL = 0;
+  let closedCost = 0;
+  filtered.forEach(tx => {
+    if (tx.type === 'buy') {
+      invested += tx.total;
+    } else if (tx.type === 'sell') {
+      const p = perfFor(tx);
+      if (p) {
+        closedPL += p.pl;
+        closedCost += tx.costBasis * tx.shares;
+      }
+    }
+  });
+
+  const hasClosed = !(closedCost === 0 && closedPL === 0);
+  const closedPct = closedCost > 0 ? (closedPL / closedCost) * 100 : 0;
+
+  // Fill all three variants (only the active one is visible via CSS)
+  fillInvested('stat-invested', invested);
+  fillInvested('si-invested', invested);
+  fillInvested('sf-invested', invested);
+  fillClosed('stat-closed', closedPL, closedPct, hasClosed);
+  fillClosed('si-closed', closedPL, closedPct, hasClosed);
+  fillClosed('sf-closed', closedPL, closedPct, hasClosed);
+}
+
+function fillInvested(id, invested) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = fmtMoney(invested);
+  el.classList.remove('gain', 'loss', 'muted');
+  if (invested === 0) el.classList.add('muted');
+}
+
+function fillClosed(id, closedPL, closedPct, hasClosed) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.classList.remove('gain', 'loss', 'muted');
+  if (!hasClosed) {
+    el.classList.add('muted');
+    el.textContent = '—';
+    return;
+  }
+  el.classList.add(closedPL >= 0 ? 'gain' : 'loss');
+  el.textContent = '';
+  el.appendChild(document.createTextNode(fmtSignedMoney(closedPL)));
+  const pctSpan = document.createElement('span');
+  pctSpan.className = 'pct';
+  pctSpan.textContent = '(' + fmtSignedPct(closedPct) + ')';
+  el.appendChild(pctSpan);
 }
 
 /* ── Filter ── */
@@ -505,6 +692,9 @@ function render() {
 
   // Update count
   countEl.textContent = filtered.length + ' transaction' + (filtered.length !== 1 ? 's' : '');
+
+  // Update stats strip (dynamic on filter/search)
+  updateStats(filtered);
 
   if (filtered.length === 0) {
     list.textContent = '';
@@ -532,14 +722,19 @@ function render() {
   list.textContent = '';
   let isFirst = true;
   groups.forEach((txs, month) => {
-    // Month header
+    // Month header (sits between groups, outside any rail)
     const hdr = document.createElement('div');
     hdr.className = 'month-hdr' + (isFirst ? ' first' : '');
     hdr.textContent = month;
     list.appendChild(hdr);
     isFirst = false;
 
-    txs.forEach(tx => buildTxRow(tx, list));
+    // Each month's rows are wrapped in their own group, so the rail is
+    // scoped per month — reads as a separate thread per group.
+    const groupEl = document.createElement('div');
+    groupEl.className = 'tx-group';
+    txs.forEach(tx => buildTxRow(tx, groupEl));
+    list.appendChild(groupEl);
   });
 }
 
@@ -554,13 +749,14 @@ function buildTxRow(tx, container) {
   const head = document.createElement('div');
   head.className = 'tx-head';
 
+  // Thread node (tiny color-coded dot on the rail)
+  const dot = document.createElement('div');
+  dot.className = 'tx-dot ' + tx.type;
+  row.appendChild(dot);
+
   // Left
   const left = document.createElement('div');
   left.className = 'tx-left';
-
-  const icon = document.createElement('div');
-  icon.className = 'tx-icon ' + tx.type;
-  icon.textContent = tx.type === 'buy' ? '+' : tx.type === 'sell' ? '−' : '÷';
 
   const info = document.createElement('div');
   info.className = 'tx-info';
@@ -584,9 +780,27 @@ function buildTxRow(tx, container) {
     meta.appendChild(sharesLabel);
   }
 
+  // Performance pill on sell rows (Realized P/L)
+  const perf = perfFor(tx);
+  if (perf) {
+    const dot = document.createElement('span');
+    dot.className = 'tx-meta-dot';
+    dot.textContent = '•';
+    meta.appendChild(dot);
+
+    const perfLbl = document.createElement('span');
+    perfLbl.className = 'tx-perf-lbl';
+    perfLbl.textContent = 'Performance:';
+    meta.appendChild(perfLbl);
+
+    const perfVal = document.createElement('span');
+    perfVal.className = 'tx-perf-val ' + (perf.pl >= 0 ? 'gain' : 'loss');
+    perfVal.textContent = fmtSignedMoney(perf.pl) + ' (' + fmtSignedPct(perf.pct) + ')';
+    meta.appendChild(perfVal);
+  }
+
   info.appendChild(name);
   info.appendChild(meta);
-  left.appendChild(icon);
   left.appendChild(info);
 
   // Date
@@ -637,6 +851,23 @@ function buildTxRow(tx, container) {
     grid.appendChild(makeCell('Price / share', fmtMoney(tx.price)));
   }
   grid.appendChild(makeCell('Total', fmtMoney(tx.total)));
+
+  // Realized P/L cells on sells
+  if (perf) {
+    grid.appendChild(makeCell('Cost basis / share', fmtMoney(tx.costBasis)));
+    const plCell = document.createElement('div');
+    plCell.className = 'td-cell';
+    const plLbl = document.createElement('div');
+    plLbl.className = 'td-lbl';
+    plLbl.textContent = 'Realized P/L';
+    const plVal = document.createElement('div');
+    plVal.className = 'td-val';
+    plVal.style.color = perf.pl >= 0 ? 'var(--positive)' : 'var(--negative)';
+    plVal.textContent = fmtSignedMoney(perf.pl) + '  (' + fmtSignedPct(perf.pct) + ')';
+    plCell.appendChild(plLbl);
+    plCell.appendChild(plVal);
+    grid.appendChild(plCell);
+  }
 
   // Actions
   const actions = document.createElement('div');
@@ -790,6 +1021,14 @@ document.getElementById('conf-cancel-btn').addEventListener('click', closeConfir
 document.getElementById('conf-del-btn').addEventListener('click', doDelete);
 
 /* ── Scenario switcher ── */
+document.querySelectorAll('.sc-btn[data-stats]').forEach(btn => {
+  btn.addEventListener('click', function() {
+    const mode = this.dataset.stats;
+    document.querySelectorAll('.sc-btn[data-stats]').forEach(b => b.classList.toggle('active', b === this));
+    document.getElementById('main').setAttribute('data-stats-mode', mode);
+  });
+});
+
 document.querySelectorAll('.sc-btn[data-sc]').forEach(btn => {
   btn.addEventListener('click', function() {
     const sc = this.dataset.sc;
