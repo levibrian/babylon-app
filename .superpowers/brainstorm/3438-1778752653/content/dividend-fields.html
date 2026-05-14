@@ -1,0 +1,95 @@
+<h2>Add Dividend — Field Layout Options</h2>
+<p class="subtitle">Which set of fields should the dividend form capture?</p>
+
+<div class="cards">
+
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:16px 20px; background:#0f0f0f; border-radius:8px; font-family:monospace; font-size:13px;">
+      <div style="color:#888; font-size:11px; letter-spacing:1px; margin-bottom:12px;">DIVIDEND TRANSACTION</div>
+      <div style="margin-bottom:10px;">
+        <div style="color:#555; font-size:11px; margin-bottom:3px;">SHARES QTY</div>
+        <div style="background:#1a1a1a; border:1px solid #333; border-radius:4px; padding:8px 10px; color:#e0e0e0;">10.5</div>
+      </div>
+      <div style="margin-bottom:10px;">
+        <div style="color:#555; font-size:11px; margin-bottom:3px;">AMOUNT RECEIVED (NET)</div>
+        <div style="background:#1a1a1a; border:1px solid #333; border-radius:4px; padding:8px 10px; color:#e0e0e0;">€ 42.00</div>
+      </div>
+      <div style="border-top:1px solid #222; padding-top:10px; display:flex; justify-content:space-between;">
+        <span style="color:#555; font-size:11px;">Net / share</span>
+        <span style="color:#6fcf97; font-size:13px; font-weight:600;">€ 4.00</span>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A — Shares + Net Amount</h3>
+      <p>Minimal. Fast entry. Shows net dividend per share. No tax tracking — loses gross amount visibility.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:16px 20px; background:#0f0f0f; border-radius:8px; font-family:monospace; font-size:13px;">
+      <div style="color:#888; font-size:11px; letter-spacing:1px; margin-bottom:12px;">DIVIDEND TRANSACTION</div>
+      <div style="margin-bottom:10px;">
+        <div style="color:#555; font-size:11px; margin-bottom:3px;">SHARES QTY</div>
+        <div style="background:#1a1a1a; border:1px solid #333; border-radius:4px; padding:8px 10px; color:#e0e0e0;">10.5</div>
+      </div>
+      <div style="margin-bottom:10px;">
+        <div style="color:#555; font-size:11px; margin-bottom:3px;">AMOUNT RECEIVED (NET)</div>
+        <div style="background:#1a1a1a; border:1px solid #333; border-radius:4px; padding:8px 10px; color:#e0e0e0;">€ 42.00</div>
+      </div>
+      <div style="margin-bottom:10px;">
+        <div style="color:#555; font-size:11px; margin-bottom:3px; display:flex; justify-content:space-between; align-items:center;">
+          <span>TAX WITHHELD <span style="color:#444;">(optional)</span></span>
+          <span style="color:#444; font-size:10px;">▾ expand</span>
+        </div>
+        <div style="background:#1a1a1a; border:1px dashed #333; border-radius:4px; padding:8px 10px; color:#555; font-style:italic;">0.00 — tap to add</div>
+      </div>
+      <div style="border-top:1px solid #222; padding-top:10px; display:flex; justify-content:space-between;">
+        <span style="color:#555; font-size:11px;">Net / share</span>
+        <span style="color:#6fcf97; font-size:13px; font-weight:600;">€ 4.00</span>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B — Shares + Net + Tax (optional)</h3>
+      <p>Fast by default. Tax hidden until tapped. When filled: shows gross amount + gross / share. Best of both.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:16px 20px; background:#0f0f0f; border-radius:8px; font-family:monospace; font-size:13px;">
+      <div style="color:#888; font-size:11px; letter-spacing:1px; margin-bottom:12px;">DIVIDEND TRANSACTION</div>
+      <div style="margin-bottom:10px;">
+        <div style="color:#555; font-size:11px; margin-bottom:3px;">SHARES QTY</div>
+        <div style="background:#1a1a1a; border:1px solid #333; border-radius:4px; padding:8px 10px; color:#e0e0e0;">10.5</div>
+      </div>
+      <div style="margin-bottom:10px;">
+        <div style="color:#555; font-size:11px; margin-bottom:3px;">AMOUNT RECEIVED (NET)</div>
+        <div style="background:#1a1a1a; border:1px solid #333; border-radius:4px; padding:8px 10px; color:#e0e0e0;">€ 42.00</div>
+      </div>
+      <div style="margin-bottom:10px;">
+        <div style="color:#555; font-size:11px; margin-bottom:3px;">TAX WITHHELD</div>
+        <div style="background:#1a1a1a; border:1px solid #333; border-radius:4px; padding:8px 10px; color:#e0e0e0;">€ 8.00</div>
+      </div>
+      <div style="border-top:1px solid #222; padding-top:10px;">
+        <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+          <span style="color:#555; font-size:11px;">Gross amount</span>
+          <span style="color:#aaa; font-size:13px;">€ 50.00</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+          <span style="color:#555; font-size:11px;">Net / share</span>
+          <span style="color:#6fcf97; font-size:13px; font-weight:600;">€ 4.00</span>
+        </div>
+        <div style="display:flex; justify-content:space-between;">
+          <span style="color:#555; font-size:11px;">Gross / share</span>
+          <span style="color:#aaa; font-size:13px;">€ 4.76</span>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>C — Shares + Net + Tax (always visible)</h3>
+      <p>Current edit-row pattern. Full data always. More to fill. Shows gross amount + both per-share figures.</p>
+    </div>
+  </div>
+
+</div>
+
+<p class="subtitle" style="margin-top:16px; font-size:12px; color:#555;">Click a card to select. Let me know in terminal what you think.</p>

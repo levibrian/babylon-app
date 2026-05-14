@@ -101,3 +101,11 @@ _(empty — add entries as anti-patterns are discovered)_
 - **DON'T**: Use spacing values not in the 4px scale (e.g. 5px, 7px, 10px, 15px).
 - **Why**: The 4px grid keeps the layout precise and intentional.
 - **Instead**: Always use `var(--space-N)` tokens. Scale: 4, 8, 12, 16, 24, 32, 48, 64px.
+
+---
+
+## API / Data
+
+- **DON'T**: Assume the API returns date-only strings (e.g. `2026-05-13`) for `date` fields.
+- **Why**: The Babylon API returns full ISO datetimes (`2026-05-13T00:00:00Z`). Appending `T12:00:00` directly produces an invalid date string.
+- **Instead**: Always normalize with `d.substring(0, 10)` before constructing a `Date` from any `Transaction.date` or similar field.
