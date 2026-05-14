@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, EventEmitter, Input, Output, inject, signal, computed } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, EventEmitter, Input, Output, inject, signal, computed, input } from '@angular/core';
 
 type PnlMode = 'absolute' | 'relative';
 import { PortfolioItem } from '../../../../models/portfolio.model';
@@ -15,7 +15,7 @@ import { FilterStore, AssetClass } from '../../../../stores/filter.store';
 })
 export class HoldingsListComponent {
   @Input() items: PortfolioItem[] = [];
-  @Input() loading = false;
+  readonly loading = input(false);
   @Output() rowClick = new EventEmitter<string>();
 
   protected readonly skeletonRows = [1, 2, 3, 4, 5];

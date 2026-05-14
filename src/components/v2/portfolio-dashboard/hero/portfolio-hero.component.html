@@ -21,12 +21,12 @@
 
   <!-- Row 2: value + P&L -->
   <div class="hero-value-row">
-    @if (loading) {
+    @if (loading()) {
       <span class="skeleton hero-skel-value"></span>
     } @else {
       <div class="hero-value">{{ formatValue(totalValue) }}</div>
     }
-    @if (loading) {
+    @if (loading()) {
       <span class="skeleton hero-skel-perf"></span>
     } @else {
       <div class="hero-perf-row">

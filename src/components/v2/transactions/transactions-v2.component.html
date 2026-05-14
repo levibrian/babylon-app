@@ -9,18 +9,24 @@
     <div class="hdr-right">
       <!-- Inline stats -->
       <div class="stats-inline">
-        <div class="si-group"><span class="si-lbl">Invested</span><span class="si-val">{{ formatValue(statsInvested()) }}</span></div>
-        <span class="si-sep">•</span>
-        <div class="si-group"><span class="si-lbl">Cash</span><span class="si-val muted">{{ formatValue(cashBalance()) }}</span></div>
-        <span class="si-sep">•</span>
-        <div class="si-group">
-          <span class="si-lbl">Closed</span>
-          @if (statsClosed() !== null) {
-            <span class="si-val" [class.gain]="(statsClosed() ?? 0) >= 0" [class.loss]="(statsClosed() ?? 0) < 0">{{ formatSigned(statsClosed()!) }}</span>
-          } @else {
-            <span class="si-val muted">—</span>
-          }
-        </div>
+        @if (loading()) {
+          <span class="skeleton si-skel"></span>
+          <span class="skeleton si-skel si-skel-sm"></span>
+          <span class="skeleton si-skel si-skel-md"></span>
+        } @else {
+          <div class="si-group"><span class="si-lbl">Invested</span><span class="si-val">{{ formatValue(statsInvested()) }}</span></div>
+          <span class="si-sep">•</span>
+          <div class="si-group"><span class="si-lbl">Cash</span><span class="si-val muted">{{ formatValue(cashBalance()) }}</span></div>
+          <span class="si-sep">•</span>
+          <div class="si-group">
+            <span class="si-lbl">Closed</span>
+            @if (statsClosed() !== null) {
+              <span class="si-val" [class.gain]="(statsClosed() ?? 0) >= 0" [class.loss]="(statsClosed() ?? 0) < 0">{{ formatSigned(statsClosed()!) }}</span>
+            } @else {
+              <span class="si-val muted">—</span>
+            }
+          </div>
+        }
       </div>
       <div class="filter-bar">
         <div class="search-wrap">

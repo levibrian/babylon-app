@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output, inject, input } from '@angular/core';
 import { FilterStore, ALL_ASSET_CLASSES, AssetClass } from '../../../../stores/filter.store';
 import { Timeframe } from '../../../../models/portfolio-history.model';
 
@@ -17,7 +17,7 @@ export class PortfolioHeroComponent {
   @Input() pnlAmount = 0;
   @Input() pnlPercent = 0;
   @Input() activePeriod: Timeframe = '1M';
-  @Input() loading = false;
+  readonly loading = input(false);
   @Output() periodChange = new EventEmitter<Timeframe>();
 
   protected filterStore = inject(FilterStore);
