@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from '@angular/core';
 import { Transaction } from '../../../../models/transaction.model';
 import { MonthGroup } from '../transaction-group.util';
 
@@ -13,24 +13,12 @@ import { MonthGroup } from '../transaction-group.util';
 export class TransactionListV2Component {
   @Input() groups: MonthGroup[] = [];
   @Input() loading = false;
-  @Output() editClick = new EventEmitter<Transaction>();
-  @Output() deleteClick = new EventEmitter<Transaction>();
+  @Output() rowClick = new EventEmitter<Transaction>();
 
   protected readonly skeletonRows = [1, 2, 3, 4, 5];
-  protected expandedId = signal<string | null>(null);
 
-  protected toggleExpand(id: string): void {
-    this.expandedId.set(this.expandedId() === id ? null : id);
-  }
-
-  protected onEdit(event: Event, tx: Transaction): void {
-    event.stopPropagation();
-    this.editClick.emit(tx);
-  }
-
-  protected onDelete(event: Event, tx: Transaction): void {
-    event.stopPropagation();
-    this.deleteClick.emit(tx);
+  protected onRowClick(tx: Transaction): void {
+    this.rowClick.emit(tx);
   }
 
   protected formatValue(n: number): string {

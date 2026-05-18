@@ -19,7 +19,7 @@
       <div class="month-hdr" [class.first]="$first">{{ group.label }}</div>
       <div class="tx-group">
         @for (tx of group.transactions; track trackById($index, tx)) {
-          <div class="tx-row" [class.expanded]="expandedId() === tx.id" (click)="toggleExpand(tx.id)">
+          <div class="tx-row" (click)="onRowClick(tx)">
             <div class="tx-dot" [class]="'tx-dot ' + tx.transactionType"></div>
 
             <div class="tx-head">
@@ -45,47 +45,8 @@
               <div class="tx-val" [class]="'tx-val ' + tx.transactionType">{{ formatValue(tx.totalAmount) }}</div>
             </div>
 
-            <div class="tx-detail">
-              <div class="tx-detail-inner">
-                <div class="tx-detail-grid">
-                  @if (tx.shares && tx.shares > 0) {
-                    <div class="td-cell">
-                      <div class="td-lbl">Shares</div>
-                      <div class="td-val">{{ formatShares(tx.shares) }}</div>
-                    </div>
-                    <div class="td-cell">
-                      <div class="td-lbl">Price / share</div>
-                      <div class="td-val">{{ formatValue(tx.sharePrice) }}</div>
-                    </div>
-                  }
-                  <div class="td-cell">
-                    <div class="td-lbl">Total</div>
-                    <div class="td-val">{{ formatValue(tx.totalAmount) }}</div>
-                  </div>
-                  @if (hasPerfPill(tx)) {
-                    <div class="td-cell">
-                      <div class="td-lbl">Realized P/L</div>
-                      <div class="td-val" [class]="(tx.realizedPnL ?? 0) >= 0 ? 'gain' : 'loss'">
-                        {{ formatSigned(tx.realizedPnL ?? 0) }} ({{ formatSignedPct(tx.realizedPnLPct ?? 0) }})
-                      </div>
-                    </div>
-                  }
-                </div>
-                <div class="tx-actions">
-                  <button class="tx-act-btn danger" type="button" (click)="onDelete($event, tx)">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-                    Delete
-                  </button>
-                  <button class="tx-act-btn" type="button" (click)="onEdit($event, tx)">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                    Edit
-                  </button>
-                </div>
-              </div>
-            </div>
-
             <div class="tx-chev">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
             </div>
           </div>
         }

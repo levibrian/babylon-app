@@ -24,6 +24,7 @@ export class TransactionsV2Component {
   readonly typeFilter  = signal<TypeFilter>('all');
   readonly drawerOpen  = signal(false);
   readonly drawerTx    = signal<Transaction | null>(null);
+  readonly drawerMode  = signal<'form' | 'detail'>('form');
 
   protected readonly loading = this.txService.loading;
   protected readonly error   = this.txService.error;
@@ -74,7 +75,14 @@ export class TransactionsV2Component {
   };
 
   openDrawer(tx?: Transaction): void {
+    this.drawerMode.set('form');
     this.drawerTx.set(tx ?? null);
+    this.drawerOpen.set(true);
+  }
+
+  openDetailDrawer(tx: Transaction): void {
+    this.drawerMode.set('detail');
+    this.drawerTx.set(tx);
     this.drawerOpen.set(true);
   }
 

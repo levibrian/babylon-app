@@ -93,88 +93,14 @@ describe('TransactionListV2Component', () => {
     expect(dot).toBeTruthy();
   });
 
-  // Expand/collapse
-  it('should not have .expanded on rows by default', () => {
-    const expanded = el.querySelectorAll('.tx-row.expanded');
-    expect(expanded.length).toBe(0);
-  });
-
-  it('should add .expanded to row on click', fakeAsync(() => {
-    const row = el.querySelector('.tx-row') as HTMLElement;
-    row.click();
-    tick(0);
-    fixture.detectChanges();
-    expect(row.classList.contains('expanded')).toBeTrue();
-  }));
-
-  it('should collapse row on second click', fakeAsync(() => {
-    const row = el.querySelector('.tx-row') as HTMLElement;
-    row.click();
-    tick(0);
-    fixture.detectChanges();
-    row.click();
-    tick(0);
-    fixture.detectChanges();
-    expect(row.classList.contains('expanded')).toBeFalse();
-  }));
-
-  it('should only expand one row at a time', fakeAsync(() => {
-    const rows = el.querySelectorAll('.tx-row');
-    (rows[0] as HTMLElement).click();
-    tick(0);
-    fixture.detectChanges();
-    (rows[1] as HTMLElement).click();
-    tick(0);
-    fixture.detectChanges();
-    const expanded = el.querySelectorAll('.tx-row.expanded');
-    expect(expanded.length).toBe(1);
-    expect(expanded[0]).toBe(rows[1]);
-  }));
-
-  // Detail panel
-  it('should have a .tx-detail in each row', () => {
-    const details = el.querySelectorAll('.tx-detail');
-    expect(details.length).toBe(3);
-  });
-
-  // Edit/Delete actions
-  it('should emit editClick with the transaction when Edit is clicked in expanded row', fakeAsync(() => {
+  // Row click → drawer
+  it('should emit rowClick with transaction when row is clicked', fakeAsync(() => {
     const emitted: Transaction[] = [];
-    fixture.componentInstance.editClick.subscribe((t: Transaction) => emitted.push(t));
+    fixture.componentInstance.rowClick.subscribe((t: Transaction) => emitted.push(t));
     const row = el.querySelector('.tx-row') as HTMLElement;
     row.click();
-    tick(0);
-    fixture.detectChanges();
-    const editBtn = row.querySelector('.tx-act-btn:not(.danger)') as HTMLElement;
-    editBtn.click();
     tick(0);
     expect(emitted[0]).toEqual(BUY_TX);
-  }));
-
-  it('should emit deleteClick with the transaction when Delete is clicked in expanded row', fakeAsync(() => {
-    const emitted: Transaction[] = [];
-    fixture.componentInstance.deleteClick.subscribe((t: Transaction) => emitted.push(t));
-    const row = el.querySelector('.tx-row') as HTMLElement;
-    row.click();
-    tick(0);
-    fixture.detectChanges();
-    const delBtn = row.querySelector('.tx-act-btn.danger') as HTMLElement;
-    delBtn.click();
-    tick(0);
-    expect(emitted[0]).toEqual(BUY_TX);
-  }));
-
-  it('should not emit editClick click from bubbling to row toggle', fakeAsync(() => {
-    const row = el.querySelector('.tx-row') as HTMLElement;
-    row.click();
-    tick(0);
-    fixture.detectChanges();
-    const editBtn = row.querySelector('.tx-act-btn:not(.danger)') as HTMLElement;
-    editBtn.click();
-    tick(0);
-    fixture.detectChanges();
-    // Row should remain expanded (stopPropagation prevented collapse)
-    expect(row.classList.contains('expanded')).toBeTrue();
   }));
 
   // Loading state

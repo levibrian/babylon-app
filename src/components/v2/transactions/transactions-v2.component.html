@@ -82,8 +82,7 @@
     <app-transaction-list-v2
       [groups]="groupedTransactions()"
       [loading]="false"
-      (editClick)="openDrawer($event)"
-      (deleteClick)="deleteTransaction($event)" />
+      (rowClick)="openDetailDrawer($event)" />
   }
 
 </div>
@@ -91,7 +90,10 @@
 <!-- Drawer -->
 <app-transaction-drawer
   [open]="drawerOpen()"
+  [mode]="drawerMode()"
   [transaction]="drawerTx()"
   [securities]="securities()"
   (save)="saveTransaction($event)"
-  (cancel)="closeDrawer()" />
+  (cancel)="closeDrawer()"
+  (editClicked)="openDrawer($event)"
+  (deleteClicked)="deleteTransaction($event)" />

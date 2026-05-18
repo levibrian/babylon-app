@@ -8,6 +8,11 @@ const EDIT_TX: Transaction = {
   id: '1', date: '2026-04-22', ticker: 'AAPL', transactionType: 'buy',
   shares: 5, sharePrice: 192.34, fees: 0, totalAmount: 961.70, securityName: 'Apple',
 };
+
+const DIV_TX: Transaction = {
+  id: '3', date: '2026-04-15', ticker: 'VWCE', transactionType: 'dividend',
+  shares: 100, sharePrice: 0, fees: 0, totalAmount: 42.00, tax: 8.00, securityName: 'Vanguard ETF',
+};
 const SECURITIES = [
   { ticker: 'AAPL', name: 'Apple' },
   { ticker: 'MSFT', name: 'Microsoft' },
@@ -190,4 +195,152 @@ describe('TransactionDrawerComponent', () => {
     tick(0);
     expect(emitted.length).toBe(0);
   }));
+
+  // ── Dividend form fields ──────────────────────────────────────────────────
+
+  describe('dividend form fields', () => {
+    beforeEach(fakeAsync(() => {
+      fixture.componentRef.setInput('open', true);
+      fixture.detectChanges();
+      const divBtn = el.querySelector('.ts-btn[data-type="dividend"]') as HTMLElement;
+      divBtn.click();
+      tick(0);
+      fixture.detectChanges();
+    }));
+
+    it('should show shares-held field when dividend is selected', () => {
+      expect(el.querySelector('#f-div-shares')).toBeTruthy();
+    });
+
+    it('should show net-amount field when dividend is selected', () => {
+      expect(el.querySelector('#f-div-net')).toBeTruthy();
+    });
+
+    it('should show tax-withheld field when dividend is selected', () => {
+      expect(el.querySelector('#f-div-tax')).toBeTruthy();
+    });
+
+    it('should show € — in per-share calc when fields are empty', () => {
+      const calcVal = el.querySelector('.f-calc-val') as HTMLElement;
+      expect(calcVal?.textContent?.trim()).toBe('€ —');
+    });
+
+    it('should update per-share calc when shares, net, and tax are filled', fakeAsync(() => {
+      component.form.patchValue({ divShares: 100, divNet: 42, divTax: 8 });
+      tick(0);
+      fixture.detectChanges();
+      const calcVal = el.querySelector('.f-calc-val') as HTMLElement;
+      // (42 + 8) / 100 = 0.50
+      expect(calcVal?.textContent).toContain('0,50');
+    }));
+  });
+
+  // ── divPerShare computed signal ───────────────────────────────────────────
+
+  describe('divPerShare computed', () => {
+    beforeEach(() => {
+      fixture.componentRef.setInput('open', true);
+      fixture.detectChanges();
+    });
+
+    it('should return null when shares is 0', () => {
+      component.form.patchValue({ divShares: 0, divNet: 42, divTax: 8 });
+      fixture.detectChanges();
+      expect(component.divPerShare()).toBeNull();
+    });
+
+    it('should return null when net is 0', () => {
+      component.form.patchValue({ divShares: 100, divNet: 0, divTax: 8 });
+      fixture.detectChanges();
+      expect(component.divPerShare()).toBeNull();
+    });
+
+    it('should calculate (net + tax) / shares correctly', () => {
+      component.form.patchValue({ divShares: 100, divNet: 42, divTax: 8 });
+      fixture.detectChanges();
+      expect(component.divPerShare()).toBeCloseTo(0.50, 4);
+    });
+
+    it('should treat null tax as 0', () => {
+      component.form.patchValue({ divShares: 100, divNet: 42, divTax: null });
+      fixture.detectChanges();
+      expect(component.divPerShare()).toBeCloseTo(0.42, 4);
+    });
+  });
+
+  // ── Detail mode ───────────────────────────────────────────────────────────
+
+  describe('detail mode - buy transaction', () => {
+    beforeEach(() => {
+      fixture.componentRef.setInput('mode', 'detail');
+      fixture.componentRef.setInput('transaction', EDIT_TX);
+      fixture.componentRef.setInput('open', true);
+      fixture.detectChanges();
+    });
+
+    it('should show .drawer-body-detail', () => {
+      expect(el.querySelector('.drawer-body-detail')).toBeTruthy();
+    });
+
+    it('should hide form body', () => {
+      const formBody = el.querySelector('.drawer-body-form') as HTMLElement;
+      expect(formBody).toBeFalsy();
+    });
+
+    it('should show ticker in hero', () => {
+      const ticker = el.querySelector('.dd-ticker') as HTMLElement;
+      expect(ticker?.textContent?.trim()).toBe('AAPL');
+    });
+
+    it('should show security name in hero', () => {
+      const name = el.querySelector('.dd-name') as HTMLElement;
+      expect(name?.textContent?.trim()).toBe('Apple');
+    });
+
+    it('should emit editClicked with transaction when Edit is clicked', fakeAsync(() => {
+      const emitted: Transaction[] = [];
+      component.editClicked.subscribe((t: Transaction) => emitted.push(t));
+      const btn = el.querySelector('.btn-detail-edit') as HTMLElement;
+      btn.click();
+      tick(0);
+      expect(emitted[0]).toEqual(EDIT_TX);
+    }));
+
+    it('should emit deleteClicked with transaction when Delete is clicked', fakeAsync(() => {
+      const emitted: Transaction[] = [];
+      component.deleteClicked.subscribe((t: Transaction) => emitted.push(t));
+      const btn = el.querySelector('.btn-detail-del') as HTMLElement;
+      btn.click();
+      tick(0);
+      expect(emitted[0]).toEqual(EDIT_TX);
+    }));
+
+    it('should not show yield section for buy transaction', () => {
+      expect(el.querySelector('.dd-section-yield')).toBeFalsy();
+    });
+  });
+
+  describe('detail mode - dividend transaction', () => {
+    beforeEach(() => {
+      fixture.componentRef.setInput('mode', 'detail');
+      fixture.componentRef.setInput('transaction', DIV_TX);
+      fixture.componentRef.setInput('open', true);
+      fixture.detectChanges();
+    });
+
+    it('should show yield section for dividend', () => {
+      expect(el.querySelector('.dd-section-yield')).toBeTruthy();
+    });
+
+    it('should show per-share dividend in yield section', () => {
+      const yieldSection = el.querySelector('.dd-section-yield') as HTMLElement;
+      // (42 + 8) / 100 = 0.50
+      expect(yieldSection?.textContent).toContain('0,50');
+    });
+
+    it('should show shares held in yield section', () => {
+      const yieldSection = el.querySelector('.dd-section-yield') as HTMLElement;
+      expect(yieldSection?.textContent).toContain('100');
+    });
+  });
 });

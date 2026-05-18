@@ -165,6 +165,19 @@ describe('TransactionsV2Component', () => {
     expect(txSpy.deleteTransaction).toHaveBeenCalledWith(TX_BUY1.id, TX_BUY1.ticker);
   });
 
+  // Detail drawer
+  it('should set drawerMode to detail and drawerTx when openDetailDrawer is called', () => {
+    component.openDetailDrawer(TX_BUY1);
+    expect(component.drawerMode()).toBe('detail');
+    expect(component.drawerTx()).toBe(TX_BUY1);
+    expect(component.drawerOpen()).toBeTrue();
+  });
+
+  it('should set drawerMode to form when openDrawer is called', () => {
+    component.openDrawer(TX_BUY1);
+    expect(component.drawerMode()).toBe('form');
+  });
+
   // Page structure
   it('should render page title "Transactions"', () => {
     const title = fixture.nativeElement.querySelector('.page-title');

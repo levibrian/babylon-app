@@ -1,6 +1,4 @@
 import { Routes } from '@angular/router';
-import { TransactionsPageComponent } from './components/transactions-page/transactions-page.component';
-import { TransactionsPageV2Component } from './components/transactions-page-v2/transactions-page-v2.component';
 import { WealthPageComponent } from './components/wealth-page/wealth-page.component';
 import { PortfolioDesignDemoComponent } from './components/portfolio-design-demo/portfolio-design-demo.component';
 import { LoginComponent } from './components/auth/login/login.component';
@@ -23,8 +21,7 @@ export const routes: Routes = [
     canActivate: [publicGuard],
     data: { mode: 'register' },
   },
-  { path: 'transactions', component: TransactionsPageV2Component, canActivate: [authGuard] },
-  { path: 'transactions-legacy', component: TransactionsPageComponent, canActivate: [authGuard] },
+  { path: 'transactions', redirectTo: '/v2/transactions', pathMatch: 'full' },
   { path: 'wealth', component: WealthPageComponent, canActivate: [authGuard] },
   {
     path: 'settings',
