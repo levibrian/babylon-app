@@ -211,11 +211,13 @@
   transition: background 200ms ease-out, color 200ms ease-out, border-color 200ms ease-out;
   outline: none;
 
-  &:hover {
+  &:hover:not(:disabled) {
     background: var(--hover);
     color: var(--text);
     border-color: var(--border-mid);
   }
+
+  &:disabled { opacity: 0.4; cursor: not-allowed; }
 }
 
 .btn-submit {
@@ -232,8 +234,23 @@
   transition: opacity 200ms ease-out;
   outline: none;
   letter-spacing: -0.01em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
 
-  &:hover { opacity: 0.88; }
+  &:hover:not(:disabled) { opacity: 0.88; }
+  &:disabled { opacity: 0.55; cursor: not-allowed; }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+.spin {
+  animation: spin 0.65s linear infinite;
+  flex-shrink: 0;
 }
 
 // ── f-calc block (dividend form) ──────────────────────────────────────────

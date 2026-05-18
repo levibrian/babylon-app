@@ -25,6 +25,7 @@ type DrawerMode = 'form' | 'detail';
 })
 export class TransactionDrawerComponent implements OnChanges {
   @Input() open = false;
+  @Input() pending = false;
 
   private readonly _mode = signal<DrawerMode>('form');
   @Input() set mode(v: DrawerMode) { this._mode.set(v); }

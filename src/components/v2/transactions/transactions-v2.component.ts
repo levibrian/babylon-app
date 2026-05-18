@@ -22,9 +22,10 @@ export class TransactionsV2Component {
 
   readonly searchQuery = signal<string>('');
   readonly typeFilter  = signal<TypeFilter>('all');
-  readonly drawerOpen  = signal(false);
-  readonly drawerTx    = signal<Transaction | null>(null);
-  readonly drawerMode  = signal<'form' | 'detail'>('form');
+  readonly drawerOpen       = signal(false);
+  readonly drawerTx         = signal<Transaction | null>(null);
+  readonly drawerMode       = signal<'form' | 'detail'>('form');
+  readonly operationPending = signal(false);
 
   protected readonly loading = this.txService.loading;
   protected readonly error   = this.txService.error;
@@ -91,17 +92,28 @@ export class TransactionsV2Component {
   }
 
   async saveTransaction(data: NewTransactionData): Promise<void> {
-    const existing = this.drawerTx();
-    if (existing) {
-      await this.txService.updateTransaction({ ...existing, ...data });
-    } else {
-      await this.txService.addTransaction(data);
+    this.operationPending.set(true);
+    try {
+      const existing = this.drawerTx();
+      if (existing) {
+        await this.txService.updateTransaction({ ...existing, ...data });
+      } else {
+        await this.txService.addTransaction(data);
+      }
+      this.drawerOpen.set(false);
+    } finally {
+      this.operationPending.set(false);
     }
-    this.drawerOpen.set(false);
   }
 
   async deleteTransaction(tx: Transaction): Promise<void> {
-    await this.txService.deleteTransaction(tx.id, tx.ticker);
+    this.operationPending.set(true);
+    try {
+      await this.txService.deleteTransaction(tx.id, tx.ticker);
+      this.drawerOpen.set(false);
+    } finally {
+      this.operationPending.set(false);
+    }
   }
 
   protected formatValue(n: number): string {

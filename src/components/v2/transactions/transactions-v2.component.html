@@ -93,6 +93,7 @@
   [mode]="drawerMode()"
   [transaction]="drawerTx()"
   [securities]="securities()"
+  [pending]="operationPending()"
   (save)="saveTransaction($event)"
   (cancel)="closeDrawer()"
   (editClicked)="openDrawer($event)"
